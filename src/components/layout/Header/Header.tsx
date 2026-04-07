@@ -10,6 +10,7 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import { usePathname } from "next/navigation";
 import MobileDropdown from "@/components/layout/MobileDropdown";
 import SearchBar from "@/components/layout/Header/SearchBar";
+import AuthSection from "@/components/layout/Header/AuthSection";
 import { useMounted } from "@/hooks";
 
 interface HeaderProps {
@@ -32,8 +33,9 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
 
     const routes = [
         { path: "/post", label: "Post" },
-        { path: "/roadmaps", label: "Roadmaps" },
-        { path: "/project", label: "Project" }
+        { path: "/contests", label: "Contests" },
+        { path: "/contest", label: "Contest" },
+        { path: "/mycontest", label: "My Contest" },
     ];
     const currentRoute = routes.find(r => pathname.startsWith(r.path));
 
@@ -106,6 +108,9 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
                 <IconButton onClick={toggleTheme} className={`text-(--foreground-dim) bg-background-hover ${theme === "light" ? "hover:text-blue-500" : "hover:text-yellow-500"}`}>
                     {theme === "light" ? <Moon strokeWidth={3} /> : <Sun strokeWidth={3} />}
                 </IconButton>
+                <div className="ml-2">
+                    <AuthSection />
+                </div>
             </div>
         </header>
     );

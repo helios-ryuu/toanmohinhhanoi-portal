@@ -8,6 +8,7 @@ import Banner from "@/components/layout/Banner";
 import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/Toast";
+import { UserProvider } from "@/contexts/UserContext";
 import { Button } from "@/components/ui";
 import DotGrid from "@/components/ui/DotGrid";
 
@@ -92,11 +93,13 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
         <ThemeProvider attribute="class" defaultTheme="dark" storageKey="helios-blog-theme" enableSystem={false}>
-            <SidebarProvider>
-                <ToastProvider>
-                    <AppShellContent>{children}</AppShellContent>
-                </ToastProvider>
-            </SidebarProvider>
+            <UserProvider>
+                <SidebarProvider>
+                    <ToastProvider>
+                        <AppShellContent>{children}</AppShellContent>
+                    </ToastProvider>
+                </SidebarProvider>
+            </UserProvider>
         </ThemeProvider>
     );
 }

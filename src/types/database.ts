@@ -56,3 +56,15 @@ export interface DbPostWithRelations extends DbPost {
     series: DbSeries | null;
     tags: DbTag[];
 }
+
+export interface DbUser {
+    id: number;
+    email: string;
+    phone: string | null;
+    username: string;
+    password_hash: string;
+    avatar_url: string | null;
+    display_name: string | null;
+    created_at: string;
+    updated_at: string | null;
+}
