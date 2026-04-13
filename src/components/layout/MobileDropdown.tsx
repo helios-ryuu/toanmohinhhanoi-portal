@@ -4,10 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { menuItems } from "@/config/navigation";
+import { useUser } from "@/contexts/UserContext";
 
 export default function MobileDropdown() {
     const { isMobileOpen, setIsMobileOpen } = useSidebar();
     const pathname = usePathname();
+    const { user } = useUser();
+    const isAdmin = user?.role === "admin";
+    const visibleItems = menuItems.filter((item) => (!item.requiresAdmin || isAdmin) && !item.desktopOnly);
 
     const handleClose = () => setIsMobileOpen(false);
 
@@ -35,16 +39,17 @@ export default function MobileDropdown() {
                 `}
             >
                 <nav className="flex flex-col py-1">
-                    {menuItems.map((item) => {
+                    {visibleItems.map((item) => {
                         const isActive = item.href === "/"
                             ? pathname === "/"
-                            : pathname.startsWith(item.href);
+                            : pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href + "/"));
                         const Icon = item.icon;
 
-                        if (item.disabled) {
+                        if (item.underDevelopment) {
                             return (
                                 <span
                                     key={item.href}
+                                    title="Under development"
                                     className="flex items-center gap-3 px-4 py-2 text-foreground/40 cursor-not-allowed"
                                 >
                                     <Icon strokeWidth={2.5} className="size-5" />

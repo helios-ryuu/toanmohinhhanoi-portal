@@ -2,116 +2,112 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { CHAR_LIMITS } from "@/types/admin";
+import type { PostCategory } from "@/types/database";
 
 export interface PostFormData {
     title: string;
+    slug: string;
     description: string;
     content: string;
     image_url: string;
-    level: string;
-    type: string;
-    series_id: string;
-    series_order: string;
-    author_id: string;
-    reading_time: string;
-    // AddPostForm extras
-    series_name?: string;
-    series_description?: string;
+    category: PostCategory;
+    published: boolean;
 }
 
 export const INITIAL_POST_FORM_DATA: PostFormData = {
     title: "",
+    slug: "",
     description: "",
     content: "",
     image_url: "",
-    level: "beginner",
-    type: "standalone",
-    series_id: "",
-    series_order: "",
-    author_id: "",
-    reading_time: "",
-    series_name: "",
-    series_description: "",
+    category: "news",
+    published: false,
 };
 
-/**
- * Shared validation logic for Add/Edit post forms.
- */
 export function usePostFormValidation(
     formData: PostFormData,
-    opts?: { existingTitles?: string[] }
+    opts?: { existingTitles?: string[]; existingSlugs?: string[] }
 ) {
     const [imageUrlValid, setImageUrlValid] = useState(true);
 
-    // Check image URL validity
     useEffect(() => {
         if (!formData.image_url) {
             setImageUrlValid(true);
             return;
         }
-
         const img = new window.Image();
         img.onload = () => setImageUrlValid(true);
         img.onerror = () => setImageUrlValid(false);
         img.src = formData.image_url;
     }, [formData.image_url]);
 
-    // Hard errors (block submit)
     const validationErrors = useMemo(() => {
         const errors: Record<string, string> = {};
 
-        if (formData.title.length > CHAR_LIMITS.title) {
+        if (!formData.title.trim()) errors.title = "Title is required";
+        else if (formData.title.length > CHAR_LIMITS.title) {
             errors.title = `Title exceeds ${CHAR_LIMITS.title} characters`;
         }
 
-        if (formData.description.length > CHAR_LIMITS.description) {
+        if (!formData.slug.trim()) errors.slug = "Slug is required";
+        else if (!/^[a-z0-9-]+$/.test(formData.slug)) {
+            errors.slug = "Slug must be lowercase letters, digits, or hyphens";
+        }
+
+        if (!formData.description.trim()) errors.description = "Description is required";
+        else if (formData.description.length > CHAR_LIMITS.description) {
             errors.description = `Description exceeds ${CHAR_LIMITS.description} characters`;
         }
 
+        if (!formData.content.trim()) errors.content = "Content is required";
+
         if (opts?.existingTitles?.some(t => t.toLowerCase() === formData.title.trim().toLowerCase())) {
-            errors.title = "This title already exists. Please choose another one.";
+            errors.title = "This title already exists";
+        }
+        if (opts?.existingSlugs?.includes(formData.slug.trim())) {
+            errors.slug = "This slug already exists";
         }
 
         return errors;
-    }, [formData.title, formData.description, opts?.existingTitles]);
+    }, [formData.title, formData.slug, formData.description, formData.content, opts?.existingTitles, opts?.existingSlugs]);
 
-    // Soft warnings (can proceed)
     const validationWarnings = useMemo(() => {
         const warnings: Record<string, string> = {};
-
         if (formData.content.length > CHAR_LIMITS.content) {
             warnings.content = `Content exceeds ${CHAR_LIMITS.content} characters`;
         }
-
-        const readingTime = parseInt(formData.reading_time);
-        if (readingTime > 30) {
-            warnings.reading_time = "Consider splitting into series or reducing content length";
-        }
-
         if (!imageUrlValid && formData.image_url) {
             warnings.image_url = "Image URL may be invalid or inaccessible";
         }
-
         return warnings;
-    }, [formData.content, formData.reading_time, formData.image_url, imageUrlValid]);
+    }, [formData.content, formData.image_url, imageUrlValid]);
 
     const hasValidationErrors = Object.keys(validationErrors).length > 0;
 
-    return {
-        validationErrors,
-        validationWarnings,
-        hasValidationErrors,
-        imageUrlValid,
-    };
+    return { validationErrors, validationWarnings, hasValidationErrors, imageUrlValid };
 }
 
-/**
- * Shared handleChange for post form inputs.
- */
 export function handlePostFormChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>,
     setFormData: React.Dispatch<React.SetStateAction<PostFormData>>
 ) {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    if (type === "checkbox") {
+        const checked = (e.target as HTMLInputElement).checked;
+        setFormData((prev) => ({ ...prev, [name]: checked }));
+    } else {
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    }
+}
+
+export function slugify(title: string): string {
+    return title
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/[^a-z0-9\s-]/g, "")
+        .trim()
+        .replace(/\s+/g, "-")
+        .replace(/-+/g, "-");
 }

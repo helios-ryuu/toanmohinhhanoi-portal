@@ -1,47 +1,10 @@
 # Toán Mô Hình Hà Nội — Portal
 
-Portal chính thức của tổ chức **Toán Mô Hình Hà Nội**, xây dựng trên Next.js 16, React 19 và Supabase.
+Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
----
-
-## Tính năng
-
-### Blog & Nội dung
-- **Posts**: Đăng bài về cuộc thi, chia sẻ kiến thức và sự kiện của tổ chức.
-- **MDX Rendering**: Nội dung phong phú kết hợp Markdown và React component.
-- **Syntax Highlighting**: Hiển thị code đẹp với Shiki và `rehype-pretty-code`.
-- **Series**: Nhóm các bài viết liên quan theo chuỗi có thứ tự.
-- **Tag**: Phân loại và lọc bài viết theo chủ đề.
-- **Mức độ**: Phân loại `Beginner`, `Intermediate`, `Advanced`.
-
-### Giao diện
-- **Responsive**: Tương thích đầy đủ từ mobile đến desktop.
-- **Dark / Light Theme**: Chuyển đổi giao diện sáng/tối.
-- **Card & List View**: Hai chế độ hiển thị danh sách bài viết.
-- **Sidebar thu gọn**: Ghim hoặc ẩn thanh điều hướng.
-- **Animations**: Framer Motion và GSAP.
-
-### Chia sẻ & Tải xuống
-- **QR Code**: Tạo thẻ chia sẻ kèm mã QR cho từng bài viết.
-- **Tải Markdown**: Xuất bài viết ra file `.md`.
-- **Copy link**: Sao chép đường dẫn một click.
-
-### CMS — Quản trị nội dung
-- **Dashboard bảo mật**: Khu vực admin yêu cầu xác thực.
-- **Quản lý bài viết**: Tạo, chỉnh sửa, xoá bài; hỗ trợ bản nháp.
-- **Quản lý Tag & Series**: Thao tác trực tiếp từ giao diện admin.
-- **Xem trước**: Preview bài viết trước khi xuất bản.
-
-### Đang phát triển
-
-**Contest (Cuộc thi)**
-- Mở cuộc thi trong khoảng thời gian xác định.
-- Người dùng đăng ký tham gia theo cá nhân hoặc đội nhóm tuỳ theo từng cuộc thi.
-- Nộp bài làm với nhiều định dạng file khác nhau.
-
-**Xác thực (Auth)**
-- Đăng nhập bằng Google hoặc email.
-- Tài khoản có username riêng.
+> **Contest UI — Under development.** Toàn bộ backend API (đăng ký, nộp bài, duyệt) đã hoàn thiện ở Milestone M3. Giao diện người dùng cho Contest sẽ được phát hành ở Milestone M4.
+>
+> **Đăng nhập — Google only.** Không hỗ trợ đăng ký bằng email/mật khẩu. Xác thực qua Supabase Auth + Google Identity Services.
 
 ---
 
@@ -49,65 +12,14 @@ Portal chính thức của tổ chức **Toán Mô Hình Hà Nội**, xây dựn
 
 | Hạng mục | Công nghệ |
 | :--- | :--- |
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Turbopack) |
-| **Ngôn ngữ** | [TypeScript 5](https://www.typescriptlang.org/) |
-| **UI Library** | [React 19](https://react.dev/) với React Compiler |
-| **Database** | [Supabase](https://supabase.com/) (PostgreSQL) via `postgres` |
-| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) |
-| **Content** | [MDX](https://mdxjs.com/) via `next-mdx-remote` |
+| **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Turbopack, React Compiler) |
+| **UI** | [React 19](https://react.dev/) + [TypeScript 5](https://www.typescriptlang.org/) |
+| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) + [next-themes](https://github.com/pacocoursey/next-themes) |
+| **Backend** | [Supabase](https://supabase.com/) — Postgres + Auth (Google) + Storage |
+| **Supabase SDK** | `@supabase/supabase-js`, `@supabase/ssr` |
+| **Content** | [MDX](https://mdxjs.com/) qua `next-mdx-remote` + [Shiki](https://shiki.style/) + `rehype-pretty-code` |
 | **Animation** | [Framer Motion](https://www.framer.com/motion/), [GSAP](https://gsap.com/) |
-| **UI Primitives** | [Radix UI](https://www.radix-ui.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
-| **Code Syntax** | [Shiki](https://shiki.style/) + `rehype-pretty-code` |
-
----
-
-## Bắt đầu
-
-### Yêu cầu
-- **Node.js**: v20 trở lên.
-- **Supabase**: Một project Supabase (có thể dùng free tier tại [supabase.com](https://supabase.com)).
-
-### Cài đặt
-
-```bash
-git clone https://github.com/helios-ryuu/toanmohinhhanoi-portal.git
-cd toanmohinhhanoi-portal
-npm install
-```
-
-### Biến môi trường
-
-Tạo file `.env` ở thư mục gốc:
-
-```env
-# Supabase Connection String (Project Settings > Database > Connection string > URI)
-DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
-```
-
-### Database Schema
-
-Các bảng cần thiết:
-- `post` — Bài viết
-- `author` — Thông tin tác giả
-- `tag` — Tag phân loại
-- `series` — Chuỗi bài viết
-- `post_tags` — Quan hệ nhiều-nhiều giữa post và tag
-
-### Chạy development
-
-```bash
-npm run dev
-```
-
-Mở [http://localhost:3456](http://localhost:3456) trên trình duyệt.
-
-### Build production
-
-```bash
-npm run build
-npm run start
-```
 
 ---
 
@@ -115,90 +27,161 @@ npm run start
 
 ```
 toanmohinhhanoi-portal/
-├── public/                 # Ảnh, favicon và file tĩnh
+├── public/                         # Ảnh, favicon, file tĩnh
+├── docs/                           # Tài liệu dự án (Charter, Requirements, Schema, ...)
+├── supabase/
+│   └── schema.sql                  # DDL: bảng, enum, RLS, triggers, buckets
 ├── src/
-│   ├── app/                # Next.js App Router — pages & API routes
-│   │   ├── api/            # API endpoints
-│   │   │   ├── admin/      # Quản trị (auth, posts, tags, series, authors)
-│   │   │   ├── post/       # Tải xuống bài viết
-│   │   │   └── search/     # Tìm kiếm
-│   │   ├── admin/          # Trang dashboard quản trị
-│   │   ├── post/           # Danh sách và chi tiết bài viết
-│   │   └── page.tsx        # Trang chủ
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── auth/               # callback, logout, me
+│   │   │   ├── users/              # [id], me
+│   │   │   ├── posts/              # GET list, GET [slug]
+│   │   │   ├── tags/               # GET
+│   │   │   ├── contests/           # GET list, GET [slug], [slug]/register
+│   │   │   ├── submissions/        # POST, mark-final, download
+│   │   │   └── admin/              # posts, tags, uploads, contests, registrations
+│   │   ├── admin/                  # Dashboard quản trị (role = 'admin')
+│   │   │   ├── bucket/             # Quản lý Storage bucket
+│   │   │   ├── database/           # Xem dữ liệu DB
+│   │   │   └── posts/              # Tạo / sửa bài viết (new, [id]/edit)
+│   │   ├── auth/                   # Trang đăng nhập Google
+│   │   ├── contest-management/     # Quản lý cuộc thi (admin)
+│   │   ├── contests/               # Placeholder "Under development"
+│   │   ├── post/                   # Danh sách + chi tiết bài viết
+│   │   ├── not-found.tsx           # Trang 404
+│   │   └── page.tsx                # Trang chủ
 │   ├── components/
-│   │   ├── features/       # Component theo tính năng (Post, Admin, ...)
-│   │   ├── layout/         # Cấu trúc trang (Header, Sidebar, Footer)
-│   │   └── ui/             # UI primitives (Button, Select, ...)
-│   ├── config/             # Cấu hình điều hướng
-│   ├── contexts/           # React Context providers
-│   ├── hooks/              # Custom hooks
-│   ├── lib/                # Tiện ích
-│   │   ├── db.ts           # Kết nối PostgreSQL
-│   │   ├── posts.ts        # API lấy bài viết
-│   │   ├── posts-db.ts     # Query database
-│   │   └── utils.ts        # Hàm tiện ích chung
-│   ├── services/           # Tích hợp dịch vụ ngoài
-│   └── types/              # TypeScript type definitions
-├── .env
+│   │   ├── features/               # post, admin, ui
+│   │   └── layout/                 # Header, Sidebar, Footer, AppShell
+│   ├── contexts/                   # UserContext, SidebarContext
+│   ├── lib/
+│   │   ├── supabase/               # server.ts, admin.ts, client.ts
+│   │   ├── posts-db.ts             # Query bài viết (supabase-js)
+│   │   ├── users-db.ts             # Query user
+│   │   ├── tags-db.ts              # Query tag
+│   │   ├── contests-db.ts          # Query + validate contest/registration/submission
+│   │   ├── storage.ts              # Upload + signed URL
+│   │   └── api-helpers.ts          # { success, data, message } + revalidateTag
+│   ├── hooks/                      # usePostForm, useResizablePanel, usePostFormValidation
+│   ├── config/                     # navigation.ts (sidebar menu items)
+│   ├── types/                      # user, database, post, contest, admin
+│   └── proxy.ts                    # Next.js 16 proxy (cũ: middleware)
 ├── package.json
-├── tsconfig.json
 └── README.md
 ```
 
 ---
 
-## Quản lý nội dung
+## Setup
 
-### Qua Admin Dashboard
+### Yêu cầu
+- **Node.js** v20+
+- **Supabase project** (free tier OK — [supabase.com](https://supabase.com))
+- **Google Cloud OAuth Client ID** cho Google Identity Services
 
-Truy cập `/admin` để quản lý toàn bộ nội dung — bài viết, series, tag và tác giả. Yêu cầu xác thực.
+### 1. Cài đặt dependency
 
-### Qua Database trực tiếp
-
-```sql
-INSERT INTO post (slug, title, description, content, image_url, level, type, author_id, reading_time, published, published_at)
-VALUES (
-  'ten-bai-viet',
-  'Tiêu đề bài viết',
-  'Mô tả ngắn.',
-  '## Nội dung MDX...',
-  'https://url-anh.jpg',
-  'beginner',   -- hoặc 'intermediate', 'advanced'
-  'standalone', -- hoặc 'series'
-  1,
-  '5 min read',
-  true,
-  NOW()
-);
+```bash
+git clone https://github.com/helios-ryuu/toanmohinhhanoi-portal.git
+cd toanmohinhhanoi-portal
+npm install
 ```
 
-### Schema bảng `post`
+### 2. Biến môi trường
 
-| Trường | Kiểu | Mô tả |
-|---|---|---|
-| `slug` | string | Định danh URL |
-| `title` | string | Tiêu đề |
-| `description` | string | Mô tả ngắn |
-| `content` | text | Nội dung MDX |
-| `image_url` | string | Ảnh bìa |
-| `level` | enum | `beginner`, `intermediate`, `advanced` |
-| `type` | enum | `standalone` hoặc `series` |
-| `series_id` | int? | Tham chiếu đến bảng series |
-| `series_order` | int? | Thứ tự trong series |
-| `author_id` | int? | Tham chiếu đến bảng author |
-| `reading_time` | string | Ví dụ: "5 min read" |
-| `published` | boolean | Trạng thái xuất bản |
-| `published_at` | timestamp | Thời điểm xuất bản |
+Tạo file `.env.local` ở thư mục gốc:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+NEXT_PUBLIC_SITE_URL=http://localhost:3456
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=<google-oauth-client-id>.apps.googleusercontent.com
+```
+
+### 3. Áp dụng schema Supabase
+
+Mở Supabase Dashboard → **SQL Editor** → paste nội dung `supabase/schema.sql` → **Run**. Script tạo toàn bộ bảng, enum, RLS policy, trigger `handle_new_auth_user`, và 2 bucket `post-images` / `submissions`.
+
+### 4. Bật Google provider
+
+Supabase Dashboard → **Authentication → Providers → Google** → bật và dán `Client ID` + `Client Secret`. Đồng thời thêm `http://localhost:3456` vào **Authorized JavaScript origins** trong Google Cloud Console để Google Identity Services popup hoạt động.
+
+### 5. Chạy dev server
+
+```bash
+npm run dev
+```
+
+Mở [http://localhost:3456](http://localhost:3456).
+
+### 6. Promote tài khoản thành admin
+
+Sau lần đăng nhập đầu tiên, trigger `handle_new_auth_user` tự động tạo row trong `public.users` với `role = 'user'`. Để truy cập `/admin`:
+
+```sql
+UPDATE public.users SET role = 'admin' WHERE id = '<your-auth-uid>';
+```
+
+---
+
+## Scripts
+
+| Lệnh | Mô tả |
+| :--- | :--- |
+| `npm run dev` | Dev server tại port 3456 (Turbopack) |
+| `npm run build` | Build production |
+| `npm start` | Chạy bản production |
+| `npm run lint` | ESLint |
+
+---
+
+## Kiến trúc
+
+```
+Pages/Components (App Router, React 19)
+    ↓ fetch
+API Routes (/api/*)  — { success, data?, message? }
+    ↓ supabase-js
+DB helpers (src/lib/*-db.ts)
+    ↓
+Supabase (Postgres + Auth + Storage, RLS bật trên mọi bảng)
+```
+
+### Auth flow
+
+1. Người dùng bấm "Đăng nhập bằng Google" tại `/auth`.
+2. Google Identity Services (GIS) mở popup native của Google — **không redirect, không hiển thị "Continue to …"**.
+3. GIS trả về ID token; client gọi `supabase.auth.signInWithIdToken({ provider: 'google', token })`.
+4. Supabase tạo session; trigger `handle_new_auth_user` INSERT vào `public.users` với `role = 'user'`.
+5. `src/proxy.ts` kiểm tra session + role trên các route được bảo vệ (`/admin/**`, `/contest-management/**`, `/profile/**`, `/contest/[slug]/join`, `/api/admin/**`, `/api/auth/me`, `/api/users/me`, `/api/contests/*/register`, `/api/submissions/**`).
+
+### Gating routes
+
+| Pattern | Yêu cầu |
+| :--- | :--- |
+| `/admin/**`, `/contest-management/**`, `/api/admin/**` | Đăng nhập + `users.role = 'admin'` |
+| `/profile/**`, `/contest/[slug]/join`, `/api/users/me`, `/api/auth/me` | Đăng nhập |
+| `/api/contests/[slug]/register/**`, `/api/submissions/**` | Đăng nhập |
+| Các route còn lại | Công khai |
+
+---
+
+## Notes
+
+- **Contest UI: Under development.** Backend API đầy đủ; frontend cho Contest sẽ ra ở M4. Hiện `/contests` hiển thị placeholder "Chức năng đang được phát triển".
+- **Login: Google only.** Không có email/mật khẩu. Muốn thêm provider khác, bật trong Supabase Dashboard và cập nhật `src/app/auth/page.tsx`.
+- **Next.js 16 proxy.** File `src/proxy.ts` (xuất hàm `proxy`) thay thế cho `middleware.ts` theo convention mới của Next.js 16.
 
 ---
 
 ## Triển khai
 
-Project tối ưu cho [Vercel](https://vercel.com/).
+Project tối ưu cho [Vercel](https://vercel.com/):
 
 1. Push code lên GitHub.
 2. Import project vào Vercel.
-3. Thêm biến môi trường `DATABASE_URL`.
-4. Deploy.
-
-Với các nền tảng khác, dùng `npm run build` để tạo thư mục `.next`.
+3. Thêm các biến môi trường ở mục [Setup](#2-biến-môi-trường).
+4. Cập nhật `NEXT_PUBLIC_SITE_URL` thành domain production và thêm domain đó vào Google Cloud OAuth origins.
+5. Deploy.

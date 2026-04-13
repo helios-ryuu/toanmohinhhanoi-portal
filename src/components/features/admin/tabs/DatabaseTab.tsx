@@ -1,44 +1,49 @@
 "use client";
 
-import { RefreshCw, Download } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { RefreshCw } from "lucide-react";
 import DataTable from "../common/DataTable";
 import { Button } from "../common/Button";
-
-interface Post {
-    id: number;
-    title: string;
-    slug?: string;
-    published?: boolean;
-    level?: string;
-    type?: string;
-    author_name?: string | null;
-    tags?: string[];
-    [key: string]: unknown;
-}
+import { useToast } from "../../../ui/Toast";
 
 interface TableData {
-    author: Record<string, unknown>[];
-    post: Post[];
+    users: Record<string, unknown>[];
+    post: Record<string, unknown>[];
     tag: Record<string, unknown>[];
-    series: Record<string, unknown>[];
     post_tags: Record<string, unknown>[];
 }
 
-interface DatabaseTabProps {
-    tableData: TableData;
-    isLoading: boolean;
-    onRefresh: () => void;
-}
+const EMPTY: TableData = { users: [], post: [], tag: [], post_tags: [] };
 
-export default function DatabaseTab({ tableData, isLoading, onRefresh }: DatabaseTabProps) {
+export default function DatabaseTab() {
+    const { showToast } = useToast();
+    const [data, setData] = useState<TableData>(EMPTY);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const fetchData = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const res = await fetch("/api/admin/data");
+            const json = await res.json();
+            if (json.success) setData(json.data);
+            else showToast("error", json.message || "Failed to load data");
+        } catch (e) {
+            showToast("error", e instanceof Error ? e.message : "Failed to load data");
+        } finally {
+            setIsLoading(false);
+        }
+    }, [showToast]);
+
+    useEffect(() => { fetchData(); }, [fetchData]);
+
     return (
-        <div className="space-y-2">
+        <div className="space-y-3">
             <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-foreground">Database Tables</h2>
                 <Button
                     variant="utility"
                     size="sm"
-                    onClick={onRefresh}
+                    onClick={fetchData}
                     disabled={isLoading}
                     isLoading={isLoading}
                     loadingText="Loading..."
@@ -49,90 +54,54 @@ export default function DatabaseTab({ tableData, isLoading, onRefresh }: Databas
             </div>
 
             <DataTable
-                title="Authors"
+                title="Users"
+                isLoading={isLoading}
+                data={data.users}
                 columns={[
                     { key: "id", label: "ID" },
-                    { key: "name", label: "Name" },
-                    { key: "title", label: "Title" },
-                    { key: "avatar_url", label: "Avatar" },
-                    { key: "github_url", label: "GitHub" },
-                    { key: "created_at", label: "Created At" },
+                    { key: "username", label: "Username" },
+                    { key: "display_name", label: "Display name" },
+                    { key: "role", label: "Role" },
+                    { key: "school", label: "School" },
+                    { key: "created_at", label: "Created at" },
                 ]}
-                data={tableData.author}
-                isLoading={isLoading}
             />
 
             <DataTable
                 title="Posts"
+                isLoading={isLoading}
+                data={data.post}
                 columns={[
                     { key: "id", label: "ID" },
                     { key: "title", label: "Title" },
                     { key: "slug", label: "Slug" },
-                    { key: "author_name", label: "Author" },
-                    { key: "level", label: "Level" },
-                    { key: "type", label: "Type" },
-                    { key: "series_name", label: "Series" },
+                    { key: "category", label: "Category" },
                     { key: "published", label: "Published" },
-                    { key: "published_at", label: "Published At" },
-                    { key: "created_at", label: "Created At" },
-                    {
-                        key: "actions",
-                        label: "Actions",
-                        render: (_, row) => {
-                            if (!row.slug) return null;
-                            return (
-                                <a
-                                    href={`/api/post/${row.slug}/download?format=md`}
-                                    download={`${row.slug}.md`}
-                                    className="text-accent hover:text-accent/80 transition-colors p-1 rounded-md hover:bg-accent/10 inline-flex"
-                                    title="Download Markdown"
-                                >
-                                    <Download size={16} />
-                                </a>
-                            );
-                        },
-                    },
+                    { key: "published_at", label: "Published at" },
+                    { key: "created_at", label: "Created at" },
                 ]}
-                data={tableData.post}
-                isLoading={isLoading}
             />
 
             <DataTable
                 title="Tags"
+                isLoading={isLoading}
+                data={data.tag}
                 columns={[
                     { key: "id", label: "ID" },
                     { key: "name", label: "Name" },
                     { key: "slug", label: "Slug" },
-                    { key: "created_at", label: "Created At" },
+                    { key: "created_at", label: "Created at" },
                 ]}
-                data={tableData.tag}
-                isLoading={isLoading}
             />
 
             <DataTable
-                title="Series"
-                columns={[
-                    { key: "id", label: "ID" },
-                    { key: "name", label: "Name" },
-                    { key: "slug", label: "Slug" },
-                    { key: "description", label: "Description" },
-                    { key: "created_at", label: "Created At" },
-                ]}
-                data={tableData.series}
+                title="Post ↔ Tags"
                 isLoading={isLoading}
-            />
-
-            <DataTable
-                title="Post Tags"
+                data={data.post_tags}
                 columns={[
                     { key: "post_id", label: "Post ID" },
-                    { key: "post_title", label: "Post Title" },
                     { key: "tag_id", label: "Tag ID" },
-                    { key: "tag_name", label: "Tag Name" },
-                    { key: "created_at", label: "Created At" },
                 ]}
-                data={tableData.post_tags}
-                isLoading={isLoading}
             />
         </div>
     );

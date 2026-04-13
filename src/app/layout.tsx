@@ -20,20 +20,20 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Helios - Blog",
-  description: "Helios personal blog for sharing my thoughts and experiences",
+  title: "Toán Mô Hình Hà Nội",
+  description: "Cổng thông tin chính thức của Toán Mô Hình Hà Nội — chia sẻ kiến thức toán mô hình, cuộc thi, và tài nguyên cho cộng đồng.",
   metadataBase: new URL("https://blog.helios.id.vn"), // Update with your actual domain
   openGraph: {
-    title: "Helios - Blog",
-    description: "Helios personal blog for sharing my thoughts and experiences",
+    title: "Toán Mô Hình Hà Nội",
+    description: "Cổng thông tin chính thức của Toán Mô Hình Hà Nội — chia sẻ kiến thức toán mô hình, cuộc thi, và tài nguyên cho cộng đồng.",
     url: "https://blog.helios.id.vn",
-    siteName: "Helios Blog",
+    siteName: "Toán Mô Hình Hà Nội",
     images: [
       {
         url: "/favicon.ico",
         width: 512,
         height: 512,
-        alt: "Helios Blog",
+        alt: "Toán Mô Hình Hà Nội",
       },
     ],
     locale: "vi_VN",
@@ -41,8 +41,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Helios - Blog",
-    description: "Helios personal blog for sharing my thoughts and experiences",
+    title: "Toán Mô Hình Hà Nội",
+    description: "Cổng thông tin chính thức của Toán Mô Hình Hà Nội — chia sẻ kiến thức toán mô hình, cuộc thi, và tài nguyên cho cộng đồng.",
     images: ["/favicon.ico"],
   },
 };

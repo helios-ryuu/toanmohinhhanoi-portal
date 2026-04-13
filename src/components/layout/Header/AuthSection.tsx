@@ -59,11 +59,7 @@ export default function AuthSection() {
                 className="w-7 h-7 rounded-full overflow-hidden border border-(--border-color) bg-accent/20 flex items-center justify-center text-sm font-semibold text-accent hover:border-accent transition-colors flex-shrink-0"
                 aria-label="User menu"
             >
-                {user.avatar_url ? (
-                    <Image src={user.avatar_url} alt={user.username} width={28} height={28} className="object-cover" />
-                ) : (
-                    initial
-                )}
+                {initial}
             </button>
 
             {/* Dropdown */}
@@ -77,14 +73,16 @@ export default function AuthSection() {
                         <User size={14} />
                         Profile
                     </Link>
-                    <Link
-                        href="/mycontest"
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-foreground/80 hover:text-accent hover:bg-accent/10 transition-colors"
-                        onClick={() => setIsOpen(false)}
-                    >
-                        <Trophy size={14} />
-                        My Contests
-                    </Link>
+                    {user.role !== "admin" && (
+                        <Link
+                            href="/contests"
+                            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground/80 hover:text-accent hover:bg-accent/10 transition-colors"
+                            onClick={() => setIsOpen(false)}
+                        >
+                            <Trophy size={14} />
+                            My Contests
+                        </Link>
+                    )}
                     <div className="border-t border-(--border-color) my-1" />
                     <button
                         onClick={handleLogout}

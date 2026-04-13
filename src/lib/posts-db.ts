@@ -1,230 +1,180 @@
-import sql from "./db";
-import type { DbPost, DbTag, DbAuthor, DbSeries, DbPostWithRelations } from "@/types/database";
-import type { Post, PostMeta } from "@/types/post";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { DbPost, DbPostWithRelations, DbTag, PostCategory } from "@/types/database";
 
-/**
- * Transform database post to application Post type
- */
-function transformDbPostToPost(dbPost: DbPostWithRelations): Post {
-    return {
-        slug: dbPost.slug,
-        title: dbPost.title,
-        description: dbPost.description,
-        content: dbPost.content,
-        image: dbPost.image_url,
-        level: dbPost.level,
-        type: dbPost.type,
-        date: dbPost.published_at
-            ? new Date(dbPost.published_at).toISOString().split("T")[0]
-            : new Date(dbPost.created_at).toISOString().split("T")[0],
-        author: dbPost.author?.name,
-        authorTitle: dbPost.author?.title,
-        tags: dbPost.tags.map((t) => t.name),
-        seriesId: dbPost.series?.slug,
-        seriesOrder: dbPost.series_order ?? undefined,
-        readingTime: dbPost.reading_time,
-    };
+const POST_FIELDS = "id, slug, title, description, content, image_url, category, published, published_at, created_at, updated_at";
+
+interface ListOptions {
+    page?: number;
+    pageSize?: number;
+    tag?: string;
+    category?: PostCategory;
+    q?: string;
+    publishedOnly?: boolean;
 }
 
-/**
- * Transform database post to PostMeta (without content)
- */
-function transformDbPostToMeta(dbPost: DbPostWithRelations): PostMeta {
-    const { content: _content, ...rest } = transformDbPostToPost(dbPost);
-    return rest;
+async function attachTags(
+    supabase: SupabaseClient,
+    posts: DbPost[],
+): Promise<DbPostWithRelations[]> {
+    if (posts.length === 0) return [];
+    const ids = posts.map((p) => p.id);
+    const { data, error } = await supabase
+        .from("post_tags")
+        .select("post_id, tag:tag(id, name, slug, created_at)")
+        .in("post_id", ids);
+    if (error) throw new Error(error.message);
+
+    const byPost = new Map<number, DbTag[]>();
+    for (const row of (data ?? []) as unknown as Array<{ post_id: number; tag: DbTag | DbTag[] | null }>) {
+        if (!row.tag) continue;
+        const tags = Array.isArray(row.tag) ? row.tag : [row.tag];
+        const arr = byPost.get(row.post_id) ?? [];
+        arr.push(...tags);
+        byPost.set(row.post_id, arr);
+    }
+    return posts.map((p) => ({ ...p, tags: byPost.get(p.id) ?? [] }));
 }
 
-/**
- * Fetch a single post by slug with all relations (optimized with JOINs)
- */
-export async function getPostBySlugFromDb(slug: string): Promise<Post | null> {
-    // Fetch post with author and series in a single query
-    const postsWithRelations = await sql<(DbPost & {
-        author_name: string | null;
-        author_title: string | null;
-        series_slug: string | null;
-        series_name: string | null;
-    })[]>`
-        SELECT 
-            p.*,
-            a.name as author_name,
-            a.title as author_title,
-            s.slug as series_slug,
-            s.name as series_name
-        FROM post p
-        LEFT JOIN author a ON p.author_id = a.id
-        LEFT JOIN series s ON p.series_id = s.id
-        WHERE p.slug = ${slug} AND p.published = true 
-        LIMIT 1
-    `;
+export async function listPosts(
+    supabase: SupabaseClient,
+    opts: ListOptions = {},
+): Promise<{ items: DbPostWithRelations[]; total: number; page: number; pageSize: number }> {
+    const page = Math.max(1, opts.page ?? 1);
+    const pageSize = Math.min(50, Math.max(1, opts.pageSize ?? 10));
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
 
-    if (postsWithRelations.length === 0) return null;
+    let query = supabase
+        .from("post")
+        .select(POST_FIELDS, { count: "exact" })
+        .order("published_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false });
 
-    const post = postsWithRelations[0];
+    if (opts.publishedOnly !== false) query = query.eq("published", true);
+    if (opts.category) query = query.eq("category", opts.category);
+    if (opts.q) query = query.ilike("title", `%${opts.q}%`);
 
-    // Fetch tags for this post
-    const tags = await sql<DbTag[]>`
-        SELECT t.* FROM tag t
-        INNER JOIN post_tags pt ON t.id = pt.tag_id
-        WHERE pt.post_id = ${post.id}
-    `;
-
-    const postWithRelations: DbPostWithRelations = {
-        ...post,
-        author: post.author_name ? {
-            id: post.author_id!,
-            name: post.author_name,
-            title: post.author_title
-        } as DbAuthor : null,
-        series: post.series_slug ? {
-            id: post.series_id!,
-            slug: post.series_slug,
-            name: post.series_name!
-        } as DbSeries : null,
-        tags,
-    };
-
-    return transformDbPostToPost(postWithRelations);
-}
-
-/**
- * Fetch all published posts metadata using optimized JOINs (single query)
- */
-export async function getAllPostsMetaFromDb(): Promise<PostMeta[]> {
-    // Fetch all posts with authors and series in a single query
-    const postsWithRelations = await sql<(DbPost & {
-        author_name: string | null;
-        author_title: string | null;
-        series_slug: string | null;
-        series_name: string | null;
-    })[]>`
-        SELECT 
-            p.*,
-            a.name as author_name,
-            a.title as author_title,
-            s.slug as series_slug,
-            s.name as series_name
-        FROM post p
-        LEFT JOIN author a ON p.author_id = a.id
-        LEFT JOIN series s ON p.series_id = s.id
-        WHERE p.published = true 
-        ORDER BY p.published_at DESC, p.created_at DESC
-    `;
-
-    if (postsWithRelations.length === 0) return [];
-
-    // Get all post IDs
-    const postIds = postsWithRelations.map(p => p.id);
-
-    // Fetch all tags for all posts in a single query
-    const allTags = await sql<{ post_id: number; tag_name: string }[]>`
-        SELECT pt.post_id, t.name as tag_name 
-        FROM post_tags pt
-        INNER JOIN tag t ON t.id = pt.tag_id
-        WHERE pt.post_id = ANY(${postIds})
-    `;
-
-    // Group tags by post_id for O(1) lookup
-    const tagsByPostId = new Map<number, string[]>();
-    for (const tag of allTags) {
-        if (!tagsByPostId.has(tag.post_id)) {
-            tagsByPostId.set(tag.post_id, []);
-        }
-        tagsByPostId.get(tag.post_id)!.push(tag.tag_name);
+    if (opts.tag) {
+        const { data: tagRow } = await supabase.from("tag").select("id").eq("slug", opts.tag).single();
+        const row = tagRow as { id: number } | null;
+        if (!row) return { items: [], total: 0, page, pageSize };
+        const { data: rels } = await supabase.from("post_tags").select("post_id").eq("tag_id", row.id);
+        const ids = ((rels ?? []) as Array<{ post_id: number }>).map((r) => r.post_id);
+        if (ids.length === 0) return { items: [], total: 0, page, pageSize };
+        query = query.in("id", ids);
     }
 
-    // Transform all posts
-    return postsWithRelations.map(post => {
-        const postWithRelations: DbPostWithRelations = {
-            ...post,
-            author: post.author_name ? {
-                id: post.author_id!,
-                name: post.author_name,
-                title: post.author_title
-            } as DbAuthor : null,
-            series: post.series_slug ? {
-                id: post.series_id!,
-                slug: post.series_slug,
-                name: post.series_name!
-            } as DbSeries : null,
-            tags: (tagsByPostId.get(post.id) || []).map(name => ({ name } as DbTag)),
-        };
-        return transformDbPostToMeta(postWithRelations);
-    });
+    const { data, error, count } = await query.range(from, to);
+    if (error) throw new Error(error.message);
+
+    const items = await attachTags(supabase, (data ?? []) as DbPost[]);
+    return { items, total: count ?? 0, page, pageSize };
 }
 
-/**
- * Fetch all unique tags from database
- */
-export async function getAllTagsFromDb(): Promise<string[]> {
-    const tags = await sql<DbTag[]>`
-        SELECT DISTINCT t.* FROM tag t
-        INNER JOIN post_tags pt ON t.id = pt.tag_id
-        INNER JOIN post p ON pt.post_id = p.id
-        WHERE p.published = true
-        ORDER BY t.name ASC
-    `;
-    return tags.map((t) => t.name);
+export async function getPostBySlug(
+    supabase: SupabaseClient,
+    slug: string,
+    includeUnpublished = false,
+): Promise<DbPostWithRelations | null> {
+    let query = supabase.from("post").select(POST_FIELDS).eq("slug", slug).limit(1);
+    if (!includeUnpublished) query = query.eq("published", true);
+    const { data, error } = await query.maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    const [withTags] = await attachTags(supabase, [data as DbPost]);
+    return withTags;
 }
 
-/**
- * Fetch all unique levels from database
- */
-export async function getAllLevelsFromDb(): Promise<string[]> {
-    const levels = await sql<{ level: string }[]>`
-        SELECT DISTINCT level FROM post 
-        WHERE published = true 
-        ORDER BY level ASC
-    `;
-    return levels.map((l) => l.level).filter(Boolean);
+export async function getPostById(
+    supabase: SupabaseClient,
+    id: number,
+): Promise<DbPostWithRelations | null> {
+    const { data, error } = await supabase.from("post").select(POST_FIELDS).eq("id", id).maybeSingle();
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+    const [withTags] = await attachTags(supabase, [data as DbPost]);
+    return withTags;
 }
 
-/**
- * Fetch posts by tag
- */
-export async function getPostsByTagFromDb(tagSlug: string): Promise<PostMeta[]> {
-    const allPosts = await getAllPostsMetaFromDb();
-    return allPosts.filter((post) =>
-        post.tags?.some((t) => t.toLowerCase() === tagSlug.toLowerCase())
-    );
+export interface PostInput {
+    slug: string;
+    title: string;
+    description: string;
+    content: string;
+    image_url?: string | null;
+    category?: PostCategory;
+    published?: boolean;
+    tag_ids?: number[];
 }
 
-/**
- * Fetch related posts based on matching tags
- */
-export async function getRelatedPostsFromDb(
-    currentSlug: string,
-    tags: string[] = [],
-    limit: number = 3
-): Promise<PostMeta[]> {
-    if (tags.length === 0) return [];
-
-    const allPosts = await getAllPostsMetaFromDb();
-
-    const scoredPosts = allPosts
-        .filter((post) => post.slug !== currentSlug)
-        .map((post) => {
-            const matchingTags =
-                post.tags?.filter((tag) =>
-                    tags.some((t) => t.toLowerCase() === tag.toLowerCase())
-                ) || [];
-            return { post, score: matchingTags.length };
-        })
-        .filter((item) => item.score > 0)
-        .sort((a, b) => b.score - a.score);
-
-    return scoredPosts.slice(0, limit).map((item) => item.post);
+export async function createPost(
+    supabase: SupabaseClient,
+    input: PostInput,
+): Promise<DbPost> {
+    const published = input.published ?? false;
+    const insert = {
+        slug: input.slug,
+        title: input.title,
+        description: input.description,
+        content: input.content,
+        image_url: input.image_url ?? null,
+        category: input.category ?? "news",
+        published,
+        published_at: published ? new Date().toISOString() : null,
+    };
+    const { data, error } = await supabase.from("post").insert(insert).select(POST_FIELDS).single();
+    if (error) throw new Error(error.message);
+    const post = data as DbPost;
+    if (input.tag_ids?.length) {
+        await replacePostTags(supabase, post.id, input.tag_ids);
+    }
+    return post;
 }
 
-/**
- * Fetch all posts in the same series
- */
-export async function getSeriesPostsFromDb(seriesSlug: string): Promise<PostMeta[]> {
-    if (!seriesSlug) return [];
+export async function updatePost(
+    supabase: SupabaseClient,
+    id: number,
+    patch: Partial<PostInput>,
+): Promise<DbPost> {
+    const { tag_ids, ...rest } = patch;
+    const update: Record<string, unknown> = { ...rest };
+    if (rest.published === true) {
+        const existing = await getPostById(supabase, id);
+        if (existing && !existing.published_at) update.published_at = new Date().toISOString();
+    } else if (rest.published === false) {
+        update.published_at = null;
+    }
+    const { data, error } = await supabase.from("post").update(update).eq("id", id).select(POST_FIELDS).single();
+    if (error) throw new Error(error.message);
+    if (tag_ids) await replacePostTags(supabase, id, tag_ids);
+    return data as DbPost;
+}
 
-    const allPosts = await getAllPostsMetaFromDb();
+export async function deletePost(
+    supabase: SupabaseClient,
+    id: number,
+): Promise<void> {
+    const { error } = await supabase.from("post").delete().eq("id", id);
+    if (error) throw new Error(error.message);
+}
 
-    return allPosts
-        .filter((post) => post.seriesId === seriesSlug)
-        .sort((a, b) => (a.seriesOrder || 0) - (b.seriesOrder || 0));
+export async function setPostPublished(
+    supabase: SupabaseClient,
+    id: number,
+    published: boolean,
+): Promise<DbPost> {
+    return updatePost(supabase, id, { published });
+}
+
+async function replacePostTags(
+    supabase: SupabaseClient,
+    postId: number,
+    tagIds: number[],
+): Promise<void> {
+    const { error: delErr } = await supabase.from("post_tags").delete().eq("post_id", postId);
+    if (delErr) throw new Error(delErr.message);
+    if (tagIds.length === 0) return;
+    const rows = tagIds.map((tag_id) => ({ post_id: postId, tag_id }));
+    const { error } = await supabase.from("post_tags").insert(rows);
+    if (error) throw new Error(error.message);
 }

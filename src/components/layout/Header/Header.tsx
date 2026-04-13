@@ -31,11 +31,16 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
     const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
     const toggleMobileSidebar = () => setIsMobileOpen(!isMobileOpen);
 
+    const isPostEditor = pathname === "/admin/posts/new" || /^\/admin\/posts\/[^/]+\/edit$/.test(pathname);
+
     const routes = [
         { path: "/post", label: "Post" },
         { path: "/contests", label: "Contests" },
         { path: "/contest", label: "Contest" },
-        { path: "/mycontest", label: "My Contest" },
+        { path: "/contest-management", label: "Contest Management" },
+        { path: "/admin/bucket", label: "Bucket" },
+        { path: "/admin/database", label: "Database" },
+        { path: "/admin", label: "CMS" },
     ];
     const currentRoute = routes.find(r => pathname.startsWith(r.path));
 
@@ -105,9 +110,11 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
                     theme={theme}
                     className="mr-4"
                 />
-                <IconButton onClick={toggleTheme} className={`text-(--foreground-dim) bg-background-hover ${theme === "light" ? "hover:text-blue-500" : "hover:text-yellow-500"}`}>
-                    {theme === "light" ? <Moon strokeWidth={3} /> : <Sun strokeWidth={3} />}
-                </IconButton>
+                {!isPostEditor && (
+                    <IconButton onClick={toggleTheme} className={`text-(--foreground-dim) bg-background-hover ${theme === "light" ? "hover:text-blue-500" : "hover:text-yellow-500"}`}>
+                        {theme === "light" ? <Moon strokeWidth={3} /> : <Sun strokeWidth={3} />}
+                    </IconButton>
+                )}
                 <div className="ml-2">
                     <AuthSection />
                 </div>

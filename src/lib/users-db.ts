@@ -1,57 +1,49 @@
-import sql from "./db";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DbUser } from "@/types/database";
 import type { User } from "@/types/user";
 
-export function dbUserToUser(dbUser: DbUser): User {
+export function dbUserToUser(row: DbUser): User {
     return {
-        id: dbUser.id,
-        email: dbUser.email,
-        phone: dbUser.phone,
-        username: dbUser.username,
-        avatar_url: dbUser.avatar_url,
-        display_name: dbUser.display_name,
-        created_at: dbUser.created_at,
+        id: row.id,
+        username: row.username,
+        display_name: row.display_name,
+        bio: row.bio,
+        school: row.school,
+        role: row.role,
+        created_at: row.created_at,
     };
 }
 
-export async function getUserByEmail(email: string): Promise<DbUser | null> {
-    const rows = await sql<DbUser[]>`
-        SELECT * FROM "user" WHERE email = ${email} LIMIT 1
-    `;
-    return rows[0] ?? null;
+export async function getUserById(
+    supabase: SupabaseClient,
+    id: string,
+): Promise<DbUser | null> {
+    const { data, error } = await supabase.from("users").select("*").eq("id", id).single();
+    if (error) return null;
+    return (data as DbUser) ?? null;
 }
 
-export async function getUserByUsername(username: string): Promise<DbUser | null> {
-    const rows = await sql<DbUser[]>`
-        SELECT * FROM "user" WHERE username = ${username} LIMIT 1
-    `;
-    return rows[0] ?? null;
+export async function getUsersByIds(
+    supabase: SupabaseClient,
+    ids: string[],
+): Promise<DbUser[]> {
+    if (ids.length === 0) return [];
+    const { data, error } = await supabase.from("users").select("*").in("id", ids);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as DbUser[];
 }
 
-export async function getUserById(id: number): Promise<DbUser | null> {
-    const rows = await sql<DbUser[]>`
-        SELECT * FROM "user" WHERE id = ${id} LIMIT 1
-    `;
-    return rows[0] ?? null;
-}
-
-export async function createUser(data: {
-    email: string;
-    username: string;
-    password_hash: string;
-    phone?: string | null;
-    display_name?: string | null;
-}): Promise<DbUser> {
-    const rows = await sql<DbUser[]>`
-        INSERT INTO "user" (email, username, password_hash, phone, display_name)
-        VALUES (
-            ${data.email},
-            ${data.username},
-            ${data.password_hash},
-            ${data.phone ?? null},
-            ${data.display_name ?? null}
-        )
-        RETURNING *
-    `;
-    return rows[0];
+export async function updateUserProfile(
+    supabase: SupabaseClient,
+    id: string,
+    patch: Partial<Pick<DbUser, "display_name" | "bio" | "school">>,
+): Promise<DbUser> {
+    const { data, error } = await supabase
+        .from("users")
+        .update(patch)
+        .eq("id", id)
+        .select("*")
+        .single();
+    if (error) throw new Error(error.message);
+    return data as DbUser;
 }

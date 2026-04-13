@@ -1,13 +1,35 @@
-// Database Types - matching Supabase schema
+// Database row types — mirror the Supabase schema in supabase/schema.sql.
 
-export interface DbAuthor {
-    id: number;
-    name: string;
-    title: string;
-    avatar_url: string | null;
-    github_url: string | null;
-    linkedin_url: string | null;
+export type PostCategory = "news" | "announcement" | "tutorial" | "result";
+export type UserRoleDb = "user" | "admin";
+export type ContestParticipationType = "individual" | "team" | "both";
+export type ContestStatus = "draft" | "open" | "ongoing" | "closed" | "cancelled";
+export type RegistrationStatus = "pending" | "approved" | "rejected" | "withdrawn";
+export type MemberRole = "leader" | "member";
+
+export interface DbUser {
+    id: string;
+    username: string;
+    display_name: string | null;
+    bio: string | null;
+    school: string | null;
+    role: UserRoleDb;
     created_at: string;
+    updated_at: string | null;
+}
+
+export interface DbPost {
+    id: number;
+    slug: string;
+    title: string;
+    description: string;
+    content: string;
+    image_url: string | null;
+    category: PostCategory;
+    published: boolean;
+    published_at: string | null;
+    created_at: string;
+    updated_at: string | null;
 }
 
 export interface DbTag {
@@ -17,54 +39,92 @@ export interface DbTag {
     created_at: string;
 }
 
-export interface DbSeries {
-    id: number;
-    name: string;
-    slug: string;
-    description: string | null;
-    created_at: string;
-}
-
-export interface DbPost {
-    id: number;
-    slug: string;
-    title: string;
-    description: string;
-    content: string;
-    image_url: string;
-    level: "beginner" | "intermediate" | "advanced";
-    type: "standalone" | "series";
-    series_id: number | null;
-    series_order: number | null;
-    author_id: number | null;
-    reading_time: string;
-    published: boolean;
-    published_at: string | null;
-    created_at: string;
-    updated_at: string | null;
-}
-
 export interface DbPostTag {
     post_id: number;
     tag_id: number;
     created_at: string;
 }
 
-// Extended types with joins
 export interface DbPostWithRelations extends DbPost {
-    author: DbAuthor | null;
-    series: DbSeries | null;
     tags: DbTag[];
 }
 
-export interface DbUser {
+export interface DbContest {
     id: number;
-    email: string;
-    phone: string | null;
-    username: string;
-    password_hash: string;
-    avatar_url: string | null;
-    display_name: string | null;
+    slug: string;
+    title: string;
+    description: string;
+    rules: string | null;
+    cover_image_url: string | null;
+    participation_type: ContestParticipationType;
+    max_team_size: number;
+    registration_start: string;
+    registration_end: string;
+    contest_start: string;
+    contest_end: string;
+    submission_deadline: string;
+    status: ContestStatus;
     created_at: string;
     updated_at: string | null;
+}
+
+export interface DbContestRegistration {
+    id: number;
+    contest_id: number;
+    team_name: string | null;
+    status: RegistrationStatus;
+    registered_at: string;
+    updated_at: string | null;
+}
+
+export interface DbRegistrationMember {
+    registration_id: number;
+    user_id: string;
+    role: MemberRole;
+    joined_at: string;
+}
+
+export interface DbSubmission {
+    id: number;
+    registration_id: number;
+    storage_path: string;
+    file_name: string;
+    file_size_bytes: number;
+    mime_type: string;
+    note: string | null;
+    submitted_by: string;
+    submitted_at: string;
+    is_final: boolean;
+}
+
+// Minimal Supabase Database typings used by @supabase/ssr generics.
+type Row<T> = T;
+type Insert<T> = Partial<T>;
+type Update<T> = Partial<T>;
+
+export interface Database {
+    public: {
+        Tables: {
+            users: { Row: Row<DbUser>; Insert: Insert<DbUser>; Update: Update<DbUser> };
+            post: { Row: Row<DbPost>; Insert: Insert<DbPost>; Update: Update<DbPost> };
+            tag: { Row: Row<DbTag>; Insert: Insert<DbTag>; Update: Update<DbTag> };
+            post_tags: { Row: Row<DbPostTag>; Insert: Insert<DbPostTag>; Update: Update<DbPostTag> };
+            contest: { Row: Row<DbContest>; Insert: Insert<DbContest>; Update: Update<DbContest> };
+            contest_registration: { Row: Row<DbContestRegistration>; Insert: Insert<DbContestRegistration>; Update: Update<DbContestRegistration> };
+            registration_member: { Row: Row<DbRegistrationMember>; Insert: Insert<DbRegistrationMember>; Update: Update<DbRegistrationMember> };
+            submission: { Row: Row<DbSubmission>; Insert: Insert<DbSubmission>; Update: Update<DbSubmission> };
+        };
+        Views: Record<string, never>;
+        Functions: {
+            is_admin: { Args: Record<string, never>; Returns: boolean };
+        };
+        Enums: {
+            user_role: UserRoleDb;
+            post_category: PostCategory;
+            contest_participation_type: ContestParticipationType;
+            contest_status: ContestStatus;
+            registration_status: RegistrationStatus;
+            member_role: MemberRole;
+        };
+    };
 }

@@ -9,20 +9,24 @@ import { useSidebar } from "@/contexts/SidebarContext";
 import { menuItems } from "@/config/navigation";
 import { usePathname } from "next/navigation";
 import { TableOfContents } from "@/components/features/post";
+import { useUser } from "@/contexts/UserContext";
 
 export default function Sidebar() {
     const [hovered, setHovered] = useState(false);
     const { isPinned, setIsPinned, postContent } = useSidebar();
     const hoverCooldownRef = useRef(false);
     const pathname = usePathname();
+    const { user } = useUser();
+    const isAdmin = user?.role === "admin";
+    const visibleItems = menuItems.filter((item) => !item.requiresAdmin || isAdmin);
 
     // Determine if we are on a post detail page based on path.
     // /post is the list, /post/anything-else is a detail page.
     const isPostPage = pathname.startsWith("/post/") && pathname !== "/post";
     const isExpanded = isPinned || hovered;
 
-    // Wider sidebar for TOC
-    const expandedWidth = isPostPage ? "w-68" : "w-38";
+    // Wider sidebar for TOC; auto-width for menu so longer labels like "Contest Management" fit
+    const expandedWidth = isPostPage ? "w-68" : "w-auto";
 
     const handleMouseEnter = useCallback(() => {
         if (!hoverCooldownRef.current) {
@@ -80,7 +84,7 @@ export default function Sidebar() {
             ) : (
                 // Standard Menu Mode
                 <>
-                    {menuItems.map((item) => {
+                    {visibleItems.map((item) => {
                         const Icon = item.icon;
                         return (
                             <SidebarItem
@@ -89,7 +93,8 @@ export default function Sidebar() {
                                 label={<FadeText text={item.label} isVisible={isExpanded} duration={100} />}
                                 className={isExpanded ? "gap-x-1.5" : "gap-x-0"}
                                 href={item.href}
-                                disabled={item.disabled}
+                                disabled={item.underDevelopment}
+                                underDevelopment={item.underDevelopment}
                             />
                         );
                     })}

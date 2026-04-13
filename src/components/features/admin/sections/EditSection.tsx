@@ -1,149 +1,61 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, FileText, Users, Library } from "lucide-react";
+import { Edit2 } from "lucide-react";
 import { SectionCard } from "../common/SectionCard";
-import { AdvancedSelector } from "../common/AdvancedSelector";
-import type { AdminPost, AdminSeries, AdminTag } from "@/types/admin";
-import { LEVELS, TYPES, STATUSES } from "@/types/admin";
+import type { AdminPost, AdminTag } from "@/types/admin";
+import { useState } from "react";
 
 interface EditSectionProps {
     posts: AdminPost[];
     tags: AdminTag[];
-    authors: { id: number; name: string; title?: string; avatar_url?: string; created_at?: string }[];
-    series: AdminSeries[];
     onEditPost: (id: number) => void;
-    onEditAuthor: (id: number) => void;
-    onEditSeries?: (id: number) => void;
+    onEditTag: (tag: AdminTag) => void;
 }
 
-export default function EditSection({ posts, tags, authors, series, onEditPost, onEditAuthor, onEditSeries }: EditSectionProps) {
-    const [showAdvancedPostSelector, setShowAdvancedPostSelector] = useState(false);
-    const [showAdvancedSeriesSelector, setShowAdvancedSeriesSelector] = useState(false);
-
-    const postOptions = posts.map((post) => ({
-        value: post.id as number,
-        label: `[${post.published ? "✓" : "○"}] ${post.title as string}`,
-    }));
-
-    const authorOptions = authors.map((author) => ({
-        value: author.id as number,
-        label: author.name as string,
-    }));
-
-    const seriesOptions = series.map((s) => ({
-        value: s.id,
-        label: s.name,
-    }));
+export default function EditSection({ posts, tags, onEditPost, onEditTag }: EditSectionProps) {
+    const [postId, setPostId] = useState<string>("");
+    const [tagId, setTagId] = useState<string>("");
 
     return (
-        <>
-            <div className="bg-blue-500/5 p-6 rounded-lg border border-blue-500/70">
-                <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                    <Pencil size={20} className="text-blue-500" />
-                    Edit
-                </h2>
-                <div className="grid gap-4 grid-cols-4 md:grid-cols-8 auto-rows-fr">
-                    <SectionCard
-                        title="Edit Post"
-                        description="Select a post to edit"
-                        className="col-span-4 md:col-span-3"
-                        colorVariant="blue"
-                        icon={FileText}
-                        selectPlaceholder="Select a post..."
-                        selectOptions={postOptions}
-                        onSelectChange={(value) => value && onEditPost(parseInt(value))}
-                        onSecondaryButtonClick={() => setShowAdvancedPostSelector(true)}
-                        legend="✓ = Published, ○ = Draft"
-                    />
-                    <SectionCard
-                        title="Edit Series"
-                        description="Modify series name/slug"
-                        className="col-span-4 md:col-span-3"
-                        colorVariant="blue"
-                        icon={Library}
-                        selectPlaceholder="Select a series..."
-                        selectOptions={seriesOptions}
-                        onSelectChange={(value) => value && onEditSeries?.(parseInt(value))}
-                        onSecondaryButtonClick={() => setShowAdvancedSeriesSelector(true)}
-                    />
-                    <SectionCard
-                        title="Edit Author"
-                        description="Modify author info"
-                        className="col-span-4 md:col-span-2"
-                        colorVariant="blue"
-                        icon={Users}
-                        selectPlaceholder="Select an author..."
-                        selectOptions={authorOptions}
-                        onSelectChange={(value) => value && onEditAuthor(parseInt(value))}
-                    />
-                </div>
+        <section>
+            <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-3">
+                Edit
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <SectionCard
+                    title="Edit Post"
+                    description="Pick a post to edit its content, category, or tags."
+                    icon={Edit2}
+                    colorVariant="accent"
+                    selectKey={posts.length}
+                    selectValue={postId}
+                    selectPlaceholder={posts.length ? "Select a post..." : "No posts"}
+                    selectOptions={posts.map((p) => ({ value: p.id, label: p.title }))}
+                    onSelectChange={setPostId}
+                    selectDisabled={posts.length === 0}
+                    buttonText="Edit Post"
+                    buttonDisabled={!postId}
+                    onButtonClick={() => postId && onEditPost(Number(postId))}
+                />
+                <SectionCard
+                    title="Edit Tag"
+                    description={`Pick a tag to rename or change its slug.`}
+                    icon={Edit2}
+                    colorVariant="blue"
+                    selectKey={tags.length}
+                    selectValue={tagId}
+                    selectPlaceholder={tags.length ? "Select a tag..." : "No tags"}
+                    selectOptions={tags.map((t) => ({ value: t.id, label: t.name }))}
+                    onSelectChange={setTagId}
+                    selectDisabled={tags.length === 0}
+                    buttonText="Edit Tag"
+                    buttonDisabled={!tagId}
+                    onButtonClick={() => {
+                        const tag = tags.find((t) => String(t.id) === tagId);
+                        if (tag) onEditTag(tag);
+                    }}
+                />
             </div>
-
-            {showAdvancedPostSelector && (
-                <AdvancedSelector<AdminPost>
-                    items={posts}
-                    title="Select Post to Edit"
-                    icon={FileText}
-                    getKey={(p) => p.id}
-                    searchFn={(p, q) => p.title.toLowerCase().includes(q.toLowerCase())}
-                    getDate={(p) => p.created_at}
-                    filters={[
-                        { key: "level", placeholder: "Level", options: [{ value: "", label: "All Levels" }, ...LEVELS.map((l) => ({ value: l, label: l.charAt(0).toUpperCase() + l.slice(1) }))] },
-                        { key: "type", placeholder: "Type", options: [{ value: "", label: "All Types" }, ...TYPES.map((t) => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))] },
-                        { key: "status", placeholder: "Status", options: STATUSES.map((s) => ({ value: s, label: s.charAt(0).toUpperCase() + s.slice(1) })) },
-                        { key: "tag", placeholder: "Tag", options: [{ value: "", label: "All Tags" }, ...tags.map((t) => ({ value: t.name, label: t.name }))] },
-                    ]}
-                    filterFn={(p, fv) => {
-                        if (fv.level && p.level !== fv.level) return false;
-                        if (fv.type && p.type !== fv.type) return false;
-                        if (fv.status && fv.status !== "all") {
-                            if (fv.status === "published" && !p.published) return false;
-                            if (fv.status === "draft" && p.published) return false;
-                        }
-                        if (fv.tag && !p.tags?.includes(fv.tag)) return false;
-                        return true;
-                    }}
-                    renderItem={(p) => (
-                        <div className="flex items-center gap-3">
-                            <span className={`text-xs px-1.5 py-0.5 rounded ${p.published ? "bg-green-500/20 text-green-500" : "bg-yellow-500/20 text-yellow-500"}`}>
-                                {p.published ? "PUB" : "DFT"}
-                            </span>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">{p.title}</p>
-                                <p className="text-xs text-foreground/50 capitalize">{p.level} • {p.type}</p>
-                            </div>
-                        </div>
-                    )}
-                    onSelect={(p) => {
-                        setShowAdvancedPostSelector(false);
-                        onEditPost(p.id);
-                    }}
-                    onClose={() => setShowAdvancedPostSelector(false)}
-                />
-            )}
-
-            {showAdvancedSeriesSelector && (
-                <AdvancedSelector<AdminSeries>
-                    items={series}
-                    title="Select Series to Edit"
-                    icon={Library}
-                    getKey={(s) => s.id}
-                    searchFn={(s, q) => s.name.toLowerCase().includes(q.toLowerCase())}
-                    getDate={(s) => s.created_at}
-                    renderItem={(s) => (
-                        <div>
-                            <p className="text-sm font-medium text-foreground">{s.name}</p>
-                            <p className="text-xs text-foreground/50 font-mono">{s.slug}</p>
-                        </div>
-                    )}
-                    onSelect={(s) => {
-                        setShowAdvancedSeriesSelector(false);
-                        onEditSeries?.(s.id);
-                    }}
-                    onClose={() => setShowAdvancedSeriesSelector(false)}
-                />
-            )}
-        </>
+        </section>
     );
 }

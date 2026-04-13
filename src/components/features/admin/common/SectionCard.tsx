@@ -31,6 +31,7 @@ interface SectionCardProps {
     selectPlaceholder?: string;
     selectOptions?: SelectOption[];
     onSelectChange?: (value: string) => void;
+    selectDisabled?: boolean;
 
     // Optional - button
     buttonText?: string;
@@ -61,6 +62,7 @@ export function SectionCard({
     buttonVariant = "default",
     buttonDisabled = false,
     onButtonClick,
+    selectDisabled,
     onSecondaryButtonClick,
     legend,
 }: SectionCardProps) {
@@ -129,6 +131,7 @@ export function SectionCard({
                         placeholder={selectPlaceholder}
                         options={selectOptions}
                         onChange={onSelectChange}
+                        disabled={selectDisabled}
                     />
                     {onSecondaryButtonClick && (
                         <button

@@ -1,6 +1,7 @@
 "use client";
 
-import { Check, Plus } from "lucide-react";
+import { useState } from "react";
+import { Check, Plus, Search } from "lucide-react";
 
 interface Tag {
     id: number;
@@ -16,13 +17,16 @@ interface TagSelectorProps {
     onAddNew?: () => void;
 }
 
-export function TagSelector({ 
-    tags, 
-    selectedTags, 
-    maxTags = 3, 
-    onToggle, 
-    onAddNew 
+export function TagSelector({
+    tags,
+    selectedTags,
+    maxTags = 3,
+    onToggle,
+    onAddNew,
 }: TagSelectorProps) {
+    const [query, setQuery] = useState("");
+    const filtered = tags.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()));
+
     return (
         <div>
             <div className="flex items-center justify-between mb-1">
@@ -40,8 +44,22 @@ export function TagSelector({
                     </button>
                 )}
             </div>
+
+            {tags.length > 6 && (
+                <div className="relative mb-2">
+                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/40" />
+                    <input
+                        type="text"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search tags..."
+                        className="w-full pl-8 pr-3 py-1.5 text-sm rounded-md border border-(--border-color) bg-background focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    />
+                </div>
+            )}
+
             <div className="flex flex-wrap gap-2 p-3 rounded-md border border-(--border-color) bg-foreground/5 min-h-[60px]">
-                {tags.map((tag) => {
+                {filtered.map((tag) => {
                     const isSelected = selectedTags.includes(tag.id);
                     const isDisabled = !isSelected && selectedTags.length >= maxTags;
                     return (
@@ -50,21 +68,22 @@ export function TagSelector({
                             type="button"
                             onClick={() => onToggle(tag.id)}
                             disabled={isDisabled}
-                            className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${
-                                isSelected
-                                    ? "bg-accent text-white cursor-pointer"
-                                    : isDisabled
+                            className={`flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-colors ${isSelected
+                                ? "bg-accent text-white cursor-pointer"
+                                : isDisabled
                                     ? "bg-foreground/10 text-foreground/30 cursor-not-allowed"
                                     : "bg-foreground/10 text-foreground/70 hover:bg-foreground/20 cursor-pointer"
-                            }`}
+                                }`}
                         >
                             {isSelected && <Check size={14} />}
                             {tag.name}
                         </button>
                     );
                 })}
-                {tags.length === 0 && (
-                    <span className="text-foreground/40 text-sm">No tags available</span>
+                {filtered.length === 0 && (
+                    <span className="text-foreground/40 text-sm">
+                        {tags.length === 0 ? "No tags available" : "No tags match search"}
+                    </span>
                 )}
             </div>
         </div>

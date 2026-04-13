@@ -1,65 +1,54 @@
 import { NextResponse } from "next/server";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidateTag, revalidatePath } from "next/cache";
 
-/**
- * Parse a numeric ID from route params. Returns the number, or a 400 error response.
- */
-export async function parseIdParam(
-    params: Promise<{ id: string }>,
-    entityName = "ID"
-): Promise<number | NextResponse> {
-    const { id } = await params;
-    const parsed = parseInt(id, 10);
+export type ApiResponse<T> =
+    | { success: true; data: T; message?: string }
+    | { success: false; message: string };
 
-    if (isNaN(parsed)) {
-        return NextResponse.json(
-            { success: false, message: `Invalid ${entityName}` },
-            { status: 400 }
-        );
-    }
-
-    return parsed;
+export function apiSuccess<T>(data: T, message?: string): NextResponse {
+    return NextResponse.json({ success: true, data, ...(message ? { message } : {}) });
 }
 
-/**
- * Standard JSON error response.
- */
-export function errorResponse(message: string, status = 500) {
-    return NextResponse.json({ success: false, message }, { status });
-}
-
-/**
- * Standard JSON success response.
- */
-export function successResponse<T>(data: T, message?: string) {
-    return NextResponse.json({
-        success: true,
-        ...(message ? { message } : {}),
-        data,
-    });
-}
-
-/**
- * Standard JSON success response without data.
- */
-export function successMessage(message: string) {
+export function apiMessage(message: string): NextResponse {
     return NextResponse.json({ success: true, message });
 }
 
-/**
- * Revalidate all post-related cache paths.
- */
-export function revalidatePostCache(slug?: string) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const revalidate = revalidateTag as any;
-    revalidate("posts", "max");
-    revalidate("admin-data", "max");
-    revalidate("admin-drafts", "max");
-    if (slug) {
-        revalidate(`post-${slug}`, "max");
-        revalidatePath(`/post/${slug}`);
-    }
-    revalidatePath("/");
-    revalidatePath("/blog");
+export function apiError(message: string, status = 500): NextResponse {
+    return NextResponse.json({ success: false, message }, { status });
 }
 
+export async function parseIdParam(
+    params: Promise<{ id: string }>,
+    entityName = "ID",
+): Promise<number | NextResponse> {
+    const { id } = await params;
+    const parsed = parseInt(id, 10);
+    if (Number.isNaN(parsed)) {
+        return apiError(`Invalid ${entityName}`, 400);
+    }
+    return parsed;
+}
+
+export function revalidatePosts(slug?: string): void {
+    revalidateTag("posts", "max");
+    if (slug) revalidateTag(`post-${slug}`, "max");
+    revalidatePath("/");
+    revalidatePath("/post");
+}
+
+export function revalidateContests(slug?: string): void {
+    revalidateTag("contests", "max");
+    if (slug) revalidateTag(`contest-${slug}`, "max");
+    revalidatePath("/contests");
+}
+
+export function revalidateTags(): void {
+    revalidateTag("tags", "max");
+}
+
+export function handleRouteError(err: unknown): NextResponse {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    if (message === "UNAUTHORIZED") return apiError("Unauthorized", 401);
+    if (message === "FORBIDDEN") return apiError("Forbidden", 403);
+    return apiError(message, 500);
+}

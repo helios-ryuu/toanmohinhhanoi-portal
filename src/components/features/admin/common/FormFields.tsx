@@ -130,6 +130,7 @@ interface FormSelectDropdownProps {
     hasError?: boolean;
     required?: boolean;
     name?: string;
+    disabled?: boolean;
 }
 
 export function FormSelectDropdown({
@@ -140,6 +141,7 @@ export function FormSelectDropdown({
     onChange,
     hasError,
     name,
+    disabled,
 }: FormSelectDropdownProps) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -181,8 +183,12 @@ export function FormSelectDropdown({
 
             <button
                 type="button"
-                onClick={() => setIsOpen(!isOpen)}
-                className={`w-full px-3 py-2 pr-10 rounded-md border bg-background text-sm text-left flex items-center justify-between transition-colors cursor-pointer ${hasError
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                disabled={disabled}
+                className={`w-full px-3 py-2 pr-10 rounded-md border bg-background text-sm text-left flex items-center justify-between transition-colors ${disabled
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    } ${hasError
                         ? "border-red-500"
                         : "border-(--border-color)"
                     } ${value ? "text-foreground" : "text-foreground/60"}`}

@@ -10,14 +10,32 @@ interface SidebarItemProps {
     className?: string;
     onClick?: () => void;
     disabled?: boolean;
+    underDevelopment?: boolean;
 }
 
-export default function SidebarItem({ icon, label, href, className = "", onClick, disabled }: SidebarItemProps) {
+function isActiveHref(pathname: string, href: string): boolean {
+    if (href === "/") return pathname === "/";
+    if (pathname === href) return true;
+    // Only match subpaths for non-leaf admin routes.
+    // /admin is a leaf page — don't highlight it for /admin/bucket or /admin/database.
+    if (href === "/admin") return false;
+    return pathname.startsWith(href + "/");
+}
+
+export default function SidebarItem({
+    icon,
+    label,
+    href,
+    className = "",
+    onClick,
+    disabled,
+    underDevelopment,
+}: SidebarItemProps) {
     const pathname = usePathname();
-    const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+    const isActive = isActiveHref(pathname, href);
 
     const baseClasses = `
-        flex items-center gap-x-2 pl-2 py-1 my-0.5 mx-1 rounded-sm text-[12px]
+        flex items-center gap-x-2 px-2 py-1 my-0.5 mx-1 rounded-sm text-[12px]
         ${className}
     `;
 
@@ -25,6 +43,7 @@ export default function SidebarItem({ icon, label, href, className = "", onClick
         return (
             <span
                 className={`${baseClasses} text-(--foreground-dim) opacity-40 cursor-not-allowed`}
+                title={underDevelopment ? "Under development" : undefined}
             >
                 {icon && <span className="flex-none size-4 flex items-center justify-center [&>svg]:size-4">{icon}</span>}
                 <span className="whitespace-nowrap">{label}</span>

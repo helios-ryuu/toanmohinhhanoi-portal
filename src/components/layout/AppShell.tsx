@@ -12,12 +12,22 @@ import { UserProvider } from "@/contexts/UserContext";
 import { Button } from "@/components/ui";
 import DotGrid from "@/components/ui/DotGrid";
 
+const BANNER_LINK = {
+    app: "facebook" as "facebook",
+    facebook: { webUrl: "https://www.facebook.com/toanmohinh.hanoi", appUrl: "fb://page/toanmohinh.hanoi" },
+};
+
 function AppShellContent({ children }: { children: React.ReactNode }) {
     const { isPinned } = useSidebar();
     const pathname = usePathname();
     const isHomePage = pathname === "/";
 
     const isPostPage = pathname.startsWith("/post/");
+
+    // Hide sidebar entirely on the dedicated post editor routes so the form can use full width.
+    const isPostEditorRoute =
+        pathname === "/admin/posts/new" || /^\/admin\/posts\/[^/]+\/edit$/.test(pathname);
+    const showSidebar = !isHomePage && !isPostEditorRoute;
 
     return (
         <div className="flex flex-col min-h-screen md:h-screen md:overflow-hidden relative">
@@ -43,23 +53,22 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                     gradient="linear-gradient(to right, #f59e0b, #ea580c, #dc2626)"
                     content={
                         <>
-                            <span className="text-xs mr-2">Check out Helios&apos;s new post on Instagram! Currently looking for companion in DevOps Engineer position 😉.</span>
+                            <span className="text-xs mr-2">Truy cập fanpage của Toán Mô Hình Hà Nội để cập nhật thông tin mới nhất! 😉</span>
                             <Button
-                                className="bg-yellow-600 border-yellow-500 text-white hover:bg-yellow-400 hover:border-yellow-500"
-                                onClick={() => {
-                                    const instagramUrl = "https://www.instagram.com/helios_innov/";
-                                    const instagramAppUrl = "instagram://user?username=helios_innov";
-                                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                                    if (isMobile) {
-                                        window.location.href = instagramAppUrl;
-                                        setTimeout(() => window.open(instagramUrl, "_blank"), 500);
-                                    } else {
-                                        window.open(instagramUrl, "_blank");
-                                    }
-                                }}
-                            >
-                                Find out more
-                            </Button>
+                                    className="bg-yellow-600 border-yellow-500 text-white hover:bg-yellow-400 hover:border-yellow-500"
+                                    onClick={() => {
+                                        const { webUrl, appUrl } = BANNER_LINK[BANNER_LINK.app];
+                                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                                        if (isMobile) {
+                                            window.location.href = appUrl;
+                                            setTimeout(() => window.open(webUrl, "_blank"), 500);
+                                        } else {
+                                            window.open(webUrl, "_blank");
+                                        }
+                                    }}
+                                >
+                                    Truy cập ngay
+                                </Button>
                         </>
                     }
                     dismissible
@@ -75,10 +84,10 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                 <div className="relative flex-1 flex md:min-h-0">
 
                     {/* Sidebar - hidden on mobile, full height on desktop */}
-                    {!isHomePage && <Sidebar />}
+                    {showSidebar && <Sidebar />}
 
                     {/* Main space - scrollable */}
-                    <main className={`flex-1 overflow-auto ${isHomePage ? "bg-transparent" : "bg-background"} ${!isHomePage && !isPinned ? "md:ml-10" : ""} ${isPostPage ? "lg:overflow-hidden" : ""}`}>
+                    <main className={`flex-1 overflow-auto ${isHomePage ? "bg-transparent" : "bg-background"} ${showSidebar && !isPinned ? "md:ml-10" : ""} ${isPostPage ? "lg:overflow-hidden" : ""}`}>
                         <div className={`${isPostPage ? "h-full" : "min-h-full"} flex flex-col ${!isPostPage ? "pb-[env(safe-area-inset-bottom)]" : ""}`}>
                             <div className="flex-1 min-h-0">{children}</div>
                             {isHomePage && <Footer transparent />}

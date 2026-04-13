@@ -1,9 +1,29 @@
-import { CompassIcon, FlameIcon, HomeIcon, NewspaperIcon, ShieldIcon } from "lucide-react";
+import {
+    HomeIcon,
+    NewspaperIcon,
+    ShieldIcon,
+    DatabaseIcon,
+    FolderIcon,
+    TrophyIcon,
+    type LucideIcon,
+} from "lucide-react";
 
-export const menuItems = [
+export interface MenuItem {
+    icon: LucideIcon;
+    label: string;
+    href: string;
+    requiresAdmin?: boolean;
+    underDevelopment?: boolean;
+    /** Hide this item from the mobile dropdown (desktop-only features). */
+    desktopOnly?: boolean;
+}
+
+export const menuItems: MenuItem[] = [
     { icon: HomeIcon, label: "Home", href: "/" },
     { icon: NewspaperIcon, label: "Posts", href: "/post" },
-    { icon: ShieldIcon, label: "Admin", href: "/admin" },
-    { icon: CompassIcon, label: "Roadmaps", href: "/roadmaps", disabled: true },
-    { icon: FlameIcon, label: "Projects", href: "/project", disabled: true },
+    { icon: TrophyIcon, label: "Contest", href: "/contests" },
+    { icon: ShieldIcon, label: "CMS", href: "/admin", requiresAdmin: true, desktopOnly: true },
+    { icon: FolderIcon, label: "Bucket", href: "/admin/bucket", requiresAdmin: true, desktopOnly: true },
+    { icon: DatabaseIcon, label: "Database", href: "/admin/database", requiresAdmin: true, desktopOnly: true },
+    { icon: TrophyIcon, label: "Contest Management", href: "/contest-management", requiresAdmin: true, desktopOnly: true },
 ];

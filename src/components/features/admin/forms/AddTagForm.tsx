@@ -4,107 +4,83 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { FormField, FormInput, FormMessage } from "../common/FormFields";
 import { Button } from "../common/Button";
+import { slugify } from "@/hooks/usePostFormValidation";
 
 interface AddTagFormProps {
-    onSuccess: () => void;
+    onSuccess: (tag: { id: number; name: string; slug: string }) => void;
     onClose: () => void;
 }
 
 export default function AddTagForm({ onSuccess, onClose }: AddTagFormProps) {
     const [name, setName] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
+    const [slug, setSlug] = useState("");
     const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        setError("");
-
-        const trimmedName = name.trim();
-
-        if (!trimmedName) {
-            setError("Tag name is required");
-            return;
-        }
-
-        if (trimmedName.length > 15) {
-            setError("Tag name must be 15 characters or less");
-            return;
+        if (!name.trim()) return setError("Name is required");
+        const finalSlug = slug.trim() || slugify(name);
+        if (!/^[a-z0-9-]+$/.test(finalSlug)) {
+            return setError("Slug must be lowercase letters, digits, or hyphens");
         }
 
         setIsLoading(true);
-
+        setError("");
         try {
-            const response = await fetch("/api/admin/tags", {
+            const res = await fetch("/api/admin/tags", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: trimmedName }),
+                body: JSON.stringify({ name: name.trim(), slug: finalSlug }),
             });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
-                onSuccess();
-            } else {
-                setError(data.message || "Failed to create tag");
-            }
-        } catch {
-            setError("Failed to create tag");
+            const json = await res.json();
+            if (!json.success) throw new Error(json.message || "Failed to create tag");
+            onSuccess(json.data);
+            onClose();
+        } catch (err) {
+            setError(err instanceof Error ? err.message : "Unknown error");
         } finally {
             setIsLoading(false);
         }
-    };
+    }
 
     return (
-        <div
-            className="fixed inset-0 z-200 flex items-center justify-center bg-black/70 backdrop-blur-sm"
-            onClick={onClose}
-        >
-            <div
-                className="relative w-full max-w-md mx-4 p-6 rounded-xl border border-(--border-color) bg-background shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <button
-                    onClick={onClose}
-                    className="absolute top-4 right-4 p-1 text-foreground/50 hover:text-foreground transition-colors"
-                >
-                    <X size={20} />
-                </button>
-
-                <h2 className="text-xl font-bold text-accent tracking-wider mb-6">ADD TAG</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="w-full max-w-md rounded-lg border border-(--border-color) bg-background p-6 shadow-xl">
+                <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold">Add New Tag</h2>
+                    <button onClick={onClose} className="text-foreground/60 hover:text-foreground">
+                        <X size={18} />
+                    </button>
+                </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <FormField label="Tag Name" hint="max 15 characters">
+                    <FormField label="Name" required>
                         <FormInput
+                            name="name"
                             value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            maxLength={15}
-                            placeholder="Enter tag name"
+                            onChange={(e) => {
+                                setName(e.target.value);
+                                if (!slug) setSlug(slugify(e.target.value));
+                            }}
                             autoFocus
                         />
-                        <div className="text-right text-xs text-foreground/40 mt-1">
-                            {name.length}/15
-                        </div>
+                    </FormField>
+
+                    <FormField label="Slug" hint="auto-generated if empty">
+                        <FormInput
+                            name="slug"
+                            value={slug}
+                            onChange={(e) => setSlug(e.target.value)}
+                            placeholder="vd: toan-cao-cap"
+                        />
                     </FormField>
 
                     {error && <FormMessage type="error" message={error} />}
 
-                    <div className="flex gap-3">
-                        <Button
-                            type="button"
-                            variant="cancel"
-                            onClick={onClose}
-                            fullWidth
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            disabled={isLoading}
-                            isLoading={isLoading}
-                            loadingText="Creating..."
-                            fullWidth
-                        >
+                    <div className="flex justify-end gap-2 pt-2">
+                        <Button type="button" variant="cancel" onClick={onClose}>Cancel</Button>
+                        <Button type="submit" variant="primary" isLoading={isLoading} loadingText="Saving...">
                             Create Tag
                         </Button>
                     </div>

@@ -1,211 +1,255 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Upload, Trash2, Copy, Check, FileImage, File, RefreshCw, ExternalLink, Pencil, X, Search, ArrowUpDown, ArrowDownAz, ArrowUpAz } from "lucide-react";
+import {
+    Upload,
+    Trash2,
+    Copy,
+    Check,
+    FileImage,
+    File as FileIcon,
+    RefreshCw,
+    ExternalLink,
+    Pencil,
+    X,
+    Search,
+    Folder,
+    FolderOpen,
+    ChevronRight,
+    Home,
+} from "lucide-react";
 import Image from "next/image";
 import { Button } from "../common/Button";
-import { FormSelectDropdown } from "../common/FormFields";
 import { useToast } from "../../../ui/Toast";
 
-interface BucketFile {
+export type BucketName = "post-images" | "submissions";
+
+interface BucketEntry {
     name: string;
-    id: string;
-    updated_at: string;
-    created_at: string;
+    path: string;
     publicUrl: string;
-    metadata?: {
-        size: number;
-        mimetype: string;
-    };
+    size: number;
+    mimetype: string;
+    createdAt: string | null;
+    updatedAt: string | null;
 }
 
-export default function BucketManager() {
+interface BucketFolder {
+    name: string;
+    path: string;
+}
+
+interface BucketListResponse {
+    success: boolean;
+    data?: { bucket: BucketName; prefix: string; folders: BucketFolder[]; files: BucketEntry[] };
+    message?: string;
+}
+
+interface BucketManagerProps {
+    initialBucket?: BucketName;
+    allowBucketSwitch?: boolean;
+    mode?: "manage" | "picker";
+    onPick?: (file: BucketEntry) => void;
+}
+
+const BUCKET_LABELS: Record<BucketName, string> = {
+    "post-images": "Post Images",
+    submissions: "Submissions",
+};
+
+const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
+const isImage = (name: string) => IMAGE_EXTENSIONS.some((ext) => name.toLowerCase().endsWith(ext));
+
+function formatSize(bytes: number): string {
+    if (!bytes) return "—";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export default function BucketManager({
+    initialBucket = "post-images",
+    allowBucketSwitch = true,
+    mode = "manage",
+    onPick,
+}: BucketManagerProps) {
     const { showToast } = useToast();
-    const [files, setFiles] = useState<BucketFile[]>([]);
+    const [bucket, setBucket] = useState<BucketName>(initialBucket);
+    const [prefix, setPrefix] = useState<string>("");
+    const [folders, setFolders] = useState<BucketFolder[]>([]);
+    const [files, setFiles] = useState<BucketEntry[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
-    const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
-    const [selectedFile, setSelectedFile] = useState<BucketFile | null>(null);
-    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-    const [renameFile, setRenameFile] = useState<{ name: string; newName: string } | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-    const [sortBy, setSortBy] = useState<"date" | "name" | "size">("date");
-    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+    const [selectedFile, setSelectedFile] = useState<BucketEntry | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+    const [renameState, setRenameState] = useState<{ from: string; to: string } | null>(null);
+    const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const fetchFiles = useCallback(async (refresh = false) => {
+    const fetchEntries = useCallback(async () => {
         setIsLoading(true);
         try {
-            const url = refresh ? "/api/admin/bucket?refresh=true" : "/api/admin/bucket";
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.success) {
-                setFiles(data.data);
+            const url = new URL("/api/admin/bucket", window.location.origin);
+            url.searchParams.set("bucket", bucket);
+            if (prefix) url.searchParams.set("prefix", prefix);
+            const res = await fetch(url.toString());
+            const json: BucketListResponse = await res.json();
+            if (json.success && json.data) {
+                setFolders(json.data.folders);
+                setFiles(json.data.files);
             } else {
-                showToast("error", data.message || "Failed to load files");
+                showToast("error", json.message || "Failed to load files");
+                setFolders([]);
+                setFiles([]);
             }
-        } catch {
-            showToast("error", "Failed to load files");
+        } catch (e) {
+            showToast("error", e instanceof Error ? e.message : "Failed to load files");
         } finally {
             setIsLoading(false);
         }
-    }, [showToast]);
+    }, [bucket, prefix, showToast]);
 
-    useEffect(() => {
-        fetchFiles();
-    }, [fetchFiles]);
+    useEffect(() => { fetchEntries(); }, [fetchEntries]);
 
-    const handleRefresh = () => {
-        fetchFiles(true);
-        showToast("info", "Refreshing files...");
-    };
+    function changeBucket(next: BucketName) {
+        if (next === bucket) return;
+        setBucket(next);
+        setPrefix("");
+        setSearchQuery("");
+        setSelectedFile(null);
+    }
 
-    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selectedFiles = e.target.files;
-        if (!selectedFiles || selectedFiles.length === 0) return;
+    function navigateInto(folder: BucketFolder) {
+        setPrefix(folder.path);
+        setSearchQuery("");
+    }
 
+    function navigateToCrumb(target: string) {
+        setPrefix(target);
+        setSearchQuery("");
+    }
+
+    async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const selected = e.target.files;
+        if (!selected || selected.length === 0) return;
         setIsUploading(true);
-
+        let count = 0;
         try {
-            let uploadedCount = 0;
-            for (const file of Array.from(selectedFiles)) {
-                const formData = new FormData();
-                formData.append("file", file);
-
-                const response = await fetch("/api/admin/bucket", {
-                    method: "POST",
-                    body: formData,
-                });
-
-                const data = await response.json();
-
-                if (!data.success) {
-                    showToast("error", data.message || `Failed to upload ${file.name}`);
-                } else {
-                    uploadedCount++;
-                }
+            for (const file of Array.from(selected)) {
+                const fd = new FormData();
+                fd.append("file", file);
+                if (prefix) fd.append("prefix", prefix);
+                const res = await fetch(`/api/admin/bucket?bucket=${bucket}`, { method: "POST", body: fd });
+                const json = await res.json();
+                if (json.success) count++;
+                else showToast("error", json.message || `Failed to upload ${file.name}`);
             }
-
-            if (uploadedCount > 0) {
-                showToast("success", `${uploadedCount} file(s) uploaded successfully`);
-            }
-
-            // Refresh with cache bypass after upload
-            fetchFiles(true);
-        } catch {
-            showToast("error", "Failed to upload files");
+            if (count > 0) showToast("success", `${count} file(s) uploaded`);
+            await fetchEntries();
         } finally {
             setIsUploading(false);
-            if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-            }
+            if (fileInputRef.current) fileInputRef.current.value = "";
         }
-    };
+    }
 
-    const handleDelete = async (fileName: string) => {
+    async function handleDelete(path: string) {
         try {
-            const response = await fetch("/api/admin/bucket", {
+            const res = await fetch(`/api/admin/bucket?bucket=${bucket}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ fileName }),
+                body: JSON.stringify({ path }),
             });
-
-            const data = await response.json();
-
-            if (data.success) {
-                setDeleteConfirm(null);
+            const json = await res.json();
+            if (json.success) {
+                showToast("success", "File deleted");
                 setSelectedFile(null);
-                fetchFiles(true);
-                showToast("success", "File deleted successfully");
+                setDeleteConfirm(null);
+                await fetchEntries();
             } else {
-                showToast("error", data.message || "Failed to delete file");
+                showToast("error", json.message || "Delete failed");
             }
-        } catch {
-            showToast("error", "Failed to delete file");
+        } catch (e) {
+            showToast("error", e instanceof Error ? e.message : "Delete failed");
         }
-    };
+    }
 
-    const handleRename = async () => {
-        if (!renameFile || !renameFile.newName.trim()) return;
-
+    async function handleRename() {
+        if (!renameState || !renameState.to.trim() || renameState.to === renameState.from) {
+            setRenameState(null);
+            return;
+        }
+        // Preserve folder prefix on rename if user typed only a filename.
+        const slashIdx = renameState.from.lastIndexOf("/");
+        const folderPrefix = slashIdx >= 0 ? renameState.from.slice(0, slashIdx + 1) : "";
+        const toBase = renameState.to.includes("/") ? renameState.to : folderPrefix + renameState.to;
         try {
-            const response = await fetch("/api/admin/bucket", {
+            const res = await fetch(`/api/admin/bucket?bucket=${bucket}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    oldName: renameFile.name,
-                    newName: renameFile.newName.trim(),
-                }),
+                body: JSON.stringify({ from: renameState.from, to: toBase }),
             });
-
-            const data = await response.json();
-
-            if (data.success) {
-                fetchFiles(true);
-                setRenameFile(null);
+            const json = await res.json();
+            if (json.success) {
+                showToast("success", "Renamed");
+                setRenameState(null);
                 setSelectedFile(null);
-                showToast("success", "File renamed successfully");
+                await fetchEntries();
             } else {
-                showToast("error", data.message || "Failed to rename file");
+                showToast("error", json.message || "Rename failed");
             }
-        } catch {
-            showToast("error", "Failed to rename file");
+        } catch (e) {
+            showToast("error", e instanceof Error ? e.message : "Rename failed");
         }
-    };
+    }
 
-    const copyToClipboard = async (url: string) => {
+    async function copyUrl(url: string) {
         try {
             await navigator.clipboard.writeText(url);
             setCopiedUrl(url);
-            setTimeout(() => setCopiedUrl(null), 2000);
+            setTimeout(() => setCopiedUrl(null), 1500);
         } catch {
-            showToast("error", "Failed to copy to clipboard");
+            showToast("error", "Clipboard write failed");
         }
-    };
+    }
 
-    const formatFileSize = (bytes?: number) => {
-        if (!bytes) return "Unknown";
-        if (bytes < 1024) return `${bytes} B`;
-        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-        return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-    };
+    const filteredFolders = folders.filter((f) =>
+        f.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    const filteredFiles = files.filter((f) =>
+        f.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-    const isImage = (file: BucketFile) => {
-        const imageExtensions = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
-        return imageExtensions.some((ext) => file.name.toLowerCase().endsWith(ext));
-    };
-
-    const filteredAndSortedFiles = files
-        .filter((file) => file.name.toLowerCase().includes(searchQuery.toLowerCase()))
-        .sort((a, b) => {
-            let comparison = 0;
-            switch (sortBy) {
-                case "name":
-                    comparison = a.name.localeCompare(b.name);
-                    break;
-                case "size":
-                    comparison = (a.metadata?.size || 0) - (b.metadata?.size || 0);
-                    break;
-                case "date":
-                default:
-                    comparison = new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-                    break;
-            }
-            return sortOrder === "asc" ? comparison : -comparison;
-        });
+    const breadcrumbs = prefix ? prefix.split("/") : [];
 
     return (
         <div className="space-y-4">
             {/* Header */}
-            <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                    <h2 className="text-lg font-semibold text-foreground">Storage Bucket</h2>
+            <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-lg font-semibold text-foreground">Storage Bucket</h2>
+                        {allowBucketSwitch && (
+                            <div className="flex items-center gap-1 ml-3 p-0.5 rounded-md border border-(--border-color) bg-foreground/5">
+                                {(Object.keys(BUCKET_LABELS) as BucketName[]).map((b) => (
+                                    <button
+                                        key={b}
+                                        onClick={() => changeBucket(b)}
+                                        className={`px-3 py-1 text-xs rounded-sm transition-colors cursor-pointer ${bucket === b
+                                            ? "bg-accent text-white"
+                                            : "text-foreground/70 hover:text-foreground"}`}
+                                    >
+                                        {BUCKET_LABELS[b]}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                     <div className="flex items-center gap-2">
                         <Button
                             variant="utility"
                             size="sm"
-                            onClick={handleRefresh}
+                            onClick={fetchEntries}
                             disabled={isLoading}
                             icon={<RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />}
                         >
@@ -218,7 +262,7 @@ export default function BucketManager() {
                                 ref={fileInputRef}
                                 type="file"
                                 multiple
-                                accept="image/*"
+                                accept={bucket === "post-images" ? "image/*" : "*"}
                                 onChange={handleUpload}
                                 disabled={isUploading}
                                 className="hidden"
@@ -227,119 +271,126 @@ export default function BucketManager() {
                     </div>
                 </div>
 
-                {/* Search & Sort Controls */}
-                <div className="flex items-center gap-3">
-                    <div className="relative flex-1">
-                        <Search
-                            size={16}
-                            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
-                        />
-                        <input
-                            type="text"
-                            placeholder="Search files..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full pl-9 pr-3 py-2 text-sm rounded-md border border-(--border-color) bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
-                        />
-                        {searchQuery && (
-                            <button
-                                onClick={() => setSearchQuery("")}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/40 hover:text-foreground"
-                            >
-                                <X size={14} />
-                            </button>
-                        )}
-                    </div>
+                {/* Breadcrumbs */}
+                <div className="flex items-center gap-1 text-xs text-foreground/60 flex-wrap">
+                    <button
+                        onClick={() => navigateToCrumb("")}
+                        className="flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-foreground/5 hover:text-foreground transition-colors cursor-pointer"
+                    >
+                        <Home size={12} />
+                        {BUCKET_LABELS[bucket]}
+                    </button>
+                    {breadcrumbs.map((crumb, idx) => {
+                        const target = breadcrumbs.slice(0, idx + 1).join("/");
+                        return (
+                            <span key={target} className="flex items-center gap-1">
+                                <ChevronRight size={12} />
+                                <button
+                                    onClick={() => navigateToCrumb(target)}
+                                    className="px-1.5 py-0.5 rounded hover:bg-foreground/5 hover:text-foreground transition-colors cursor-pointer"
+                                >
+                                    {crumb}
+                                </button>
+                            </span>
+                        );
+                    })}
+                </div>
 
-                    <div className="flex items-center gap-2">
-                        <FormSelectDropdown
-                            options={[
-                                { value: "date", label: "Date" },
-                                { value: "name", label: "Name" },
-                                { value: "size", label: "Size" },
-                            ]}
-                            value={sortBy}
-                            onChange={(val: string) => setSortBy(val as "date" | "name" | "size")}
-                            className="w-[140px]"
-                        />
-
-                        <button
-                            onClick={() => setSortOrder(prev => prev === "asc" ? "desc" : "asc")}
-                            className="p-2 rounded-md border border-(--border-color) bg-background text-foreground/70 hover:bg-foreground/5 transition-colors cursor-pointer"
-                            title={sortOrder === "asc" ? "Ascending" : "Descending"}
-                        >
-                            {sortBy === "name" ? (
-                                sortOrder === "asc" ? <ArrowDownAz size={18} /> : <ArrowUpAz size={18} />
-                            ) : (
-                                <ArrowUpDown size={18} className={sortOrder === "asc" ? "rotate-180" : ""} />
-                            )}
-                        </button>
-                    </div>
+                {/* Search */}
+                <div className="relative">
+                    <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-foreground/40" />
+                    <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Filter in current folder..."
+                        className="w-full pl-8 pr-3 py-1.5 text-sm rounded-md border border-(--border-color) bg-background focus:outline-none focus:ring-2 focus:ring-accent/50"
+                    />
                 </div>
             </div>
 
-            {/* Files List */}
+            {/* Body */}
             {isLoading ? (
-                <div className="p-8 text-center text-foreground/50">Loading files...</div>
-            ) : files.length === 0 ? (
+                <div className="p-8 text-center text-foreground/50">Loading…</div>
+            ) : filteredFolders.length === 0 && filteredFiles.length === 0 ? (
                 <div className="p-8 rounded-lg border border-(--border-color) bg-(--post-card) text-center">
-                    <FileImage size={48} className="mx-auto mb-4 text-foreground/30" />
-                    <p className="text-foreground/50">No files in bucket</p>
-                    <p className="text-sm text-foreground/30 mt-2">Upload images to get started</p>
+                    <FileImage size={40} className="mx-auto mb-3 text-foreground/30" />
+                    <p className="text-foreground/50 text-sm">Empty folder</p>
                 </div>
             ) : (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) divide-y divide-(--border-color)">
-                    {filteredAndSortedFiles.length === 0 ? (
-                        <div className="p-8 text-center text-foreground/50">
-                            <p>No files match your search.</p>
-                        </div>
-                    ) : (
-                        filteredAndSortedFiles.map((file) => (
-                            <div
-                                key={file.id || file.name}
-                                role="button"
-                                tabIndex={0}
-                                onClick={() => setSelectedFile(file)}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        setSelectedFile(file);
-                                    }
-                                }}
-                                className="w-full flex items-center gap-3 p-3 hover:bg-foreground/5 transition-colors text-left cursor-pointer"
-                            >
-                                {/* Thumbnail */}
-                                <div className="w-12 h-12 rounded-md overflow-hidden bg-foreground/5 shrink-0 flex items-center justify-center relative">
-                                    {isImage(file) ? (
-                                        <Image
-                                            src={file.publicUrl}
-                                            alt={file.name}
-                                            fill
-                                            className="object-cover"
-                                            unoptimized
-                                        />
-                                    ) : (
-                                        <File size={20} className="text-foreground/30" />
+                    {filteredFolders.map((f) => (
+                        <button
+                            key={f.path}
+                            onClick={() => navigateInto(f)}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-foreground/5 transition-colors text-left cursor-pointer"
+                        >
+                            <div className="w-10 h-10 rounded-md bg-foreground/5 flex items-center justify-center">
+                                <Folder size={18} className="text-accent" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{f.name}/</p>
+                                <p className="text-xs text-foreground/50">Folder</p>
+                            </div>
+                            <ChevronRight size={16} className="text-foreground/40" />
+                        </button>
+                    ))}
+                    {filteredFiles.map((file) => (
+                        <div
+                            key={file.path}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setSelectedFile(file)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    setSelectedFile(file);
+                                }
+                            }}
+                            className="w-full flex items-center gap-3 p-3 hover:bg-foreground/5 transition-colors text-left cursor-pointer"
+                        >
+                            <div className="w-10 h-10 rounded-md overflow-hidden bg-foreground/5 shrink-0 flex items-center justify-center relative">
+                                {isImage(file.name) ? (
+                                    <Image
+                                        src={file.publicUrl}
+                                        alt={file.name}
+                                        fill
+                                        sizes="40px"
+                                        className="object-cover"
+                                        unoptimized
+                                    />
+                                ) : (
+                                    <FileIcon size={18} className="text-foreground/40" />
+                                )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{file.name}</p>
+                                <div className="flex items-center gap-2 text-xs text-foreground/50">
+                                    <span>{formatSize(file.size)}</span>
+                                    {file.createdAt && (
+                                        <>
+                                            <span>•</span>
+                                            <span>{new Date(file.createdAt).toLocaleString()}</span>
+                                        </>
                                     )}
                                 </div>
-
-                                {/* Info */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground truncate">
-                                        {file.name}
-                                    </p>
-                                    <div className="flex items-center gap-3 text-xs text-foreground/50">
-                                        <span>{formatFileSize(file.metadata?.size)}</span>
-                                        <span>•</span>
-                                        <span>{new Date(file.created_at).toLocaleString()}</span>
-                                    </div>
-                                </div>
-
-                                {/* Quick copy button */}
+                            </div>
+                            {mode === "picker" ? (
+                                <Button
+                                    size="sm"
+                                    variant="primary"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onPick?.(file);
+                                    }}
+                                >
+                                    Use
+                                </Button>
+                            ) : (
                                 <button
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        copyToClipboard(file.publicUrl);
+                                        copyUrl(file.publicUrl);
                                     }}
                                     className="p-2 rounded-md hover:bg-foreground/10 transition-colors text-foreground/50 hover:text-foreground cursor-pointer"
                                     title="Copy URL"
@@ -350,119 +401,111 @@ export default function BucketManager() {
                                         <Copy size={16} />
                                     )}
                                 </button>
-                            </div>
-                        ))
-                    )}
+                            )}
+                        </div>
+                    ))}
                 </div>
             )}
 
-            {/* File Detail Popup */}
+            {/* Detail modal */}
             {selectedFile && (
                 <div
-                    className="fixed inset-0 z-200 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+                    className="fixed inset-0 z-200 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
                     onClick={() => {
                         setSelectedFile(null);
                         setDeleteConfirm(null);
-                        setRenameFile(null);
+                        setRenameState(null);
                     }}
                 >
                     <div
-                        className="relative w-full max-w-lg mx-4 p-6 rounded-xl border border-(--border-color) bg-background shadow-2xl"
+                        className="relative w-full max-w-lg p-6 rounded-xl border border-(--border-color) bg-background shadow-2xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Header */}
                         <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-foreground truncate pr-4">
-                                {selectedFile.name}
-                            </h3>
+                            <h3 className="text-lg font-semibold text-foreground truncate pr-4">{selectedFile.name}</h3>
                             <button
                                 onClick={() => {
                                     setSelectedFile(null);
                                     setDeleteConfirm(null);
-                                    setRenameFile(null);
+                                    setRenameState(null);
                                 }}
-                                className="p-1 text-foreground/50 hover:text-foreground transition-colors"
+                                className="p-1 text-foreground/50 hover:text-foreground"
                             >
                                 <X size={20} />
                             </button>
                         </div>
 
-                        {/* Preview */}
                         <div className="aspect-video bg-foreground/5 rounded-lg overflow-hidden mb-4 flex items-center justify-center relative">
-                            {isImage(selectedFile) ? (
+                            {isImage(selectedFile.name) ? (
                                 <Image
                                     src={selectedFile.publicUrl}
                                     alt={selectedFile.name}
                                     fill
+                                    sizes="100vw"
                                     className="object-contain"
                                     unoptimized
                                 />
                             ) : (
-                                <File size={64} className="text-foreground/30" />
+                                <FolderOpen size={64} className="text-foreground/30" />
                             )}
                         </div>
 
-                        {/* Info */}
                         <div className="text-sm text-foreground/60 mb-4 space-y-1">
-                            <p><span className="text-foreground/80">Size:</span> {formatFileSize(selectedFile.metadata?.size)}</p>
-                            <p className="truncate"><span className="text-foreground/80">URL:</span> {selectedFile.publicUrl}</p>
+                            <p><span className="text-foreground/80">Size:</span> {formatSize(selectedFile.size)}</p>
+                            <p className="break-all"><span className="text-foreground/80">Path:</span> {selectedFile.path}</p>
                         </div>
 
-                        {/* Rename Input */}
-                        {renameFile && renameFile.name === selectedFile.name && (
+                        {renameState && renameState.from === selectedFile.path && (
                             <div className="mb-4">
-                                <p className="text-sm text-foreground/70 mb-2">Rename file:</p>
+                                <p className="text-sm text-foreground/70 mb-2">New name:</p>
                                 <p className="text-yellow-500 text-xs mb-2">
-                                    ⚠️ Posts using this image will need their URLs updated manually.
+                                    ⚠️ Posts referencing this file by URL won&apos;t auto-update.
                                 </p>
                                 <div className="flex gap-2">
                                     <input
                                         type="text"
-                                        value={renameFile.newName}
-                                        onChange={(e) => setRenameFile({ ...renameFile, newName: e.target.value })}
-                                        className="flex-1 px-3 py-2 text-sm rounded-md border border-(--border-color) bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50"
+                                        value={renameState.to}
+                                        onChange={(e) => setRenameState({ ...renameState, to: e.target.value })}
+                                        className="flex-1 px-3 py-2 text-sm rounded-md border border-(--border-color) bg-background focus:outline-none focus:ring-2 focus:ring-accent/50"
                                         autoFocus
                                         onKeyDown={(e) => {
                                             if (e.key === "Enter") handleRename();
-                                            if (e.key === "Escape") setRenameFile(null);
+                                            if (e.key === "Escape") setRenameState(null);
                                         }}
                                     />
-                                    <Button variant="cancel" size="sm" onClick={() => setRenameFile(null)}>
-                                        Cancel
-                                    </Button>
-                                    <Button variant="primary" size="sm" onClick={handleRename}>
-                                        Save
-                                    </Button>
+                                    <Button variant="cancel" size="sm" onClick={() => setRenameState(null)}>Cancel</Button>
+                                    <Button variant="primary" size="sm" onClick={handleRename}>Save</Button>
                                 </div>
                             </div>
                         )}
 
-                        {/* Delete Confirmation */}
-                        {deleteConfirm === selectedFile.name && (
+                        {deleteConfirm === selectedFile.path && (
                             <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
                                 <p className="text-sm text-foreground font-medium mb-2">Delete this file?</p>
-                                <p className="text-yellow-500 text-xs mb-3">
-                                    ⚠️ Posts using this image will need their URLs updated manually.
-                                </p>
                                 <div className="flex gap-2">
-                                    <Button variant="cancel" size="sm" onClick={() => setDeleteConfirm(null)}>
-                                        Cancel
-                                    </Button>
-                                    <Button variant="danger" size="sm" onClick={() => handleDelete(selectedFile.name)}>
-                                        Delete
-                                    </Button>
+                                    <Button variant="cancel" size="sm" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+                                    <Button variant="danger" size="sm" onClick={() => handleDelete(selectedFile.path)}>Delete</Button>
                                 </div>
                             </div>
                         )}
 
-                        {/* Actions */}
-                        {!renameFile && deleteConfirm !== selectedFile.name && (
+                        {!renameState && deleteConfirm !== selectedFile.path && (
                             <div className="grid grid-cols-2 gap-2">
+                                {mode === "picker" && (
+                                    <Button
+                                        variant="primary"
+                                        size="sm"
+                                        icon={<Check size={14} />}
+                                        onClick={() => onPick?.(selectedFile)}
+                                    >
+                                        Use this file
+                                    </Button>
+                                )}
                                 <Button
                                     variant="utility"
                                     size="sm"
                                     icon={copiedUrl === selectedFile.publicUrl ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
-                                    onClick={() => copyToClipboard(selectedFile.publicUrl)}
+                                    onClick={() => copyUrl(selectedFile.publicUrl)}
                                 >
                                     {copiedUrl === selectedFile.publicUrl ? "Copied!" : "Copy URL"}
                                 </Button>
@@ -475,22 +518,26 @@ export default function BucketManager() {
                                     <ExternalLink size={14} />
                                     Open
                                 </a>
-                                <Button
-                                    variant="attention"
-                                    size="sm"
-                                    icon={<Pencil size={14} />}
-                                    onClick={() => setRenameFile({ name: selectedFile.name, newName: selectedFile.name })}
-                                >
-                                    Rename
-                                </Button>
-                                <Button
-                                    variant="danger"
-                                    size="sm"
-                                    icon={<Trash2 size={14} />}
-                                    onClick={() => setDeleteConfirm(selectedFile.name)}
-                                >
-                                    Delete
-                                </Button>
+                                {mode === "manage" && (
+                                    <>
+                                        <Button
+                                            variant="attention"
+                                            size="sm"
+                                            icon={<Pencil size={14} />}
+                                            onClick={() => setRenameState({ from: selectedFile.path, to: selectedFile.name })}
+                                        >
+                                            Rename
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            icon={<Trash2 size={14} />}
+                                            onClick={() => setDeleteConfirm(selectedFile.path)}
+                                        >
+                                            Delete
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         )}
                     </div>
@@ -499,3 +546,5 @@ export default function BucketManager() {
         </div>
     );
 }
+
+export type { BucketEntry };

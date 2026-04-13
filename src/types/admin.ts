@@ -1,6 +1,9 @@
 /**
- * Shared admin types — used across admin forms, sections, and selectors
+ * Shared admin types — used across admin forms, sections, and selectors.
+ * Mirrors the new Supabase schema (no author/series; category enum).
  */
+
+import type { PostCategory } from "./database";
 
 export interface AdminTag {
     id: number;
@@ -9,55 +12,27 @@ export interface AdminTag {
     created_at?: string;
 }
 
-export interface AdminAuthor {
-    id: number;
-    name: string;
-    title?: string;
-    avatar_url?: string;
-    github_url?: string;
-    linkedin_url?: string;
-    created_at?: string;
-}
-
-export interface AdminSeries {
-    id: number;
-    name: string;
-    slug: string;
-    description?: string | null;
-    created_at?: string;
-}
-
 export interface AdminPost {
     id: number;
     title: string;
-    slug?: string;
-    description?: string;
+    slug: string;
+    description: string;
     content?: string;
-    image_url?: string;
-    published?: boolean;
-    level?: string;
-    type?: string;
-    series_id?: number;
-    series_order?: number;
-    author_id?: number;
-    author_name?: string | null;
-    reading_time?: string;
+    image_url?: string | null;
+    category: PostCategory;
+    published: boolean;
+    published_at?: string | null;
     tags?: string[];
     created_at?: string;
+    updated_at?: string | null;
     [key: string]: unknown;
 }
 
-export interface SeriesOrderInfo {
-    existingOrders: number[];
-    nextOrder: number;
-}
-
-export const LEVELS = ["beginner", "intermediate", "advanced"];
-export const TYPES = ["standalone", "series"];
-export const STATUSES = ["all", "published", "draft"];
+export const CATEGORIES: PostCategory[] = ["news", "announcement", "tutorial", "result"];
+export const STATUSES = ["all", "published", "draft"] as const;
 
 export const CHAR_LIMITS = {
-    title: 60,
-    description: 200,
-    content: 20000,
+    title: 120,
+    description: 300,
+    content: 50000,
 } as const;
