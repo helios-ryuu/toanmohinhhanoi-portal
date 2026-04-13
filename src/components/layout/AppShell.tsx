@@ -13,9 +13,9 @@ import { Button } from "@/components/ui";
 import DotGrid from "@/components/ui/DotGrid";
 
 const BANNER_LINK = {
-    app: "facebook" as "facebook",
+    app: "facebook",
     facebook: { webUrl: "https://www.facebook.com/toanmohinh.hanoi", appUrl: "fb://page/toanmohinh.hanoi" },
-};
+} as const;
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
     const { isPinned } = useSidebar();

@@ -32,13 +32,22 @@ export function usePostFormValidation(
 
     useEffect(() => {
         if (!formData.image_url) {
-            setImageUrlValid(true);
             return;
         }
+
+        let cancelled = false;
         const img = new window.Image();
-        img.onload = () => setImageUrlValid(true);
-        img.onerror = () => setImageUrlValid(false);
+        img.onload = () => {
+            if (!cancelled) setImageUrlValid(true);
+        };
+        img.onerror = () => {
+            if (!cancelled) setImageUrlValid(false);
+        };
         img.src = formData.image_url;
+
+        return () => {
+            cancelled = true;
+        };
     }, [formData.image_url]);
 
     const validationErrors = useMemo(() => {

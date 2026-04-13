@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import FadeText from "@/components/ui/FadeText";
 import SidebarItem from "./SidebarItem";
-import { Menu, PanelRightCloseIcon, PanelRightOpenIcon, ChevronLeft } from "lucide-react";
+import { Menu, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react";
 import IconButton from "@/components/ui/IconButton";
 import { useSidebar } from "@/contexts/SidebarContext";
 import { menuItems } from "@/config/navigation";

@@ -4,7 +4,6 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiSuccess, apiError, handleRouteError } from "@/lib/api-helpers";
 
 const ALLOWED_TABLES = ["users", "post", "tag", "post_tags"] as const;
-type Table = typeof ALLOWED_TABLES[number];
 
 export async function GET(req: NextRequest) {
     try {
