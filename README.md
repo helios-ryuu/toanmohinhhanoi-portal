@@ -94,8 +94,8 @@ Tạo file `.env.local` ở thư mục gốc:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<anon-key>
-SUPABASE_SERVICE_ROLE_KEY=<service-role-key>
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-key>
+SUPABASE_SECRET_KEY=<secret-key>
 NEXT_PUBLIC_SITE_URL=http://localhost:3456
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=<google-oauth-client-id>.apps.googleusercontent.com
 ```
