@@ -17,6 +17,7 @@ interface ConfirmPopupProps {
     itemName?: string; // For danger variant - user must type this to confirm
     confirmText?: string;
     cancelText?: string;
+    hideCancelButton?: boolean;
     icon?: LucideIcon; // Override default variant icon
     onConfirm: () => Promise<void> | void;
     onCancel: () => void;
@@ -60,6 +61,7 @@ export default function ConfirmPopup({
     itemName,
     confirmText = "Confirm",
     cancelText = "Cancel",
+    hideCancelButton = false,
     icon: CustomIcon,
     onConfirm,
     onCancel,
@@ -155,13 +157,15 @@ export default function ConfirmPopup({
 
                 {/* Actions */}
                 <div className="flex gap-3 justify-end">
-                    <Button
-                        variant="cancel"
-                        onClick={onCancel}
-                        disabled={isLoading}
-                    >
-                        {cancelText}
-                    </Button>
+                    {!hideCancelButton && (
+                        <Button
+                            variant="cancel"
+                            onClick={onCancel}
+                            disabled={isLoading}
+                        >
+                            {cancelText}
+                        </Button>
+                    )}
                     <Button
                         variant={config.buttonVariant}
                         onClick={handleConfirm}
