@@ -2,12 +2,12 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Phiên bản hiện tại: v0.2.0.** Cập nhật lớn:
+> **Phiên bản hiện tại: v0.8.2.** Cập nhật lớn:
 >
 > - **Mô hình lịch trình hai lớp:** thay 5 mốc cố định bằng *Grand Timeline* (`start_at` / `end_at`) + *n giai đoạn động* (`contest_stage`) có thể chồng chéo, mỗi giai đoạn độc lập bật `allow_registration` / `allow_submission`.
-> - **Trạng thái rút gọn:** `draft | active | closed | cancelled`.
+> - **Phân loại bài viết:** category badge, /category, /tag routes, post detail cover image.
 > - **i18n đa ngôn ngữ:** English (mặc định) + Tiếng Việt qua `next-intl`, cookie-based, có nút chuyển ngôn ngữ trong Header.
-> - **UI/UX:** stage chips trên contest card, Gantt-style stage timeline trên contest detail, image picker trong ContestForm, fix layout icon mạng xã hội, loading state cho các trang admin.
+> - **Quản lý user profile:** thông tin profile, contest đã tham gia + user/auth API improvements.
 >
 > **Đăng nhập — Google only.** Không hỗ trợ đăng ký bằng email/mật khẩu. Xác thực qua Supabase Auth + Google Identity Services.
 >
