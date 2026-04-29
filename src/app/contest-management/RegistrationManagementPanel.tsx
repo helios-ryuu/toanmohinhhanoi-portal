@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileText, Search, X as XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/features/admin/common/Button";
 import { useToast } from "@/components/ui/Toast";
 import type {
@@ -27,13 +28,6 @@ interface Props {
     onBack: () => void;
 }
 
-const STATUS_LABELS: Record<RegistrationStatus, string> = {
-    pending: "Chờ duyệt",
-    approved: "Đã duyệt",
-    rejected: "Từ chối",
-    withdrawn: "Đã rút",
-};
-
 const STATUS_STYLES: Record<RegistrationStatus, string> = {
     pending: "bg-yellow-500/20 text-yellow-500",
     approved: "bg-green-500/20 text-green-500",
@@ -42,12 +36,6 @@ const STATUS_STYLES: Record<RegistrationStatus, string> = {
 };
 
 const FILTERS: Array<RegistrationStatus | "all"> = ["all", "pending", "approved", "rejected", "withdrawn"];
-
-const SORT_OPTIONS = [
-    { value: "newest", label: "Mới nhất" },
-    { value: "oldest", label: "Cũ nhất" },
-    { value: "status", label: "Theo trạng thái" },
-];
 
 const STATUS_ORDER: Record<RegistrationStatus, number> = {
     pending: 0,
@@ -64,6 +52,7 @@ function formatBytes(bytes: number): string {
 
 function SubmissionRow({ sub }: { sub: DbSubmission }) {
     const { showToast } = useToast();
+    const t = useTranslations("registrations");
     const [loading, setLoading] = useState(false);
 
     async function download() {
@@ -71,10 +60,10 @@ function SubmissionRow({ sub }: { sub: DbSubmission }) {
         try {
             const metaRes = await fetch(`/api/admin/submissions/${sub.id}/signed-url`);
             const metaJson = await metaRes.json();
-            if (!metaJson.success) throw new Error(metaJson.message || "Lỗi tạo link");
+            if (!metaJson.success) throw new Error(metaJson.message || t("linkError"));
 
             const fileRes = await fetch(metaJson.data.url);
-            if (!fileRes.ok) throw new Error("Tải file thất bại");
+            if (!fileRes.ok) throw new Error(t("downloadError"));
             const blob = await fileRes.blob();
 
             const anchor = document.createElement("a");
@@ -83,7 +72,7 @@ function SubmissionRow({ sub }: { sub: DbSubmission }) {
             anchor.click();
             URL.revokeObjectURL(anchor.href);
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Lỗi tải file");
+            showToast("error", err instanceof Error ? err.message : t("downloadError"));
         } finally {
             setLoading(false);
         }
@@ -112,7 +101,7 @@ function SubmissionRow({ sub }: { sub: DbSubmission }) {
                 className="shrink-0 inline-flex items-center gap-1 px-2 py-1 text-xs rounded border border-(--border-color) hover:border-accent hover:text-accent transition-colors disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed"
             >
                 <Download className="w-3 h-3" />
-                {loading ? "..." : "Tải"}
+                {loading ? "..." : t("download")}
             </button>
         </div>
     );
@@ -123,12 +112,15 @@ function RegistrationCard({
     submissions,
     actingId,
     onSetStatus,
+    statusLabels,
 }: {
     reg: RegistrationWithMembers;
     submissions: DbSubmission[];
     actingId: number | null;
     onSetStatus: (id: number, status: "approved" | "rejected") => Promise<void>;
+    statusLabels: Record<RegistrationStatus, string>;
 }) {
+    const t = useTranslations("registrations");
     const [expanded, setExpanded] = useState(false);
     const regSubs = submissions.filter((s) => s.registration_id === reg.id);
 
@@ -148,22 +140,22 @@ function RegistrationCard({
                             <ChevronDown className="w-4 h-4 shrink-0 text-foreground/40" />
                         )}
                         <span className="text-sm font-medium">
-                            {reg.team_name || `Đăng ký #${reg.id}`}
+                            {reg.team_name || `${t("registrationFallback")} #${reg.id}`}
                         </span>
                         <span
                             className={`px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-[4px] ${STATUS_STYLES[reg.status]}`}
                         >
-                            {STATUS_LABELS[reg.status]}
+                            {statusLabels[reg.status]}
                         </span>
                         {regSubs.length > 0 && (
                             <span className="px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-[4px] bg-blue-500/20 text-blue-400">
-                                {regSubs.length} bài nộp
+                                {t("submissionCount", { count: regSubs.length })}
                             </span>
                         )}
                     </div>
                     <div className="text-xs text-foreground/50 mt-0.5 ml-6">
-                        {reg.members.length} thành viên •{" "}
-                        {new Date(reg.registered_at).toLocaleString("vi-VN")}
+                        {t("memberCount", { count: reg.members.length })} •{" "}
+                        {new Date(reg.registered_at).toLocaleString()}
                     </div>
                 </button>
 
@@ -177,7 +169,7 @@ function RegistrationCard({
                             isLoading={actingId === reg.id}
                             loadingText="..."
                         >
-                            Duyệt
+                            {t("approve")}
                         </Button>
                         <Button
                             size="sm"
@@ -187,7 +179,7 @@ function RegistrationCard({
                             isLoading={actingId === reg.id}
                             loadingText="..."
                         >
-                            Từ chối
+                            {t("reject")}
                         </Button>
                     </div>
                 )}
@@ -199,7 +191,7 @@ function RegistrationCard({
                     {/* Members */}
                     <div>
                         <div className="text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-2">
-                            Thành viên ({reg.members.length})
+                            {t("membersHeader", { count: reg.members.length })}
                         </div>
                         <div className="space-y-2">
                             {reg.members.map((m) => (
@@ -212,7 +204,7 @@ function RegistrationCard({
                                                     : "bg-foreground/10 text-foreground/60"
                                             }`}
                                         >
-                                            {m.role === "leader" ? "Trưởng" : "TV"}
+                                            {m.role === "leader" ? t("leaderRole") : t("memberRole")}
                                         </span>
                                         <span className="text-xs font-medium">
                                             {m.users?.display_name || m.users?.username || m.user_id.slice(0, 8)}
@@ -222,7 +214,7 @@ function RegistrationCard({
                                         <div>@{m.users?.username ?? "—"}</div>
                                         {m.users?.school && <div>{m.users.school}</div>}
                                         <div>
-                                            Tham gia: {new Date(m.joined_at).toLocaleString("vi-VN")}
+                                            {t("joinedAt")}: {new Date(m.joined_at).toLocaleString()}
                                         </div>
                                     </div>
                                 </div>
@@ -233,10 +225,10 @@ function RegistrationCard({
                     {/* Submissions */}
                     <div>
                         <div className="text-xs font-semibold text-foreground/60 uppercase tracking-wider mb-2">
-                            Bài nộp
+                            {t("submissions")}
                         </div>
                         {regSubs.length === 0 ? (
-                            <div className="text-xs text-foreground/40 italic">Chưa có bài nộp</div>
+                            <div className="text-xs text-foreground/40 italic">{t("noSubmissions")}</div>
                         ) : (
                             <div className="space-y-1.5">
                                 {regSubs.map((s) => (
@@ -253,6 +245,21 @@ function RegistrationCard({
 
 export default function RegistrationManagementPanel({ contest, onBack }: Props) {
     const { showToast } = useToast();
+    const t = useTranslations("registrations");
+
+    const statusLabels: Record<RegistrationStatus, string> = {
+        pending: t("statusPending"),
+        approved: t("statusApproved"),
+        rejected: t("statusRejected"),
+        withdrawn: t("statusWithdrawn"),
+    };
+
+    const sortOptions = [
+        { value: "newest", label: t("sortNewest") },
+        { value: "oldest", label: t("sortOldest") },
+        { value: "status", label: t("sortStatus") },
+    ];
+
     const [regs, setRegs] = useState<RegistrationWithMembers[]>([]);
     const [submissions, setSubmissions] = useState<DbSubmission[]>([]);
     const [loading, setLoading] = useState(true);
@@ -273,18 +280,18 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                 if (!ct.includes("application/json")) {
                     throw new Error(
                         res.status === 401 || res.status === 403
-                            ? "Phiên đăng nhập hết hạn — vui lòng tải lại trang."
-                            : `Lỗi máy chủ (${res.status})`,
+                            ? t("sessionExpired")
+                            : t("serverError", { status: res.status }),
                     );
                 }
             }
             const [regsJson, subsJson] = await Promise.all([regsRes.json(), subsRes.json()]);
-            if (!regsJson.success) throw new Error(regsJson.message || "Lỗi tải đăng ký");
-            if (!subsJson.success) throw new Error(subsJson.message || "Lỗi tải bài nộp");
+            if (!regsJson.success) throw new Error(regsJson.message || t("loading"));
+            if (!subsJson.success) throw new Error(subsJson.message || t("loading"));
             setRegs(regsJson.data ?? []);
             setSubmissions(subsJson.data ?? []);
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Lỗi tải dữ liệu");
+            showToast("error", err instanceof Error ? err.message : t("loading"));
         } finally {
             setLoading(false);
         }
@@ -304,16 +311,16 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
             if (!ct.includes("application/json")) {
                 throw new Error(
                     res.status === 401 || res.status === 403
-                        ? "Phiên đăng nhập hết hạn — vui lòng tải lại trang."
-                        : `Lỗi máy chủ (${res.status})`,
+                        ? t("sessionExpired")
+                        : t("serverError", { status: res.status }),
                 );
             }
             const json = await res.json();
-            if (!json.success) throw new Error(json.message || "Cập nhật thất bại");
-            showToast("success", status === "approved" ? "Đã duyệt đăng ký" : "Đã từ chối đăng ký");
+            if (!json.success) throw new Error(json.message || t("updateFailed"));
+            showToast("success", status === "approved" ? t("approveSuccess") : t("rejectSuccess"));
             refresh();
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Cập nhật thất bại");
+            showToast("error", err instanceof Error ? err.message : t("updateFailed"));
         } finally {
             setActingId(null);
         }
@@ -354,11 +361,11 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                     className="inline-flex items-center gap-1 text-sm text-foreground/70 hover:text-accent transition-colors cursor-pointer"
                 >
                     <ArrowLeft className="w-4 h-4" />
-                    Quay lại
+                    {t("backLabel")}
                 </button>
                 <span className="text-foreground/30">/</span>
                 <h2 className="text-lg font-semibold tracking-wide">{contest.title}</h2>
-                <span className="text-xs text-foreground/40">— Quản lý đội thi</span>
+                <span className="text-xs text-foreground/40">— {t("panelTitle")}</span>
             </div>
 
             {/* Toolbar */}
@@ -369,7 +376,7 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                         type="text"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Tìm đội, thành viên…"
+                        placeholder={t("search")}
                         className="w-full pl-8 pr-3 py-1.5 text-xs rounded-md border border-(--border-color) bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50"
                     />
                 </div>
@@ -378,7 +385,7 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                     onChange={(e) => setSort(e.target.value)}
                     className="px-2 py-1.5 text-xs rounded-md border border-(--border-color) bg-background text-foreground focus:outline-none cursor-pointer"
                 >
-                    {SORT_OPTIONS.map((o) => (
+                    {sortOptions.map((o) => (
                         <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                 </select>
@@ -400,7 +407,7 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                                     : "border-(--border-color) text-foreground/70 hover:border-(--border-color-hover) hover:bg-foreground/5"
                             }`}
                         >
-                            {f === "all" ? "Tất cả" : STATUS_LABELS[f]}
+                            {f === "all" ? t("filterAll") : statusLabels[f]}
                             <span className="ml-1.5 text-foreground/50">({count})</span>
                         </button>
                     );
@@ -410,11 +417,11 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
             {/* Content */}
             {loading ? (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-8 text-center text-sm text-foreground/60">
-                    Đang tải...
+                    {t("loading")}
                 </div>
             ) : displayed.length === 0 ? (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-6 text-sm text-foreground/60">
-                    {search ? `Không tìm thấy kết quả cho "${search}".` : "Không có đăng ký nào."}
+                    {search ? t("noResults", { q: search }) : t("empty")}
                 </div>
             ) : (
                 <div className="space-y-3">
@@ -425,6 +432,7 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                             submissions={submissions}
                             actingId={actingId}
                             onSetStatus={setStatus}
+                            statusLabels={statusLabels}
                         />
                     ))}
                 </div>
