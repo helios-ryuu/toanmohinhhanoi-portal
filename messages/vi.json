@@ -17,16 +17,15 @@
         "home": "Trang chủ",
         "posts": "Bài viết",
         "contests": "Kỳ thi",
-        "cms": "CMS",
+        "adminWorkspace": "Admin Workspace",
         "bucket": "Bucket",
-        "database": "Cơ sở dữ liệu",
         "contestManagement": "Quản lý kỳ thi",
         "profile": "Hồ sơ",
         "signIn": "Đăng nhập",
         "signOut": "Đăng xuất"
     },
     "footer": {
-        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.2.3"
+        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.2.4"
     },
     "post": {
         "pageTitle": "BÀI VIẾT",

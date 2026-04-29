@@ -2,7 +2,6 @@ import {
     HomeIcon,
     NewspaperIcon,
     ShieldIcon,
-    DatabaseIcon,
     FolderIcon,
     TrophyIcon,
     type LucideIcon,
@@ -10,7 +9,10 @@ import {
 
 export interface MenuItem {
     icon: LucideIcon;
+    /** Fallback English label used if no translation key is wired in. */
     label: string;
+    /** Translation key under the `nav` namespace (e.g. "home", "posts"). */
+    labelKey: string;
     href: string;
     requiresAdmin?: boolean;
     underDevelopment?: boolean;
@@ -19,11 +21,10 @@ export interface MenuItem {
 }
 
 export const menuItems: MenuItem[] = [
-    { icon: HomeIcon, label: "Home", href: "/" },
-    { icon: NewspaperIcon, label: "Posts", href: "/post" },
-    { icon: TrophyIcon, label: "Contest", href: "/contests" },
-    { icon: ShieldIcon, label: "CMS", href: "/admin", requiresAdmin: true, desktopOnly: true },
-    { icon: FolderIcon, label: "Bucket", href: "/admin/bucket", requiresAdmin: true, desktopOnly: true },
-    { icon: DatabaseIcon, label: "Database", href: "/admin/database", requiresAdmin: true, desktopOnly: true },
-    { icon: TrophyIcon, label: "Contest Management", href: "/contest-management", requiresAdmin: true, desktopOnly: true },
+    { icon: HomeIcon, label: "Home", labelKey: "home", href: "/" },
+    { icon: NewspaperIcon, label: "Posts", labelKey: "posts", href: "/post" },
+    { icon: TrophyIcon, label: "Contests", labelKey: "contests", href: "/contests" },
+    { icon: ShieldIcon, label: "Admin Workspace", labelKey: "adminWorkspace", href: "/admin", requiresAdmin: true, desktopOnly: true },
+    { icon: FolderIcon, label: "Bucket", labelKey: "bucket", href: "/admin/bucket", requiresAdmin: true, desktopOnly: true },
+    { icon: TrophyIcon, label: "Contest Management", labelKey: "contestManagement", href: "/contest-management", requiresAdmin: true, desktopOnly: true },
 ];

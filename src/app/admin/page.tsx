@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Trophy } from "lucide-react";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import ManagementTab from "@/components/features/admin/tabs/ManagementTab";
+import DatabaseTab from "@/components/features/admin/tabs/DatabaseTab";
 import AddTagForm from "@/components/features/admin/forms/AddTagForm";
 import DeletePreviewPopup from "@/components/features/admin/common/DeletePreviewPopup";
 import EditTagForm from "@/components/features/admin/forms/EditTagForm";
+import { SectionCard } from "@/components/features/admin/common/SectionCard";
 import type { DeleteConfirmData } from "@/components/features/admin/sections/DeleteSection";
 import type { AdminPost, AdminTag } from "@/types/admin";
 
@@ -63,9 +66,19 @@ function AdminWorkspace() {
             <header className="mb-6">
                 <h1 className="text-2xl font-bold tracking-widest text-accent">ADMIN WORKSPACE</h1>
                 <p className="text-sm text-foreground/60 mt-1">
-                    Manage posts and tags. Contest admin tools coming with M4.
+                    Quản lý bài viết, tag, cuộc thi và đăng ký.
                 </p>
             </header>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                <SectionCard
+                    title="Quản lý Cuộc thi"
+                    description="Tạo cuộc thi, phê duyệt đăng ký, quản lý bài nộp."
+                    colorVariant="accent"
+                    icon={Trophy}
+                    onClick={() => router.push("/contest-management")}
+                />
+            </div>
 
             <ManagementTab
                 posts={posts}
@@ -79,6 +92,10 @@ function AdminWorkspace() {
                 onDeleteConfirm={(data) => setDeleteTarget(data)}
                 onShowToast={showToast}
             />
+
+            <div className="mt-8">
+                <DatabaseTab />
+            </div>
 
             {showAddTag && (
                 <AddTagForm

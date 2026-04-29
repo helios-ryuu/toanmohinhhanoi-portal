@@ -17,16 +17,15 @@
         "home": "Home",
         "posts": "Posts",
         "contests": "Contests",
-        "cms": "CMS",
+        "adminWorkspace": "Admin Workspace",
         "bucket": "Bucket",
-        "database": "Database",
         "contestManagement": "Contest Management",
         "profile": "Profile",
         "signIn": "Sign in",
         "signOut": "Sign out"
     },
     "footer": {
-        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.2.3"
+        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.2.4"
     },
     "post": {
         "pageTitle": "POSTS",
