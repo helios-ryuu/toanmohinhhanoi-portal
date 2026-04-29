@@ -183,7 +183,7 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
                         <button
                             type="button"
                             onClick={() => router.push("/profile/contests")}
-                            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent font-medium rounded-md transition-colors text-sm whitespace-nowrap"
+                            className="flex items-center justify-center gap-2 px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent font-medium rounded-md transition-colors text-sm whitespace-nowrap cursor-pointer"
                         >
                             Đến trang Cuộc thi của tôi <ExternalLink className="w-4 h-4" />
                         </button>
@@ -206,7 +206,7 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
                     <button
                         type="button"
                         onClick={() => setMode("individual")}
-                        className={`px-3 py-1 rounded-md transition-colors ${
+                        className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
                             mode === "individual"
                                 ? "bg-accent text-white"
                                 : "text-foreground/70 hover:text-foreground"
@@ -217,7 +217,7 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
                     <button
                         type="button"
                         onClick={() => setMode("team")}
-                        className={`px-3 py-1 rounded-md transition-colors ${
+                        className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
                             mode === "team" ? "bg-accent text-white" : "text-foreground/70 hover:text-foreground"
                         }`}
                     >
@@ -265,7 +265,7 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
                     className={`inline-flex items-center justify-center px-5 py-2.5 rounded-md text-white font-medium text-sm transition-colors ${
                         isDisabled
                             ? "bg-accent/50 cursor-not-allowed"
-                            : "bg-accent hover:bg-accent/90"
+                            : "bg-accent hover:bg-accent/90 cursor-pointer"
                     }`}
                 >
                     {submitting ? t("registerSubmitting") : t("registerCta")}
