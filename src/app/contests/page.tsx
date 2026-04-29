@@ -1,22 +1,37 @@
-import UnderDevelopment from "@/components/ui/UnderDevelopment";
+import { Suspense } from "react";
+import { unstable_cache } from "next/cache";
+import { getTranslations } from "next-intl/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { listContests } from "@/lib/contests-db";
+import ContestListClient from "@/components/features/contest/ContestListClient";
 
 export const metadata = {
-    title: "Kỳ thi - Toán Mô Hình Hà Nội",
+    title: "Contests — Toán Mô Hình Hà Nội",
 };
 
-export default function ContestsPage() {
+const getCachedContests = unstable_cache(
+    async () => {
+        const supabase = createSupabaseAdminClient();
+        return listContests(supabase, { withStages: true });
+    },
+    ["public-contests"],
+    { revalidate: 60, tags: ["contests"] },
+);
+
+export default async function ContestsPage() {
+    const contests = await getCachedContests();
+    const t = await getTranslations("contests");
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <header className="mb-6">
-                <h1 className="text-2xl font-bold tracking-widest text-accent">KỲ THI</h1>
-                <p className="text-sm text-foreground/60 mt-1">
-                    Đăng ký, nộp bài và theo dõi kết quả các kỳ thi.
-                </p>
+                <h1 className="text-2xl font-bold tracking-widest text-accent">{t("pageTitle")}</h1>
+                <p className="text-sm text-foreground/60 mt-1">{t("pageSubtitle")}</p>
             </header>
-            <UnderDevelopment
-                title="Tính năng kỳ thi đang được phát triển"
-                description="Chức năng này sẽ sớm ra mắt. Vui lòng quay lại sau."
-            />
+
+            <Suspense>
+                <ContestListClient contests={contests} />
+            </Suspense>
         </div>
     );
 }
