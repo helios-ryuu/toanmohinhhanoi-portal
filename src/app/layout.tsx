@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Lexend, Fira_Code } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
 
@@ -47,15 +49,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${lexend.variable} ${firaCode.variable} antialiased max-h-screen`}>
-        <AppShell>{children}</AppShell>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <AppShell>{children}</AppShell>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

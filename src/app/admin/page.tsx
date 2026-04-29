@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trophy } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import ManagementTab from "@/components/features/admin/tabs/ManagementTab";
 import DatabaseTab from "@/components/features/admin/tabs/DatabaseTab";
@@ -16,6 +17,7 @@ import type { AdminPost, AdminTag } from "@/types/admin";
 function AdminWorkspace() {
     const router = useRouter();
     const { showToast } = useToast();
+    const t = useTranslations("admin");
     const [posts, setPosts] = useState<AdminPost[]>([]);
     const [tags, setTags] = useState<AdminTag[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -36,7 +38,7 @@ function AdminWorkspace() {
             if (postsJson.success) setPosts(postsJson.data.items ?? []);
             if (tagsJson.success) setTags(tagsJson.data ?? []);
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Failed to load data");
+            showToast("error", err instanceof Error ? err.message : t("loadError"));
         } finally {
             setIsLoading(false);
         }
@@ -64,16 +66,14 @@ function AdminWorkspace() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             <header className="mb-6">
-                <h1 className="text-2xl font-bold tracking-widest text-accent">ADMIN WORKSPACE</h1>
-                <p className="text-sm text-foreground/60 mt-1">
-                    Quản lý bài viết, tag, cuộc thi và đăng ký.
-                </p>
+                <h1 className="text-2xl font-bold tracking-widest text-accent">{t("title")}</h1>
+                <p className="text-sm text-foreground/60 mt-1">{t("subtitle")}</p>
             </header>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                 <SectionCard
-                    title="Quản lý Cuộc thi"
-                    description="Tạo cuộc thi, phê duyệt đăng ký, quản lý bài nộp."
+                    title={t("contestsCard")}
+                    description={t("contestsCardDesc")}
                     colorVariant="accent"
                     icon={Trophy}
                     onClick={() => router.push("/contest-management")}
