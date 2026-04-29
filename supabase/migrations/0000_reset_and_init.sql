@@ -1,37 +1,51 @@
 -- =====================================================================
--- Toán Mô Hình Hà Nội Portal — Supabase Schema
+-- Migration 0000: NUCLEAR RESET + FULL INIT (v0.2.0 schema)
 -- =====================================================================
--- Apply via Supabase SQL editor. Assumes a clean `public` schema
--- (pre-launch: no data preservation).
+-- WARNING — DESTRUCTIVE.
+-- This script wipes the entire `public` schema for this project (all
+-- tables, types, functions, triggers, storage policies) and recreates
+-- everything from scratch using the v0.2.0 canonical schema:
+--   * Two-layer contest timeline (contest.start_at/end_at + contest_stage)
+--   * Simplified contest_status enum (draft|active|closed|cancelled)
+--
+-- Use this when you want to start cold from a fresh database. After
+-- running this, you do NOT need to run 0001_* or 0002_* — they are
+-- already incorporated.
+--
+-- DO NOT run this on a production database with real data.
 -- =====================================================================
 
--- ---------- Enums ---------------------------------------------------------
+-- ---------- 0. Drop storage policies ---------------------------------------
 
-do $$ begin
-    create type public.user_role as enum ('user', 'admin');
-exception when duplicate_object then null; end $$;
+drop policy if exists "post-images: public read"          on storage.objects;
+drop policy if exists "submissions: member or admin read" on storage.objects;
+drop policy if exists "submissions: member insert"        on storage.objects;
 
-do $$ begin
-    create type public.post_category as enum ('news', 'announcement', 'tutorial', 'result');
-exception when duplicate_object then null; end $$;
+-- ---------- 1. Drop triggers on auth.users ---------------------------------
 
-do $$ begin
-    create type public.contest_participation_type as enum ('individual', 'team', 'both');
-exception when duplicate_object then null; end $$;
+drop trigger if exists trg_on_auth_user_created on auth.users;
 
-do $$ begin
-    create type public.contest_status as enum ('draft', 'active', 'closed', 'cancelled');
-exception when duplicate_object then null; end $$;
+-- ---------- 2. Drop policies on public tables ------------------------------
+--   Must drop before tables/columns/types they depend on. Wrapped in DO so
+--   missing tables don't abort the script.
 
-do $$ begin
-    create type public.registration_status as enum ('pending', 'approved', 'rejected', 'withdrawn');
-exception when duplicate_object then null; end $$;
+do $$
+declare
+    rec record;
+begin
+    for rec in
+        select schemaname, tablename, policyname
+        from pg_policies
+        where schemaname = 'public'
+    loop
+        execute format(
+            'drop policy if exists %I on %I.%I',
+            rec.policyname, rec.schemaname, rec.tablename
+        );
+    end loop;
+end $$;
 
-do $$ begin
-    create type public.member_role as enum ('leader', 'member');
-exception when duplicate_object then null; end $$;
-
--- ---------- Drop tables (reverse dependency order) ------------------------
+-- ---------- 3. Drop tables (reverse dependency order) ----------------------
 
 drop table if exists public.submission            cascade;
 drop table if exists public.registration_member   cascade;
@@ -42,6 +56,34 @@ drop table if exists public.contest               cascade;
 drop table if exists public.post                  cascade;
 drop table if exists public.tag                   cascade;
 drop table if exists public.users                 cascade;
+
+-- ---------- 4. Drop functions ----------------------------------------------
+
+drop function if exists public.handle_new_auth_user() cascade;
+drop function if exists public.is_admin()             cascade;
+drop function if exists public.set_updated_at()       cascade;
+
+-- ---------- 5. Drop custom enum types --------------------------------------
+
+drop type if exists public.user_role                  cascade;
+drop type if exists public.post_category              cascade;
+drop type if exists public.contest_participation_type cascade;
+drop type if exists public.contest_status             cascade;
+drop type if exists public.registration_status        cascade;
+drop type if exists public.member_role                cascade;
+
+-- =====================================================================
+-- FULL INIT — mirrors supabase/schema.sql (v0.2.0 canonical DDL)
+-- =====================================================================
+
+-- ---------- Enums ---------------------------------------------------------
+
+create type public.user_role                  as enum ('user', 'admin');
+create type public.post_category              as enum ('news', 'announcement', 'tutorial', 'result');
+create type public.contest_participation_type as enum ('individual', 'team', 'both');
+create type public.contest_status             as enum ('draft', 'active', 'closed', 'cancelled');
+create type public.registration_status        as enum ('pending', 'approved', 'rejected', 'withdrawn');
+create type public.member_role                as enum ('leader', 'member');
 
 -- ---------- Tables --------------------------------------------------------
 
@@ -54,14 +96,10 @@ create table public.users (
     role          public.user_role  not null default 'user',
     created_at    timestamptz       not null default now(),
     updated_at    timestamptz,
-    -- Profile field length constraints (FR_USER_05)
     constraint chk_display_name_len check (display_name is null or char_length(display_name) <= 100),
     constraint chk_bio_len          check (bio is null or char_length(bio) <= 500),
     constraint chk_school_len       check (school is null or char_length(school) <= 200)
 );
-
--- For existing databases that already have public.users without these constraints,
--- apply the migration in supabase/migrations/0001_user_profile_length.sql via the SQL editor.
 
 create table public.post (
     id            bigint                generated by default as identity primary key,
@@ -108,8 +146,9 @@ create table public.contest (
 );
 
 -- contest_stage: dynamic n-stage timeline. Stages may overlap. Each stage
--- independently enables registration / submission. Constraint enforced at
--- application layer that stage windows fit inside [contest.start_at, contest.end_at].
+-- independently enables registration / submission. Stage windows must fit
+-- inside [contest.start_at, contest.end_at] (validated at the application
+-- layer in src/lib/contests-db.ts).
 create table public.contest_stage (
     id                 bigint        generated by default as identity primary key,
     contest_id         bigint        not null,
@@ -143,9 +182,6 @@ create table public.registration_member (
     primary key (registration_id, user_id)
 );
 
--- Uniqueness of (user, contest) enforced at application layer (subquery index
--- not supported in Postgres); see contests-db.ts in Phase 2.
-
 create table public.submission (
     id              bigint      generated by default as identity primary key,
     registration_id bigint      not null,
@@ -159,48 +195,40 @@ create table public.submission (
     is_final        boolean     not null default false
 );
 
--- ---------- Constraints: foreign keys -------------------------------------
+-- ---------- Foreign keys --------------------------------------------------
 
 alter table public.users
     add constraint users_auth_fk
         foreign key (id) references auth.users(id)
-        on delete cascade;  -- on update: no action (auth UUID không bao giờ thay đổi)
+        on delete cascade;
 
 alter table public.post_tags
     add constraint post_tags_post_fk
-        foreign key (post_id) references public.post(id)
-        on delete cascade,  -- on update: no action (identity PK không thay đổi)
+        foreign key (post_id) references public.post(id) on delete cascade,
     add constraint post_tags_tag_fk
-        foreign key (tag_id) references public.tag(id)
-        on delete cascade;  -- on update: no action (identity PK không thay đổi)
+        foreign key (tag_id)  references public.tag(id)  on delete cascade;
 
 alter table public.contest_stage
     add constraint contest_stage_contest_fk
-        foreign key (contest_id) references public.contest(id)
-        on delete cascade;  -- on update: no action (identity PK không thay đổi)
+        foreign key (contest_id) references public.contest(id) on delete cascade;
 
 alter table public.contest_registration
     add constraint contest_registration_contest_fk
-        foreign key (contest_id) references public.contest(id)
-        on delete cascade;  -- on update: no action (identity PK không thay đổi)
+        foreign key (contest_id) references public.contest(id) on delete cascade;
 
 alter table public.registration_member
     add constraint registration_member_registration_fk
-        foreign key (registration_id) references public.contest_registration(id)
-        on delete cascade,  -- on update: no action (identity PK không thay đổi)
+        foreign key (registration_id) references public.contest_registration(id) on delete cascade,
     add constraint registration_member_user_fk
-        foreign key (user_id) references public.users(id)
-        on delete cascade;  -- on update: no action (auth UUID không bao giờ thay đổi)
+        foreign key (user_id) references public.users(id) on delete cascade;
 
 alter table public.submission
     add constraint submission_registration_fk
-        foreign key (registration_id) references public.contest_registration(id)
-        on delete cascade,  -- on update: no action (identity PK không thay đổi)
+        foreign key (registration_id) references public.contest_registration(id) on delete cascade,
     add constraint submission_submitted_by_fk
         foreign key (submitted_by) references public.users(id);
-        -- on delete: no action (giữ lịch sử nộp bài khi user bị xoá); on update: no action (auth UUID không bao giờ thay đổi)
 
--- ---------- Constraints: check --------------------------------------------
+-- ---------- Check constraints ---------------------------------------------
 
 alter table public.users
     add constraint users_username_len check (char_length(username) between 3 and 30),
@@ -230,19 +258,17 @@ alter table public.submission
 
 -- ---------- Indexes -------------------------------------------------------
 
-create index if not exists idx_post_published_at    on public.post (published, published_at desc);
-create index if not exists idx_post_category        on public.post (category);
-create index if not exists idx_post_tags_tag_id     on public.post_tags (tag_id);
-create index if not exists idx_contest_status       on public.contest (status);
-create index if not exists idx_contest_window       on public.contest (start_at, end_at);
-create index if not exists idx_contest_stage_contest on public.contest_stage (contest_id, display_order);
-create index if not exists idx_contest_stage_window on public.contest_stage (start_at, end_at);
-create index if not exists idx_registration_ctx     on public.contest_registration (contest_id, status);
-create index if not exists idx_member_user_id       on public.registration_member (user_id);
-create index if not exists idx_submission_reg_final on public.submission (registration_id, is_final);
+create index idx_post_published_at     on public.post (published, published_at desc);
+create index idx_post_category         on public.post (category);
+create index idx_post_tags_tag_id      on public.post_tags (tag_id);
+create index idx_contest_status        on public.contest (status);
+create index idx_contest_window        on public.contest (start_at, end_at);
+create index idx_contest_stage_contest on public.contest_stage (contest_id, display_order);
+create index idx_contest_stage_window  on public.contest_stage (start_at, end_at);
+create index idx_registration_ctx      on public.contest_registration (contest_id, status);
+create index idx_member_user_id        on public.registration_member (user_id);
+create index idx_submission_reg_final  on public.submission (registration_id, is_final);
 
--- At most one is_final=true submission per registration.
-drop index if exists uq_submission_final_per_registration;
 create unique index uq_submission_final_per_registration
     on public.submission (registration_id)
     where is_final = true;
@@ -259,32 +285,26 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_users_updated_at on public.users;
 create trigger trg_users_updated_at
     before update on public.users
     for each row execute function public.set_updated_at();
 
-drop trigger if exists trg_post_updated_at on public.post;
 create trigger trg_post_updated_at
     before update on public.post
     for each row execute function public.set_updated_at();
 
-drop trigger if exists trg_contest_updated_at on public.contest;
 create trigger trg_contest_updated_at
     before update on public.contest
     for each row execute function public.set_updated_at();
 
-drop trigger if exists trg_contest_stage_updated_at on public.contest_stage;
 create trigger trg_contest_stage_updated_at
     before update on public.contest_stage
     for each row execute function public.set_updated_at();
 
-drop trigger if exists trg_registration_updated_at on public.contest_registration;
 create trigger trg_registration_updated_at
     before update on public.contest_registration
     for each row execute function public.set_updated_at();
 
--- Create public.users row from a new auth.users row.
 create or replace function public.handle_new_auth_user()
 returns trigger
 language plpgsql
@@ -320,13 +340,11 @@ begin
 end;
 $$;
 
-drop trigger if exists trg_on_auth_user_created on auth.users;
 create trigger trg_on_auth_user_created
     after insert on auth.users
     for each row
     execute function public.handle_new_auth_user();
 
--- Role helper (SECURITY DEFINER so RLS on `users` does not short-circuit it).
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -353,43 +371,36 @@ alter table public.registration_member   enable row level security;
 alter table public.submission            enable row level security;
 
 -- users
-drop policy if exists "users: public read"   on public.users;
 create policy "users: public read"
     on public.users for select
     using (true);
 
-drop policy if exists "users: owner update"  on public.users;
 create policy "users: owner update"
     on public.users for update
     using  (auth.uid() = id)
     with check (auth.uid() = id);
 
 -- post
-drop policy if exists "post: public read published" on public.post;
 create policy "post: public read published"
     on public.post for select
     using (published = true);
 
--- tag (public read)
-drop policy if exists "tag: public read" on public.tag;
+-- tag
 create policy "tag: public read"
     on public.tag for select
     using (true);
 
--- post_tags (public read; client-side filter by published post)
-drop policy if exists "post_tags: public read" on public.post_tags;
+-- post_tags
 create policy "post_tags: public read"
     on public.post_tags for select
     using (true);
 
 -- contest
-drop policy if exists "contest: public read non-draft" on public.contest;
 create policy "contest: public read non-draft"
     on public.contest for select
     using (status <> 'draft' or public.is_admin());
 
--- contest_stage (public read for stages of non-draft contests)
-drop policy if exists "contest_stage: public read non-draft" on public.contest_stage;
+-- contest_stage
 create policy "contest_stage: public read non-draft"
     on public.contest_stage for select
     using (
@@ -400,7 +411,6 @@ create policy "contest_stage: public read non-draft"
     );
 
 -- contest_registration
-drop policy if exists "registration: member or admin read" on public.contest_registration;
 create policy "registration: member or admin read"
     on public.contest_registration for select
     using (
@@ -412,7 +422,6 @@ create policy "registration: member or admin read"
     );
 
 -- registration_member
-drop policy if exists "registration_member: member or admin read" on public.registration_member;
 create policy "registration_member: member or admin read"
     on public.registration_member for select
     using (
@@ -425,7 +434,6 @@ create policy "registration_member: member or admin read"
     );
 
 -- submission
-drop policy if exists "submission: member or admin read" on public.submission;
 create policy "submission: member or admin read"
     on public.submission for select
     using (
@@ -436,7 +444,6 @@ create policy "submission: member or admin read"
         )
     );
 
-drop policy if exists "submission: approved member insert" on public.submission;
 create policy "submission: approved member insert"
     on public.submission for insert
     with check (
@@ -461,14 +468,10 @@ insert into storage.buckets (id, name, public)
 values ('submissions', 'submissions', false)
 on conflict (id) do nothing;
 
--- post-images: public read; writes via service role only.
-drop policy if exists "post-images: public read" on storage.objects;
 create policy "post-images: public read"
     on storage.objects for select
     using (bucket_id = 'post-images');
 
--- submissions: member-or-admin read; member insert.
-drop policy if exists "submissions: member or admin read" on storage.objects;
 create policy "submissions: member or admin read"
     on storage.objects for select
     using (
@@ -481,7 +484,6 @@ create policy "submissions: member or admin read"
         )
     );
 
-drop policy if exists "submissions: member insert" on storage.objects;
 create policy "submissions: member insert"
     on storage.objects for insert
     with check (
@@ -492,19 +494,9 @@ create policy "submissions: member insert"
         )
     );
 
--- ---------- Realtime recommendations --------------------------------------
--- Bật Realtime qua Dashboard hoặc:
---   alter publication supabase_realtime add table public.<tên_bảng>;
---
--- NÊN bật:
---   contest               — client tự cập nhật status (open/ongoing/closed) mà
---                           không cần reload; dùng cho trang danh sách kỳ thi.
---   contest_registration  — admin thấy đăng ký mới ngay lập tức; team thấy
---                           trạng thái duyệt (pending→approved/rejected) đổi live.
---   submission            — team thấy xác nhận nộp bài, admin theo dõi bài nộp
---                           cuối (is_final) mà không cần polling.
---
--- KHÔNG cần bật:
---   users                 — dữ liệu profile, thay đổi thấp, không cần push live.
---   post / tag / post_tags — nội dung tĩnh, đủ dùng ISR/revalidateTag.
---   registration_member   — thay đổi ít, đọc theo registration đã load sẵn.
+-- ---------- Done ----------------------------------------------------------
+-- After this script:
+--   * The `public` schema matches supabase/schema.sql (v0.2.0).
+--   * No need to run 0001_user_profile_length.sql or 0002_contest_stages.sql.
+--   * Promote a user to admin via:
+--       update public.users set role = 'admin' where id = '<auth-uid>';

@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
         const sp = req.nextUrl.searchParams;
         const status = (sp.get("status") as ContestStatus | null) ?? undefined;
         const supabase = createSupabaseAdminClient();
-        const contests = await listContests(supabase, { status });
+        const contests = await listContests(supabase, { status, withStages: true });
         return apiSuccess(contests);
     } catch (err) {
         return handleRouteError(err);

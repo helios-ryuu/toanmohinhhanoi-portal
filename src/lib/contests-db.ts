@@ -1,37 +1,44 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
     DbContest,
+    DbContestStage,
     DbContestRegistration,
     DbRegistrationMember,
     DbSubmission,
     ContestParticipationType,
     ContestStatus,
+    ContestWithStages,
 } from "@/types/database";
 
-const CONTEST_FIELDS = "id, slug, title, description, rules, cover_image_url, participation_type, max_team_size, registration_start, registration_end, contest_start, contest_end, submission_deadline, status, created_at, updated_at";
+const CONTEST_FIELDS = "id, slug, title, description, rules, cover_image_url, participation_type, max_team_size, start_at, end_at, status, created_at, updated_at";
+const STAGE_FIELDS = "id, contest_id, name, description, start_at, end_at, allow_registration, allow_submission, allow_resubmit, submission_type, display_order, created_at, updated_at";
 
 export async function listContests(
     supabase: SupabaseClient,
-    opts: { status?: ContestStatus; includeAll?: boolean } = {},
-): Promise<DbContest[]> {
-    let query = supabase.from("contest").select(CONTEST_FIELDS).order("registration_start", { ascending: false });
+    opts: { status?: ContestStatus; includeAll?: boolean; withStages?: boolean } = {},
+): Promise<(DbContest | ContestWithStages)[]> {
+    let query = supabase.from("contest").select(CONTEST_FIELDS).order("start_at", { ascending: false });
     if (opts.status) query = query.eq("status", opts.status);
     else if (!opts.includeAll) query = query.neq("status", "draft");
     const { data, error } = await query;
     if (error) throw new Error(error.message);
-    return (data ?? []) as DbContest[];
+    const contests = (data ?? []) as DbContest[];
+    if (!opts.withStages) return contests;
+    return Promise.all(contests.map(async (c) => ({ ...c, stages: await listStages(supabase, c.id) })));
 }
 
 export async function getContestBySlug(
     supabase: SupabaseClient,
     slug: string,
     includeDraft = false,
-): Promise<DbContest | null> {
+): Promise<ContestWithStages | null> {
     let query = supabase.from("contest").select(CONTEST_FIELDS).eq("slug", slug);
     if (!includeDraft) query = query.neq("status", "draft");
     const { data, error } = await query.maybeSingle();
     if (error) throw new Error(error.message);
-    return (data as DbContest) ?? null;
+    if (!data) return null;
+    const contest = data as DbContest;
+    return { ...contest, stages: await listStages(supabase, contest.id) };
 }
 
 export async function getContestById(
@@ -43,6 +50,15 @@ export async function getContestById(
     return (data as DbContest) ?? null;
 }
 
+export async function getContestWithStagesById(
+    supabase: SupabaseClient,
+    id: number,
+): Promise<ContestWithStages | null> {
+    const contest = await getContestById(supabase, id);
+    if (!contest) return null;
+    return { ...contest, stages: await listStages(supabase, id) };
+}
+
 export interface ContestInput {
     slug: string;
     title: string;
@@ -51,11 +67,8 @@ export interface ContestInput {
     cover_image_url?: string | null;
     participation_type: ContestParticipationType;
     max_team_size: number;
-    registration_start: string;
-    registration_end: string;
-    contest_start: string;
-    contest_end: string;
-    submission_deadline: string;
+    start_at: string;
+    end_at: string;
     status?: ContestStatus;
 }
 
@@ -66,17 +79,10 @@ function validateContest(input: ContestInput): string | null {
     if (input.participation_type !== "individual" && input.max_team_size < 2) {
         return "team/both contests must have max_team_size >= 2";
     }
-    const dates = [
-        new Date(input.registration_start),
-        new Date(input.registration_end),
-        new Date(input.contest_start),
-        new Date(input.contest_end),
-        new Date(input.submission_deadline),
-    ];
-    if (dates.some((d) => Number.isNaN(d.getTime()))) return "invalid date(s)";
-    if (!(dates[0] < dates[1] && dates[1] <= dates[2] && dates[2] < dates[3] && dates[3] <= dates[4])) {
-        return "date order invalid: registration_start < registration_end <= contest_start < contest_end <= submission_deadline";
-    }
+    const start = new Date(input.start_at);
+    const end = new Date(input.end_at);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "invalid date(s)";
+    if (!(start < end)) return "date order invalid: start_at must be before end_at";
     return null;
 }
 
@@ -99,11 +105,8 @@ export async function updateContest(
     if (
         patch.participation_type !== undefined ||
         patch.max_team_size !== undefined ||
-        patch.registration_start !== undefined ||
-        patch.registration_end !== undefined ||
-        patch.contest_start !== undefined ||
-        patch.contest_end !== undefined ||
-        patch.submission_deadline !== undefined
+        patch.start_at !== undefined ||
+        patch.end_at !== undefined
     ) {
         const existing = await getContestById(supabase, id);
         if (!existing) throw new Error("contest not found");
@@ -115,11 +118,8 @@ export async function updateContest(
             cover_image_url: patch.cover_image_url ?? existing.cover_image_url,
             participation_type: patch.participation_type ?? existing.participation_type,
             max_team_size: patch.max_team_size ?? existing.max_team_size,
-            registration_start: patch.registration_start ?? existing.registration_start,
-            registration_end: patch.registration_end ?? existing.registration_end,
-            contest_start: patch.contest_start ?? existing.contest_start,
-            contest_end: patch.contest_end ?? existing.contest_end,
-            submission_deadline: patch.submission_deadline ?? existing.submission_deadline,
+            start_at: patch.start_at ?? existing.start_at,
+            end_at: patch.end_at ?? existing.end_at,
             status: patch.status ?? existing.status,
         };
         const err = validateContest(merged);
@@ -136,6 +136,184 @@ export async function deleteContest(
 ): Promise<void> {
     const { error } = await supabase.from("contest").delete().eq("id", id);
     if (error) throw new Error(error.message);
+}
+
+// ---------- Stages ----------
+
+export interface StageInput {
+    name: string;
+    description?: string | null;
+    start_at: string;
+    end_at: string;
+    allow_registration?: boolean;
+    allow_submission?: boolean;
+    allow_resubmit?: boolean;
+    submission_type?: string | null;
+    display_order?: number;
+}
+
+function validateStage(stage: StageInput, contest: { start_at: string; end_at: string }): string | null {
+    const cStart = new Date(contest.start_at).getTime();
+    const cEnd = new Date(contest.end_at).getTime();
+    const sStart = new Date(stage.start_at).getTime();
+    const sEnd = new Date(stage.end_at).getTime();
+    if ([cStart, cEnd, sStart, sEnd].some(Number.isNaN)) return "invalid stage date(s)";
+    if (!(sStart < sEnd)) return "stage start_at must be before end_at";
+    if (sStart < cStart || sEnd > cEnd) return "stage must be within contest grand timeline";
+    if (!stage.name?.trim()) return "stage name is required";
+    return null;
+}
+
+export async function listStages(
+    supabase: SupabaseClient,
+    contestId: number,
+): Promise<DbContestStage[]> {
+    const { data, error } = await supabase
+        .from("contest_stage")
+        .select(STAGE_FIELDS)
+        .eq("contest_id", contestId)
+        .order("display_order", { ascending: true })
+        .order("start_at", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as DbContestStage[];
+}
+
+export async function createStage(
+    supabase: SupabaseClient,
+    contestId: number,
+    input: StageInput,
+): Promise<DbContestStage> {
+    const contest = await getContestById(supabase, contestId);
+    if (!contest) throw new Error("contest not found");
+    const err = validateStage(input, contest);
+    if (err) throw new Error(err);
+    const { data, error } = await supabase
+        .from("contest_stage")
+        .insert({ ...input, contest_id: contestId })
+        .select(STAGE_FIELDS)
+        .single();
+    if (error) throw new Error(error.message);
+    return data as DbContestStage;
+}
+
+export async function updateStage(
+    supabase: SupabaseClient,
+    stageId: number,
+    patch: Partial<StageInput>,
+): Promise<DbContestStage> {
+    const { data: existing, error: getErr } = await supabase
+        .from("contest_stage")
+        .select(STAGE_FIELDS)
+        .eq("id", stageId)
+        .maybeSingle();
+    if (getErr) throw new Error(getErr.message);
+    if (!existing) throw new Error("stage not found");
+    const stage = existing as DbContestStage;
+    const contest = await getContestById(supabase, stage.contest_id);
+    if (!contest) throw new Error("contest not found");
+    const merged: StageInput = {
+        name: patch.name ?? stage.name,
+        description: patch.description ?? stage.description,
+        start_at: patch.start_at ?? stage.start_at,
+        end_at: patch.end_at ?? stage.end_at,
+        allow_registration: patch.allow_registration ?? stage.allow_registration,
+        allow_submission: patch.allow_submission ?? stage.allow_submission,
+        allow_resubmit: patch.allow_resubmit ?? stage.allow_resubmit,
+        submission_type: patch.submission_type ?? stage.submission_type,
+        display_order: patch.display_order ?? stage.display_order,
+    };
+    const err = validateStage(merged, contest);
+    if (err) throw new Error(err);
+    const { data, error } = await supabase
+        .from("contest_stage")
+        .update(patch)
+        .eq("id", stageId)
+        .select(STAGE_FIELDS)
+        .single();
+    if (error) throw new Error(error.message);
+    return data as DbContestStage;
+}
+
+export async function deleteStage(
+    supabase: SupabaseClient,
+    stageId: number,
+): Promise<void> {
+    const { error } = await supabase.from("contest_stage").delete().eq("id", stageId);
+    if (error) throw new Error(error.message);
+}
+
+// Replace all stages for a contest in one shot. Used by the admin form to keep
+// the stage list in sync with what the user submits.
+export async function replaceStages(
+    supabase: SupabaseClient,
+    contestId: number,
+    stages: StageInput[],
+): Promise<DbContestStage[]> {
+    const contest = await getContestById(supabase, contestId);
+    if (!contest) throw new Error("contest not found");
+    for (const s of stages) {
+        const err = validateStage(s, contest);
+        if (err) throw new Error(err);
+    }
+    const { error: delErr } = await supabase.from("contest_stage").delete().eq("contest_id", contestId);
+    if (delErr) throw new Error(delErr.message);
+    if (stages.length === 0) return [];
+    const rows = stages.map((s, i) => ({
+        contest_id: contestId,
+        name: s.name,
+        description: s.description ?? null,
+        start_at: s.start_at,
+        end_at: s.end_at,
+        allow_registration: s.allow_registration ?? false,
+        allow_submission: s.allow_submission ?? false,
+        allow_resubmit: s.allow_resubmit ?? false,
+        submission_type: s.submission_type ?? null,
+        display_order: s.display_order ?? i,
+    }));
+    const { data, error } = await supabase.from("contest_stage").insert(rows).select(STAGE_FIELDS);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as DbContestStage[];
+}
+
+// Returns true if `now` falls within at least one stage where the given
+// capability flag is enabled.
+export function isCapabilityActive(
+    stages: DbContestStage[],
+    capability: "allow_registration" | "allow_submission",
+    now: Date = new Date(),
+): boolean {
+    const t = now.getTime();
+    return stages.some(
+        (s) => s[capability] && new Date(s.start_at).getTime() <= t && t <= new Date(s.end_at).getTime(),
+    );
+}
+
+// Returns the first active submission stage, or null. Use this to read
+// stage-level flags like allow_resubmit at submission time.
+export function getActiveSubmissionStage(
+    stages: DbContestStage[],
+    now: Date = new Date(),
+): DbContestStage | null {
+    const t = now.getTime();
+    return (
+        stages.find(
+            (s) => s.allow_submission && new Date(s.start_at).getTime() <= t && t <= new Date(s.end_at).getTime(),
+        ) ?? null
+    );
+}
+
+// Returns the latest end_at among stages where allow_submission=true and the
+// stage is currently active. Used as the effective submission deadline.
+export function activeSubmissionDeadline(
+    stages: DbContestStage[],
+    now: Date = new Date(),
+): Date | null {
+    const t = now.getTime();
+    const active = stages.filter(
+        (s) => s.allow_submission && new Date(s.start_at).getTime() <= t && t <= new Date(s.end_at).getTime(),
+    );
+    if (active.length === 0) return null;
+    return new Date(Math.max(...active.map((s) => new Date(s.end_at).getTime())));
 }
 
 // ---------- Registrations ----------
@@ -164,11 +342,11 @@ export async function createRegistration(
     args: { contest: DbContest; leaderId: string; teamName?: string | null; memberIds: string[] },
 ): Promise<{ registration: DbContestRegistration; members: DbRegistrationMember[] }> {
     const { contest, leaderId, teamName, memberIds } = args;
-    const now = new Date();
-    const regStart = new Date(contest.registration_start);
-    const regEnd = new Date(contest.registration_end);
-    if (now < regStart || now > regEnd) throw new Error("registration window closed");
-    if (contest.status !== "open") throw new Error("contest is not open for registration");
+    if (contest.status !== "active") throw new Error("contest is not active");
+    const stages = await listStages(supabase, contest.id);
+    if (!isCapabilityActive(stages, "allow_registration")) {
+        throw new Error("no registration stage is currently active");
+    }
 
     const allMembers = Array.from(new Set([leaderId, ...memberIds]));
     const teamSize = allMembers.length;
@@ -227,16 +405,24 @@ export async function getRegistration(
     return (data as DbContestRegistration) ?? null;
 }
 
+export interface DbRegistrationMemberWithUser extends DbRegistrationMember {
+    users?: {
+        username: string;
+        display_name: string | null;
+        school: string | null;
+    };
+}
+
 export async function getRegistrationMembers(
     supabase: SupabaseClient,
     registrationId: number,
-): Promise<DbRegistrationMember[]> {
+): Promise<DbRegistrationMemberWithUser[]> {
     const { data, error } = await supabase
         .from("registration_member")
-        .select("*")
+        .select("*, users(username, display_name, school)")
         .eq("registration_id", registrationId);
     if (error) throw new Error(error.message);
-    return (data ?? []) as DbRegistrationMember[];
+    return (data ?? []) as DbRegistrationMemberWithUser[];
 }
 
 export async function isRegistrationLeader(

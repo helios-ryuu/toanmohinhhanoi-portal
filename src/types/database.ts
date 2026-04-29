@@ -3,7 +3,7 @@
 export type PostCategory = "news" | "announcement" | "tutorial" | "result";
 export type UserRoleDb = "user" | "admin";
 export type ContestParticipationType = "individual" | "team" | "both";
-export type ContestStatus = "draft" | "open" | "ongoing" | "closed" | "cancelled";
+export type ContestStatus = "draft" | "active" | "closed" | "cancelled";
 export type RegistrationStatus = "pending" | "approved" | "rejected" | "withdrawn";
 export type MemberRole = "leader" | "member";
 
@@ -58,15 +58,30 @@ export interface DbContest {
     cover_image_url: string | null;
     participation_type: ContestParticipationType;
     max_team_size: number;
-    registration_start: string;
-    registration_end: string;
-    contest_start: string;
-    contest_end: string;
-    submission_deadline: string;
+    start_at: string;
+    end_at: string;
     status: ContestStatus;
     created_at: string;
     updated_at: string | null;
 }
+
+export interface DbContestStage {
+    id: number;
+    contest_id: number;
+    name: string;
+    description: string | null;
+    start_at: string;
+    end_at: string;
+    allow_registration: boolean;
+    allow_submission: boolean;
+    allow_resubmit: boolean;
+    submission_type: string | null;
+    display_order: number;
+    created_at: string;
+    updated_at: string | null;
+}
+
+export type ContestWithStages = DbContest & { stages: DbContestStage[] };
 
 export interface DbContestRegistration {
     id: number;
@@ -110,6 +125,7 @@ export interface Database {
             tag: { Row: Row<DbTag>; Insert: Insert<DbTag>; Update: Update<DbTag> };
             post_tags: { Row: Row<DbPostTag>; Insert: Insert<DbPostTag>; Update: Update<DbPostTag> };
             contest: { Row: Row<DbContest>; Insert: Insert<DbContest>; Update: Update<DbContest> };
+            contest_stage: { Row: Row<DbContestStage>; Insert: Insert<DbContestStage>; Update: Update<DbContestStage> };
             contest_registration: { Row: Row<DbContestRegistration>; Insert: Insert<DbContestRegistration>; Update: Update<DbContestRegistration> };
             registration_member: { Row: Row<DbRegistrationMember>; Insert: Insert<DbRegistrationMember>; Update: Update<DbRegistrationMember> };
             submission: { Row: Row<DbSubmission>; Insert: Insert<DbSubmission>; Update: Update<DbSubmission> };
