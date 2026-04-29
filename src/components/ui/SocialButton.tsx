@@ -35,7 +35,7 @@ export default function SocialButton({
         <button
             type="button"
             onClick={handleClick}
-            className={`p-1.5 mx-0.5 rounded-md cursor-pointer hover:bg-background-hover ${className}`}
+            className={`flex-none w-8 h-8 inline-flex items-center justify-center mx-0.5 rounded-md cursor-pointer hover:bg-background-hover ${className}`}
         >
             <Image
                 src={theme === "light" ? lightIcon : darkIcon}

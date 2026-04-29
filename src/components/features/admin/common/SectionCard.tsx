@@ -98,15 +98,24 @@ export function SectionCard({
     }
 
     // Standard card with select/button
+    const variantButtonClasses = {
+        accent: buttonDisabled ? "bg-accent/50 cursor-not-allowed" : "bg-accent hover:bg-accent/90 cursor-pointer",
+        blue: buttonDisabled ? "bg-blue-500/50 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-600 cursor-pointer",
+        red: buttonDisabled ? "bg-red-500/50 cursor-not-allowed" : "bg-red-500 hover:bg-red-600 cursor-pointer",
+    };
+
     const buttonClasses = buttonVariant === "danger"
         ? `w-full px-3 py-2 text-sm rounded-md transition-colors bg-red-700/20 text-red-700 border border-red-700/30 ${buttonDisabled
             ? "cursor-not-allowed"
             : "hover:border-red-700/80 cursor-pointer"
         }`
-        : `w-full px-3 py-2 text-white text-sm rounded-md transition-colors ${buttonDisabled
-            ? "bg-accent/50 cursor-not-allowed"
-            : "bg-accent hover:bg-accent/90 cursor-pointer"
-        }`;
+        : `w-full px-3 py-2 text-white text-sm rounded-md transition-colors ${variantButtonClasses[colorVariant]}`;
+
+    const secondaryButtonClasses = {
+        accent: "bg-accent/20 text-accent hover:bg-accent/40",
+        blue: "bg-blue-500/20 text-blue-500 hover:bg-blue-500/40",
+        red: "bg-red-500/20 text-red-500 hover:bg-red-500/40",
+    };
 
     return (
         <div className={`p-4 rounded-lg border transition-colors ${colorClasses[colorVariant]} ${className}`}>
@@ -136,7 +145,7 @@ export function SectionCard({
                     {onSecondaryButtonClick && (
                         <button
                             onClick={onSecondaryButtonClick}
-                            className="px-3 py-2 rounded-md bg-accent/20 text-accent hover:bg-accent/40 transition-colors cursor-pointer flex items-center justify-center"
+                            className={`px-3 py-2 rounded-md transition-colors cursor-pointer flex items-center justify-center ${secondaryButtonClasses[colorVariant]}`}
                             title="Advanced Select"
                         >
                             <Filter size={16} />
