@@ -38,14 +38,6 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
     const t = useTranslations("contests");
     const router = useRouter();
     const { user, isLoading } = useUser();
-
-    if (!isLoading && user?.role === "admin") {
-        return (
-            <div className="mt-8 pt-6 border-t border-(--border-color)">
-                <p className="text-xs text-foreground/50 italic">{t("registerAdminForbidden")}</p>
-            </div>
-        );
-    }
     const { showToast } = useToast();
     const [submitting, setSubmitting] = useState(false);
     const [teamName, setTeamName] = useState("");
@@ -162,6 +154,14 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
         } finally {
             setSubmitting(false);
         }
+    }
+
+    if (!isLoading && user?.role === "admin") {
+        return (
+            <div className="mt-8 pt-6 border-t border-(--border-color)">
+                <p className="text-xs text-foreground/50 italic">{t("registerAdminForbidden")}</p>
+            </div>
+        );
     }
 
     if (existingReg) {
