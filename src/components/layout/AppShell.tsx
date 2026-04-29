@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import Footer from "@/components/layout/Footer";
@@ -20,6 +21,7 @@ const BANNER_LINK = {
 function AppShellContent({ children }: { children: React.ReactNode }) {
     const { isPinned } = useSidebar();
     const pathname = usePathname();
+    const tCommon = useTranslations("common");
     const isHomePage = pathname === "/";
 
     const isPostPage = pathname.startsWith("/post/");
@@ -53,7 +55,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                     gradient="linear-gradient(to right, #f59e0b, #ea580c, #dc2626)"
                     content={
                         <>
-                            <span className="text-xs mr-2">Truy cập fanpage của Toán Mô Hình Hà Nội để cập nhật thông tin mới nhất! 😉</span>
+                            <span className="text-xs mr-2">{tCommon("bannerText")}</span>
                             <Button
                                     className="bg-yellow-600 border-yellow-500 text-white hover:bg-yellow-400 hover:border-yellow-500"
                                     onClick={() => {
@@ -67,7 +69,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                                         }
                                     }}
                                 >
-                                    Truy cập ngay
+                                    {tCommon("bannerCta")}
                                 </Button>
                         </>
                     }

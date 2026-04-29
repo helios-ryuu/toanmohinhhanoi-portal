@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Plus, Pencil, Trash2, Users } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/features/admin/common/Button";
 import {
@@ -24,6 +25,7 @@ function formatDateRange(a: string, b: string): string {
 
 function ContestManagementWorkspace() {
     const { showToast } = useToast();
+    const t = useTranslations("contestManagement");
     const [contests, setContests] = useState<ContestWithStages[]>([]);
     const [loading, setLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
@@ -40,15 +42,15 @@ function ContestManagementWorkspace() {
             if (!ct.includes("application/json")) {
                 throw new Error(
                     res.status === 401 || res.status === 403
-                        ? "Phiên đăng nhập hết hạn — vui lòng tải lại trang."
-                        : `Lỗi máy chủ (${res.status})`,
+                        ? t("sessionExpired")
+                        : t("serverError", { status: res.status }),
                 );
             }
             const json = await res.json();
             if (json.success) setContests(json.data ?? []);
-            else throw new Error(json.message || "Lỗi tải dữ liệu");
+            else throw new Error(json.message || t("loading"));
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Lỗi tải dữ liệu");
+            showToast("error", err instanceof Error ? err.message : t("loading"));
         } finally {
             setLoading(false);
         }
@@ -64,12 +66,12 @@ function ContestManagementWorkspace() {
         try {
             const res = await fetch(`/api/admin/contests/${deleting.id}`, { method: "DELETE" });
             const json = await res.json();
-            if (!json.success) throw new Error(json.message || "Xoá thất bại");
-            showToast("success", "Đã xoá cuộc thi");
+            if (!json.success) throw new Error(json.message || t("deleteError"));
+            showToast("success", t("deleteSuccess"));
             setDeleting(null);
             refresh();
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Xoá thất bại");
+            showToast("error", err instanceof Error ? err.message : t("deleteError"));
         } finally {
             setDeletingBusy(false);
         }
@@ -87,10 +89,8 @@ function ContestManagementWorkspace() {
         <div className="max-w-6xl mx-auto px-4 py-8">
             <header className="mb-6 flex items-start justify-between gap-4 flex-wrap">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-widest text-accent">CONTEST MANAGEMENT</h1>
-                    <p className="text-sm text-foreground/60 mt-1">
-                        Tạo cuộc thi, quản lý đăng ký và phê duyệt thành viên.
-                    </p>
+                    <h1 className="text-2xl font-bold tracking-widest text-accent">{t("title")}</h1>
+                    <p className="text-sm text-foreground/60 mt-1">{t("subtitle")}</p>
                 </div>
                 <Button
                     variant="primary"
@@ -100,28 +100,26 @@ function ContestManagementWorkspace() {
                         setShowForm(true);
                     }}
                 >
-                    Tạo cuộc thi mới
+                    {t("createNew")}
                 </Button>
             </header>
 
             {loading ? (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-8 text-center text-sm text-foreground/60">
-                    Đang tải...
+                    {t("loading")}
                 </div>
             ) : contests.length === 0 ? (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-8 text-center">
-                    <p className="text-sm text-foreground/60">
-                        Chưa có cuộc thi nào. Hãy tạo cuộc thi đầu tiên.
-                    </p>
+                    <p className="text-sm text-foreground/60">{t("empty")}</p>
                 </div>
             ) : (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) overflow-hidden">
                     <div className="hidden md:grid grid-cols-[2fr_120px_140px_180px_280px] gap-4 px-4 py-3 text-xs font-semibold text-foreground/60 border-b border-(--border-color) bg-foreground/5">
-                        <span>Tiêu đề</span>
-                        <span>Trạng thái</span>
-                        <span>Hình thức</span>
-                        <span>Khung thời gian</span>
-                        <span className="text-right">Thao tác</span>
+                        <span>{t("colTitle")}</span>
+                        <span>{t("colStatus")}</span>
+                        <span>{t("colType")}</span>
+                        <span>{t("colWindow")}</span>
+                        <span className="text-right">{t("colActions")}</span>
                     </div>
                     <div className="divide-y divide-(--border-color)">
                         {contests.map((c) => (
@@ -143,7 +141,7 @@ function ContestManagementWorkspace() {
                                     <div>{formatDateRange(c.start_at, c.end_at)}</div>
                                     {c.stages && c.stages.length > 0 && (
                                         <div className="mt-1 text-foreground/50">
-                                            {c.stages.length} giai đoạn
+                                            {t("stagesCount", { count: c.stages.length })}
                                         </div>
                                     )}
                                 </div>
@@ -154,7 +152,7 @@ function ContestManagementWorkspace() {
                                         icon={<Users className="w-3.5 h-3.5" />}
                                         onClick={() => setViewingPanel(c)}
                                     >
-                                        Quản lý đội thi
+                                        {t("registrations")}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -165,7 +163,7 @@ function ContestManagementWorkspace() {
                                             setShowForm(true);
                                         }}
                                     >
-                                        Sửa
+                                        {t("edit")}
                                     </Button>
                                     <Button
                                         size="sm"
@@ -173,7 +171,7 @@ function ContestManagementWorkspace() {
                                         icon={<Trash2 className="w-3.5 h-3.5" />}
                                         onClick={() => setDeleting(c)}
                                     >
-                                        Xoá
+                                        {t("delete")}
                                     </Button>
                                 </div>
                             </div>
@@ -206,22 +204,21 @@ function ContestManagementWorkspace() {
                         className="w-full max-w-md rounded-lg border border-(--border-color) bg-background p-6 shadow-xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="text-lg font-semibold mb-2">Xác nhận xoá</h3>
+                        <h3 className="text-lg font-semibold mb-2">{t("deleteConfirmTitle")}</h3>
                         <p className="text-sm text-foreground/70 mb-4">
-                            Bạn có chắc chắn muốn xoá <span className="text-foreground">&quot;{deleting.title}&quot;</span>?
-                            Tất cả đăng ký và bài nộp liên quan sẽ bị xoá theo (cascade).
+                            {t("deleteConfirmBody", { title: deleting.title })}
                         </p>
                         <div className="flex justify-end gap-2">
                             <Button variant="cancel" onClick={() => setDeleting(null)} disabled={deletingBusy}>
-                                Huỷ
+                                {t("cancel")}
                             </Button>
                             <Button
                                 variant="danger"
                                 onClick={confirmDelete}
                                 isLoading={deletingBusy}
-                                loadingText="Đang xoá..."
+                                loadingText={t("deleting")}
                             >
-                                Xoá vĩnh viễn
+                                {t("deleteForever")}
                             </Button>
                         </div>
                     </div>

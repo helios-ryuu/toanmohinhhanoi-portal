@@ -11,7 +11,11 @@
         "confirm": "Xác nhận",
         "search": "Tìm kiếm",
         "language": "Ngôn ngữ",
-        "theme": "Giao diện"
+        "theme": "Giao diện",
+        "menu": "Menu",
+        "tableOfContents": "Mục lục",
+        "bannerText": "Theo dõi fanpage Toán Mô Hình Hà Nội để cập nhật thông tin mới nhất!",
+        "bannerCta": "Truy cập ngay"
     },
     "nav": {
         "home": "Trang chủ",
@@ -26,7 +30,7 @@
         "signOut": "Đăng xuất"
     },
     "footer": {
-        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.5.0"
+        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.5.1"
     },
     "post": {
         "pageTitle": "BÀI VIẾT",
@@ -129,7 +133,13 @@
         "deleteConfirmTitle": "Xác nhận xoá",
         "deleteConfirmBody": "Bạn có chắc chắn muốn xoá \"{title}\"? Tất cả đăng ký và bài nộp liên quan sẽ bị xoá theo (cascade).",
         "deleteForever": "Xoá vĩnh viễn",
-        "stagesCount": "{count} giai đoạn"
+        "stagesCount": "{count} giai đoạn",
+        "cancel": "Huỷ",
+        "deleting": "Đang xoá…",
+        "deleteSuccess": "Đã xoá cuộc thi",
+        "deleteError": "Xoá thất bại",
+        "sessionExpired": "Phiên đăng nhập hết hạn — vui lòng tải lại trang.",
+        "serverError": "Lỗi máy chủ ({status})"
     },
     "contestForm": {
         "createTitle": "TẠO CUỘC THI MỚI",
@@ -167,7 +177,22 @@
         "fieldStatus": "Trạng thái",
         "saving": "Đang lưu…",
         "saveChanges": "Lưu thay đổi",
-        "createButton": "Tạo cuộc thi"
+        "createButton": "Tạo cuộc thi",
+        "allowResubmit": "Cho nộp lại",
+        "cancel": "Huỷ",
+        "close": "Đóng",
+        "saveFailed": "Lưu thất bại",
+        "updateSuccess": "Đã cập nhật cuộc thi",
+        "createSuccess": "Đã tạo cuộc thi",
+        "sessionExpired": "Phiên đăng nhập hết hạn — vui lòng tải lại trang.",
+        "serverError": "Lỗi máy chủ ({status})"
+    },
+    "admin": {
+        "title": "ADMIN WORKSPACE",
+        "subtitle": "Quản lý bài viết, tag, cuộc thi và đăng ký.",
+        "contestsCard": "Quản lý Cuộc thi",
+        "contestsCardDesc": "Tạo cuộc thi, phê duyệt đăng ký, quản lý bài nộp.",
+        "loadError": "Lỗi tải dữ liệu"
     },
     "auth": {
         "signInTitle": "Đăng nhập",

@@ -11,7 +11,11 @@
         "confirm": "Confirm",
         "search": "Search",
         "language": "Language",
-        "theme": "Theme"
+        "theme": "Theme",
+        "menu": "Menu",
+        "tableOfContents": "Table of Contents",
+        "bannerText": "Follow the Toán Mô Hình Hà Nội fanpage for the latest updates!",
+        "bannerCta": "Visit now"
     },
     "nav": {
         "home": "Home",
@@ -26,7 +30,7 @@
         "signOut": "Sign out"
     },
     "footer": {
-        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.5.0"
+        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.5.1"
     },
     "post": {
         "pageTitle": "POSTS",
@@ -129,7 +133,13 @@
         "deleteConfirmTitle": "Confirm delete",
         "deleteConfirmBody": "Are you sure you want to delete \"{title}\"? All related registrations and submissions will be cascaded.",
         "deleteForever": "Delete forever",
-        "stagesCount": "{count} stage(s)"
+        "stagesCount": "{count} stage(s)",
+        "cancel": "Cancel",
+        "deleting": "Deleting…",
+        "deleteSuccess": "Contest deleted",
+        "deleteError": "Delete failed",
+        "sessionExpired": "Session expired — please reload.",
+        "serverError": "Server error ({status})"
     },
     "contestForm": {
         "createTitle": "CREATE NEW CONTEST",
@@ -167,7 +177,22 @@
         "fieldStatus": "Status",
         "saving": "Saving…",
         "saveChanges": "Save changes",
-        "createButton": "Create contest"
+        "createButton": "Create contest",
+        "allowResubmit": "Allow resubmission",
+        "cancel": "Cancel",
+        "close": "Close",
+        "saveFailed": "Save failed",
+        "updateSuccess": "Contest updated",
+        "createSuccess": "Contest created",
+        "sessionExpired": "Session expired — please reload.",
+        "serverError": "Server error ({status})"
+    },
+    "admin": {
+        "title": "ADMIN WORKSPACE",
+        "subtitle": "Manage posts, tags, contests, and registrations.",
+        "contestsCard": "Contest Management",
+        "contestsCardDesc": "Create contests, approve registrations, manage submissions.",
+        "loadError": "Failed to load data"
     },
     "auth": {
         "signInTitle": "Sign in",
