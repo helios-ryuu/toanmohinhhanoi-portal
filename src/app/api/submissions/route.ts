@@ -6,8 +6,12 @@ import {
     isApprovedMember,
     getContestById,
     createSubmission,
+    listStages,
+    getActiveSubmissionStage,
+    listSubmissionsForRegistration,
+    deleteSubmission,
 } from "@/lib/contests-db";
-import { uploadSubmissionFile, MAX_SUBMISSION_BYTES } from "@/lib/storage";
+import { uploadSubmissionFile, deleteSubmissionFile, MAX_SUBMISSION_BYTES } from "@/lib/storage";
 import { apiSuccess, apiError, handleRouteError } from "@/lib/api-helpers";
 
 export async function POST(req: NextRequest) {
@@ -22,7 +26,7 @@ export async function POST(req: NextRequest) {
         if (typeof registrationIdRaw !== "string") return apiError("registration_id required", 400);
         const registrationId = parseInt(registrationIdRaw, 10);
         if (Number.isNaN(registrationId)) return apiError("invalid registration_id", 400);
-        if (file.size > MAX_SUBMISSION_BYTES) return apiError("file exceeds 50MB", 400);
+        if (file.size > MAX_SUBMISSION_BYTES) return apiError("file exceeds 5MB", 400);
 
         const supabase = createSupabaseAdminClient();
         const reg = await getRegistration(supabase, registrationId);
@@ -33,8 +37,23 @@ export async function POST(req: NextRequest) {
 
         const contest = await getContestById(supabase, reg.contest_id);
         if (!contest) return apiError("contest not found", 404);
-        if (new Date() > new Date(contest.submission_deadline)) {
-            return apiError("submission deadline passed", 400);
+
+        const stages = await listStages(supabase, contest.id);
+        const activeStage = getActiveSubmissionStage(stages);
+        if (!activeStage) return apiError("no submission stage is currently active", 400);
+
+        const existing = await listSubmissionsForRegistration(supabase, registrationId);
+        if (existing.length > 0) {
+            if (!activeStage.allow_resubmit) {
+                return apiError("already submitted — resubmission is not allowed for this stage", 400);
+            }
+            // Delete all previous submissions before accepting the new one.
+            await Promise.all(
+                existing.map(async (s) => {
+                    await deleteSubmissionFile(supabase, s.storage_path);
+                    await deleteSubmission(supabase, s.id);
+                }),
+            );
         }
 
         const { path } = await uploadSubmissionFile(supabase, {

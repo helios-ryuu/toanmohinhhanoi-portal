@@ -4,7 +4,7 @@ export const POST_IMAGE_BUCKET = "post-images";
 export const SUBMISSION_BUCKET = "submissions";
 
 export const ALLOWED_IMAGE_MIME = new Set(["image/png", "image/jpeg", "image/webp", "image/gif"]);
-export const MAX_SUBMISSION_BYTES = 50 * 1024 * 1024;
+export const MAX_SUBMISSION_BYTES = 5 * 1024 * 1024;
 
 function safeName(name: string): string {
     return name.replace(/[^a-zA-Z0-9._-]+/g, "_");
@@ -33,7 +33,7 @@ export async function uploadSubmissionFile(
 ): Promise<{ path: string }> {
     const { contestId, registrationId, file } = args;
     if (file.size <= 0) throw new Error("empty file");
-    if (file.size > MAX_SUBMISSION_BYTES) throw new Error("file exceeds 50MB");
+    if (file.size > MAX_SUBMISSION_BYTES) throw new Error("file exceeds 5MB");
     const path = `${contestId}/${registrationId}/${crypto.randomUUID()}_${safeName(file.name)}`;
     const buffer = Buffer.from(await file.arrayBuffer());
     const { error } = await supabase.storage
