@@ -30,7 +30,7 @@ export default async function ContestsPage() {
             </header>
 
             <Suspense>
-                <ContestListClient contests={contests} />
+                <ContestListClient contests={contests as import("@/types/database").ContestWithStages[]} />
             </Suspense>
         </div>
     );
