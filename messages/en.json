@@ -18,6 +18,7 @@
         "posts": "Posts",
         "contests": "Contests",
         "adminWorkspace": "Admin Workspace",
+        "faq": "Q&A",
         "bucket": "Bucket",
         "contestManagement": "Contest Management",
         "profile": "Profile",
@@ -25,7 +26,7 @@
         "signOut": "Sign out"
     },
     "footer": {
-        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.4.0"
+        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.5.0"
     },
     "post": {
         "pageTitle": "POSTS",
@@ -182,5 +183,45 @@
         "school": "School",
         "bio": "Bio",
         "save": "Save profile"
+    },
+    "faq": {
+        "pageTitle": "Q&A",
+        "pageSubtitle": "Frequently asked questions about the portal and its features.",
+        "userSection": "General Q&A",
+        "adminSection": "Admin Q&A",
+        "q1": "What is Toán Mô Hình Hà Nội?",
+        "a1": "Toán Mô Hình Hà Nội is a mathematics and modelling competition portal. This site hosts contest registrations, submission management, and blog posts related to the competition.",
+        "q2": "How do I sign in?",
+        "a2": "Click \"Sign in\" in the top-right corner and use your Google account. There is no email/password login — Google is the only authentication method.",
+        "q3": "How do I register for a contest?",
+        "a3": "Go to Contests, open the contest detail page, and use the registration form at the bottom. Registration is only possible while a registration stage is currently active. For team contests, enter your teammates' usernames separated by commas.",
+        "q4": "What are registration stages?",
+        "a4": "Each contest is divided into stages (e.g. Registration, Qualifier, Finals). Each stage has a start and end date and controls whether registration or submission is open at that time. The Gantt-style timeline on the contest page shows all stages.",
+        "q5": "What do contest statuses mean?",
+        "a5": "Draft — not yet published. Active — publicly visible and stages may be open. Closed — contest has ended. Cancelled — contest was cancelled.",
+        "q6": "What do registration statuses mean?",
+        "a6": "Pending — awaiting admin review. Approved — your registration is accepted. Rejected — your registration was declined. Withdrawn — you withdrew your registration.",
+        "q7": "How do I submit to a contest?",
+        "a7": "After your registration is approved, go to My Contests in your profile. A submission form appears when a submission stage is currently active. Upload your file (max 5 MB). You can replace a submission if the contest stage allows re-submission.",
+        "q8": "How do I update my profile?",
+        "a8": "Click your avatar or \"Profile\" in the sidebar. You can edit your display name, school, and bio. Username and email are read-only.",
+        "q9": "How do I view my contest history?",
+        "a9": "Go to Profile → My Contests to see all contests you have registered for, their status, and your submissions.",
+        "aq1": "How do I create a contest?",
+        "aa1": "Go to Contest Management and click \"New contest\". Fill in the title, slug, description, rules, cover image, participation type, grand timeline, and add stages. Save to create the contest. Set status to Active when ready to publish.",
+        "aq2": "How do I add and configure stages?",
+        "aa2": "In the Contest Form, scroll to the Stages section and click \"Add stage\". Each stage has a name, start/end dates (must fit inside the grand timeline), and toggles for Allow Registration and Allow Submission. You can add as many stages as needed.",
+        "aq3": "How do I approve or reject registrations?",
+        "aa3": "In Contest Management, click \"Quản lý đội thi\" for a contest. Use the status filter chips to find pending registrations and click Approve or Reject.",
+        "aq4": "How do I view team submissions?",
+        "aa4": "In the team management panel, expand any registration row to see all submissions. Click the Download button next to a file to download it via a 5-minute signed URL.",
+        "aq5": "How do I manage posts and tags?",
+        "aa5": "Go to Admin Workspace. Use the Management sections to create, edit, publish, and delete posts and tags. Draft posts are listed in the Drafts section.",
+        "aq6": "How do I use the Bucket (file storage)?",
+        "aa6": "Go to Bucket in the sidebar. You can browse, upload, rename, delete, and copy URLs for files in the post-images and submissions buckets.",
+        "aq7": "How do I inspect database records?",
+        "aa7": "Scroll to the Database section at the bottom of Admin Workspace. It shows read-only tables for users, posts, tags, and post-tag relationships. Click Refresh to reload.",
+        "aq8": "How do I promote a user to admin?",
+        "aa8": "Run the following SQL in the Supabase SQL Editor: UPDATE public.users SET role = 'admin' WHERE id = '<auth-uid>'; There is no UI for role promotion — it must be done directly in the database."
     }
 }

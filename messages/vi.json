@@ -18,6 +18,7 @@
         "posts": "Bài viết",
         "contests": "Kỳ thi",
         "adminWorkspace": "Admin Workspace",
+        "faq": "Hỏi & Đáp",
         "bucket": "Bucket",
         "contestManagement": "Quản lý kỳ thi",
         "profile": "Hồ sơ",
@@ -25,7 +26,7 @@
         "signOut": "Đăng xuất"
     },
     "footer": {
-        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.4.0"
+        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.5.0"
     },
     "post": {
         "pageTitle": "BÀI VIẾT",
@@ -182,5 +183,45 @@
         "school": "Trường",
         "bio": "Giới thiệu",
         "save": "Lưu hồ sơ"
+    },
+    "faq": {
+        "pageTitle": "Hỏi & Đáp",
+        "pageSubtitle": "Các câu hỏi thường gặp về cổng thông tin và các tính năng.",
+        "userSection": "Hỏi & Đáp chung",
+        "adminSection": "Hỏi & Đáp Admin",
+        "q1": "Toán Mô Hình Hà Nội là gì?",
+        "a1": "Toán Mô Hình Hà Nội là một cổng thông tin dành cho kỳ thi toán và mô hình hóa. Trang web này quản lý đăng ký thi, nộp bài và các bài viết liên quan đến kỳ thi.",
+        "q2": "Làm thế nào để đăng nhập?",
+        "a2": "Nhấn \"Đăng nhập\" ở góc trên bên phải và sử dụng tài khoản Google. Không có đăng nhập bằng email/mật khẩu — Google là phương thức xác thực duy nhất.",
+        "q3": "Làm thế nào để đăng ký tham gia cuộc thi?",
+        "a3": "Vào mục Kỳ thi, mở trang chi tiết cuộc thi và dùng biểu mẫu đăng ký ở cuối trang. Chỉ có thể đăng ký khi đang có giai đoạn đăng ký hoạt động. Với cuộc thi đội nhóm, nhập tên người dùng của các thành viên, cách nhau bằng dấu phẩy.",
+        "q4": "Giai đoạn cuộc thi là gì?",
+        "a4": "Mỗi cuộc thi được chia thành các giai đoạn (ví dụ: Đăng ký, Vòng loại, Chung kết). Mỗi giai đoạn có ngày bắt đầu và kết thúc, kiểm soát việc đăng ký hoặc nộp bài có được mở hay không. Biểu đồ Gantt trên trang cuộc thi hiển thị tất cả các giai đoạn.",
+        "q5": "Các trạng thái cuộc thi có nghĩa gì?",
+        "a5": "Bản nháp — chưa công bố. Đang có hiệu lực — hiển thị công khai và các giai đoạn có thể đang mở. Đã đóng — cuộc thi đã kết thúc. Đã huỷ — cuộc thi bị huỷ.",
+        "q6": "Các trạng thái đăng ký có nghĩa gì?",
+        "a6": "Chờ duyệt — đang chờ admin xem xét. Đã duyệt — đăng ký được chấp nhận. Từ chối — đăng ký bị từ chối. Đã rút — bạn đã rút đăng ký.",
+        "q7": "Làm thế nào để nộp bài?",
+        "a7": "Sau khi đăng ký được duyệt, vào Hồ sơ → Cuộc thi của tôi. Biểu mẫu nộp bài xuất hiện khi giai đoạn nộp bài đang hoạt động. Tải lên file (tối đa 5 MB). Bạn có thể thay thế bài nộp nếu giai đoạn cho phép nộp lại.",
+        "q8": "Làm thế nào để cập nhật hồ sơ?",
+        "a8": "Nhấn vào avatar hoặc \"Hồ sơ\" trong thanh điều hướng. Bạn có thể chỉnh sửa tên hiển thị, trường học và giới thiệu. Tên người dùng và email là chỉ đọc.",
+        "q9": "Làm thế nào để xem lịch sử thi đấu?",
+        "a9": "Vào Hồ sơ → Cuộc thi của tôi để xem tất cả các cuộc thi bạn đã đăng ký, trạng thái và bài nộp.",
+        "aq1": "Làm thế nào để tạo cuộc thi?",
+        "aa1": "Vào Quản lý kỳ thi và nhấn \"Tạo cuộc thi mới\". Điền tiêu đề, slug, mô tả, thể lệ, ảnh bìa, hình thức tham gia, khung thời gian và thêm các giai đoạn. Lưu để tạo cuộc thi. Đặt trạng thái Đang có hiệu lực khi sẵn sàng công bố.",
+        "aq2": "Làm thế nào để thêm và cấu hình giai đoạn?",
+        "aa2": "Trong biểu mẫu cuộc thi, kéo xuống phần Giai đoạn và nhấn \"Thêm giai đoạn\". Mỗi giai đoạn có tên, ngày bắt đầu/kết thúc (phải nằm trong khung thời gian cuộc thi) và các tùy chọn Cho phép đăng ký / Cho phép nộp bài. Bạn có thể thêm bao nhiêu giai đoạn tuỳ ý.",
+        "aq3": "Làm thế nào để duyệt hoặc từ chối đăng ký?",
+        "aa3": "Trong Quản lý kỳ thi, nhấn \"Quản lý đội thi\" cho một cuộc thi. Dùng bộ lọc trạng thái để tìm các đăng ký đang chờ và nhấn Duyệt hoặc Từ chối.",
+        "aq4": "Làm thế nào để xem bài nộp của đội?",
+        "aa4": "Trong bảng quản lý đội thi, mở rộng bất kỳ hàng đăng ký nào để xem tất cả bài nộp. Nhấn Tải xuống bên cạnh file để tải về qua URL có chữ ký trong 5 phút.",
+        "aq5": "Làm thế nào để quản lý bài viết và tag?",
+        "aa5": "Vào Admin Workspace. Dùng các phần Quản lý để tạo, sửa, xuất bản và xoá bài viết và tag. Bài nháp được liệt kê trong phần Bản nháp.",
+        "aq6": "Làm thế nào để sử dụng Bucket (lưu trữ file)?",
+        "aa6": "Vào Bucket trong thanh điều hướng. Bạn có thể duyệt, tải lên, đổi tên, xoá và sao chép URL cho các file trong bucket post-images và submissions.",
+        "aq7": "Làm thế nào để xem bản ghi cơ sở dữ liệu?",
+        "aa7": "Kéo xuống phần Cơ sở dữ liệu ở cuối trang Admin Workspace. Hiển thị các bảng chỉ đọc cho users, posts, tags và quan hệ post-tag. Nhấn Làm mới để tải lại.",
+        "aq8": "Làm thế nào để cấp quyền admin cho người dùng?",
+        "aa8": "Chạy SQL sau trong Supabase SQL Editor: UPDATE public.users SET role = 'admin' WHERE id = '<auth-uid>'; Không có giao diện để nâng cấp quyền — phải thực hiện trực tiếp trong cơ sở dữ liệu."
     }
 }
