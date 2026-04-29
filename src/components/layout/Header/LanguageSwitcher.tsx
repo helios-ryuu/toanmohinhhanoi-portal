@@ -37,7 +37,7 @@ export default function LanguageSwitcher() {
                     className="flex-none inline-flex items-center gap-1 px-1.5 h-8 rounded-md cursor-pointer hover:bg-background-hover text-(--foreground-dim) hover:text-foreground transition-colors text-[11px] font-semibold tracking-wider"
                 >
                     <Languages strokeWidth={3} className="w-4 h-4" />
-                    <span>{display} (experimental)</span>
+                    <span>{display}</span>
                 </button>
             </DropdownMenu.Trigger>
             <DropdownMenu.Portal>
