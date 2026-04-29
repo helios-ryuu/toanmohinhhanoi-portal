@@ -79,14 +79,14 @@ function ContestManagementWorkspace() {
 
     if (viewingPanel) {
         return (
-            <div className="max-w-6xl mx-auto px-4 py-8">
+            <div className="max-w-7xl mx-auto px-4 py-8">
                 <RegistrationManagementPanel contest={viewingPanel} onBack={() => setViewingPanel(null)} />
             </div>
         );
     }
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto px-4 py-8">
             <header className="mb-6 flex items-start justify-between gap-4 flex-wrap">
                 <div>
                     <h1 className="text-2xl font-bold tracking-widest text-accent">{t("title")}</h1>
@@ -114,7 +114,7 @@ function ContestManagementWorkspace() {
                 </div>
             ) : (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) overflow-hidden">
-                    <div className="hidden md:grid grid-cols-[2fr_120px_140px_180px_280px] gap-4 px-4 py-3 text-xs font-semibold text-foreground/60 border-b border-(--border-color) bg-foreground/5">
+                    <div className="hidden md:grid grid-cols-[2fr_140px_140px_180px_280px] gap-4 px-4 py-3 text-xs font-semibold text-foreground/60 border-b border-(--border-color) bg-foreground/5">
                         <span>{t("colTitle")}</span>
                         <span>{t("colStatus")}</span>
                         <span>{t("colType")}</span>
@@ -125,7 +125,7 @@ function ContestManagementWorkspace() {
                         {contests.map((c) => (
                             <div
                                 key={c.id}
-                                className="grid grid-cols-1 md:grid-cols-[2fr_120px_140px_180px_280px] gap-4 px-4 py-3 items-center"
+                                className="grid grid-cols-1 md:grid-cols-[2fr_140px_140px_180px_280px] gap-4 px-4 py-3 items-center"
                             >
                                 <div className="min-w-0">
                                     <div className="font-medium truncate">{c.title}</div>

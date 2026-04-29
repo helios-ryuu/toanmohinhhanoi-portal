@@ -2,16 +2,7 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Phiên bản hiện tại: v0.8.2.** Cập nhật lớn:
->
-> - **Mô hình lịch trình hai lớp:** thay 5 mốc cố định bằng *Grand Timeline* (`start_at` / `end_at`) + *n giai đoạn động* (`contest_stage`) có thể chồng chéo, mỗi giai đoạn độc lập bật `allow_registration` / `allow_submission`.
-> - **Phân loại bài viết:** category badge, /category, /tag routes, post detail cover image.
-> - **i18n đa ngôn ngữ:** English (mặc định) + Tiếng Việt qua `next-intl`, cookie-based, có nút chuyển ngôn ngữ trong Header.
-> - **Quản lý user profile:** thông tin profile, contest đã tham gia + user/auth API improvements.
->
-> **Đăng nhập — Google only.** Không hỗ trợ đăng ký bằng email/mật khẩu. Xác thực qua Supabase Auth + Google Identity Services.
->
-> **Đăng ký cuộc thi từ UI:** backend đã hoàn thiện nhưng nút "Đăng ký tham gia" trên `/contests/[slug]` đang bị disable theo FR_CONTEST_12 (Coming Soon). Mở cho người dùng cuối ở giai đoạn tiếp theo.
+> **Phiên bản hiện tại: v0.8.3.**
 
 ---
 
@@ -88,7 +79,7 @@ toanmohinhhanoi-portal/
 ## Setup
 
 ### Yêu cầu
-- **Node.js** v20+
+- **Node.js** v24+
 - **Supabase project** (free tier OK — [supabase.com](https://supabase.com))
 - **Google Cloud OAuth Client ID** cho Google Identity Services
 
@@ -160,42 +151,3 @@ DB helpers (src/lib/*-db.ts)
     ↓
 Supabase (Postgres + Auth + Storage, RLS bật trên mọi bảng)
 ```
-
-### Auth flow
-
-1. Người dùng bấm "Đăng nhập bằng Google" tại `/auth`.
-2. Google Identity Services (GIS) mở popup native của Google — **không redirect, không hiển thị "Continue to …"**.
-3. GIS trả về ID token; client gọi `supabase.auth.signInWithIdToken({ provider: 'google', token })`.
-4. Supabase tạo session; trigger `handle_new_auth_user` INSERT vào `public.users` với `role = 'user'`.
-5. `src/proxy.ts` kiểm tra session + role trên các route được bảo vệ (`/admin/**`, `/contest-management/**`, `/profile/**`, `/contest/[slug]/join`, `/api/admin/**`, `/api/auth/me`, `/api/users/me`, `/api/contests/*/register`, `/api/submissions/**`).
-
-### Gating routes
-
-| Pattern | Yêu cầu |
-| :--- | :--- |
-| `/admin/**`, `/contest-management/**`, `/api/admin/**` | Đăng nhập + `users.role = 'admin'` |
-| `/profile/**`, `/contest/[slug]/join`, `/api/users/me`, `/api/auth/me` | Đăng nhập |
-| `/api/contests/[slug]/register/**`, `/api/submissions/**` | Đăng nhập |
-| Các route còn lại | Công khai |
-
----
-
-## Notes
-
-- **MVP hoàn chỉnh.** Tất cả MUST-priority requirements đã implement (xem `docs/PLAN-FINAL.md`). Nút "Đăng ký tham gia" trên trang chi tiết cuộc thi cố ý disable theo FR_CONTEST_12 — backend sẵn sàng, UI sẽ mở ở giai đoạn enrollment.
-- **No author / no series.** Blog không có khái niệm tác giả hay series; mọi bài viết thuộc về tổ chức và phân loại theo `category` (news / announcement / tutorial / result).
-- **Login: Google only.** Không có email/mật khẩu. Muốn thêm provider khác, bật trong Supabase Dashboard và cập nhật `src/app/auth/page.tsx`.
-- **Next.js 16 proxy.** File `src/proxy.ts` (xuất hàm `proxy`) thay thế cho `middleware.ts` theo convention mới của Next.js 16.
-- **Migrations.** Các thay đổi schema sau lần áp đầu tiên nằm trong `supabase/migrations/` — apply tuần tự qua Supabase SQL Editor.
-
----
-
-## Triển khai
-
-Project tối ưu cho [Vercel](https://vercel.com/):
-
-1. Push code lên GitHub.
-2. Import project vào Vercel.
-3. Thêm các biến môi trường ở mục [Setup](#2-biến-môi-trường).
-4. Cập nhật `NEXT_PUBLIC_SITE_URL` thành domain production và thêm domain đó vào Google Cloud OAuth origins.
-5. Deploy.

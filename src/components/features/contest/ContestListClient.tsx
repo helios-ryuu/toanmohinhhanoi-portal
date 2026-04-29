@@ -88,7 +88,7 @@ export default function ContestListClient({ contests }: Props) {
                 <select
                     value={sortVal}
                     onChange={(e) => updateUrl({ sort: e.target.value })}
-                    className="px-2 py-1.5 text-sm rounded-md border border-(--border-color) bg-(--post-card) text-foreground focus:outline-none cursor-pointer"
+                    className="pl-1.5 py-1.5 text-sm rounded-md border border-(--border-color) bg-(--post-card) text-foreground focus:outline-none cursor-pointer"
                 >
                     <option value="newest">{t("sortNewest")}</option>
                     <option value="oldest">{t("sortOldest")}</option>
