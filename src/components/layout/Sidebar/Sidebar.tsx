@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import FadeText from "@/components/ui/FadeText";
 import SidebarItem from "./SidebarItem";
 import { Menu, PanelRightCloseIcon, PanelRightOpenIcon } from "lucide-react";
@@ -17,6 +18,8 @@ export default function Sidebar() {
     const hoverCooldownRef = useRef(false);
     const pathname = usePathname();
     const { user } = useUser();
+    const tNav = useTranslations("nav");
+    const tCommon = useTranslations("common");
     const isAdmin = user?.role === "admin";
     const visibleItems = menuItems.filter((item) => !item.requiresAdmin || isAdmin);
 
@@ -66,10 +69,10 @@ export default function Sidebar() {
 
                 {isPostPage && isExpanded ? (
                     <div className="flex items-center gap-2 ml-1 text-foreground/50">
-                        <FadeText text="Table of Contents" isVisible={isExpanded} duration={100} className="ml-6 font-medium text-xs" />
+                        <FadeText text={tCommon("tableOfContents")} isVisible={isExpanded} duration={100} className="ml-6 font-medium text-xs" />
                     </div>
                 ) : (
-                    <FadeText text="Menu" isVisible={isExpanded} duration={100} className="ml-7 font-medium text-xs text-foreground/50" />
+                    <FadeText text={tCommon("menu")} isVisible={isExpanded} duration={100} className="ml-7 font-medium text-xs text-foreground/50" />
                 )}
             </div>
 
@@ -90,7 +93,7 @@ export default function Sidebar() {
                             <SidebarItem
                                 key={item.href}
                                 icon={<Icon strokeWidth={3} />}
-                                label={<FadeText text={item.label} isVisible={isExpanded} duration={100} />}
+                                label={<FadeText text={tNav(item.labelKey)} isVisible={isExpanded} duration={100} />}
                                 className={isExpanded ? "gap-x-1.5" : "gap-x-0"}
                                 href={item.href}
                                 disabled={item.underDevelopment}

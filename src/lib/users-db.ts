@@ -33,6 +33,16 @@ export async function getUsersByIds(
     return (data ?? []) as DbUser[];
 }
 
+export async function getUsersByUsernames(
+    supabase: SupabaseClient,
+    usernames: string[],
+): Promise<DbUser[]> {
+    if (usernames.length === 0) return [];
+    const { data, error } = await supabase.from("users").select("*").in("username", usernames);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as DbUser[];
+}
+
 export async function updateUserProfile(
     supabase: SupabaseClient,
     id: string,

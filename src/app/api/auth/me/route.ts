@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/supabase/server";
+import { apiSuccess, apiError } from "@/lib/api-helpers";
+import { dbUserToUser } from "@/lib/users-db";
 
 export async function GET() {
     const current = await getCurrentUser();
     if (!current) {
-        return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+        return apiError("Unauthorized", 401);
     }
-    return NextResponse.json({ success: true, data: current.profile });
+    return apiSuccess({
+        ...dbUserToUser(current.profile),
+        email: current.authUser.email ?? null,
+    });
 }

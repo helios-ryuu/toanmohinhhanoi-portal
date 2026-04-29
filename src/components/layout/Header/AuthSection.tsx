@@ -74,7 +74,7 @@ export default function AuthSection() {
                     </Link>
                     {user.role !== "admin" && (
                         <Link
-                            href="/contests"
+                            href="/profile/contests"
                             className="flex items-center gap-2 px-3 py-2 text-sm text-foreground/80 hover:text-accent hover:bg-accent/10 transition-colors"
                             onClick={() => setIsOpen(false)}
                         >
