@@ -4,8 +4,10 @@
 **Mã dự án:** TMH-PORTAL-2026
 **Project Manager:** Ngô Tiến Sỹ
 **Thời gian thực hiện:** 07/02/2026 — 30/04/2026
-**Phiên bản báo cáo:** 0.1 (Outline)
-**Ngày lập:** 10/04/2026
+**Phiên bản báo cáo:** 0.2.0 (M5 — Stage timeline + i18n)
+**Ngày lập:** 10/04/2026 (cập nhật 28/04/2026)
+
+> **Cập nhật v0.2.0 (28/04/2026):** Tái thiết kế lịch trình cuộc thi sang mô hình hai lớp — *Grand Timeline* (`start_at` / `end_at`) bao trọn toàn bộ cuộc thi, kết hợp với *n giai đoạn động* (`contest_stage`) có thể chồng chéo, mỗi giai đoạn độc lập bật cờ `allow_registration` / `allow_submission`. Trạng thái cuộc thi rút gọn còn `draft | active | closed | cancelled`. Bổ sung i18n hai ngôn ngữ (English mặc định + Tiếng Việt) qua `next-intl`. Cải thiện UI: stage chip trên contest card, Gantt-style stage timeline trên contest detail, bucket image picker trong ContestForm, fix layout icon mạng xã hội, loading state cho admin routes. Bản v0.1.x cố định 5 mốc thời gian giờ đã ngừng hỗ trợ.
 
 ---
 

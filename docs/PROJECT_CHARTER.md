@@ -13,7 +13,9 @@
 | **Ngày kết thúc dự kiến** | 30/04/2026 |
 | **Tổng thời lượng** | 12 tuần (~3 tháng) |
 | **Loại dự án** | Phát triển sản phẩm mới (Greenfield) |
-| **Trạng thái** | Initiation → Planning |
+| **Trạng thái** | M4 hoàn chỉnh — sẵn sàng nghiệm thu (cập nhật 28/04/2026) |
+
+> **Cập nhật 28/04/2026.** Toàn bộ deliverables ở Milestones M0–M4 đã được hiện thực, bao gồm cả những hạng mục Contest UI mà charter ban đầu giữ ở mức "Under Development". Chi tiết xem `docs/PLAN-FINAL.md`. Riêng nút "Đăng ký tham gia" trên trang chi tiết cuộc thi cố ý disable theo FR_CONTEST_12 — backend đã sẵn sàng và sẽ được mở cho người dùng cuối ở giai đoạn enrollment.
 
 ---
 

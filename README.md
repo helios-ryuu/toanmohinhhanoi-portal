@@ -2,9 +2,16 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Contest UI — Under development.** Toàn bộ backend API (đăng ký, nộp bài, duyệt) đã hoàn thiện ở Milestone M3. Giao diện người dùng cho Contest sẽ được phát hành ở Milestone M4.
+> **Phiên bản hiện tại: v0.2.0.** Cập nhật lớn:
+>
+> - **Mô hình lịch trình hai lớp:** thay 5 mốc cố định bằng *Grand Timeline* (`start_at` / `end_at`) + *n giai đoạn động* (`contest_stage`) có thể chồng chéo, mỗi giai đoạn độc lập bật `allow_registration` / `allow_submission`.
+> - **Trạng thái rút gọn:** `draft | active | closed | cancelled`.
+> - **i18n đa ngôn ngữ:** English (mặc định) + Tiếng Việt qua `next-intl`, cookie-based, có nút chuyển ngôn ngữ trong Header.
+> - **UI/UX:** stage chips trên contest card, Gantt-style stage timeline trên contest detail, image picker trong ContestForm, fix layout icon mạng xã hội, loading state cho các trang admin.
 >
 > **Đăng nhập — Google only.** Không hỗ trợ đăng ký bằng email/mật khẩu. Xác thực qua Supabase Auth + Google Identity Services.
+>
+> **Đăng ký cuộc thi từ UI:** backend đã hoàn thiện nhưng nút "Đăng ký tham gia" trên `/contests/[slug]` đang bị disable theo FR_CONTEST_12 (Coming Soon). Mở cho người dùng cuối ở giai đoạn tiếp theo.
 
 ---
 
@@ -30,25 +37,30 @@ toanmohinhhanoi-portal/
 ├── public/                         # Ảnh, favicon, file tĩnh
 ├── docs/                           # Tài liệu dự án (Charter, Requirements, Schema, ...)
 ├── supabase/
-│   └── schema.sql                  # DDL: bảng, enum, RLS, triggers, buckets
+│   ├── schema.sql                  # DDL: bảng, enum, RLS, triggers, buckets
+│   └── migrations/                 # Versioned SQL migrations
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth/               # callback, logout, me
-│   │   │   ├── users/              # [id], me
+│   │   │   ├── auth/               # callback, logout, me (returns email + profile)
+│   │   │   ├── users/              # [id], me (GET + PATCH with length validation)
 │   │   │   ├── posts/              # GET list, GET [slug]
 │   │   │   ├── tags/               # GET
 │   │   │   ├── contests/           # GET list, GET [slug], [slug]/register
 │   │   │   ├── submissions/        # POST, mark-final, download
+│   │   │   ├── search/             # title + description search
 │   │   │   └── admin/              # posts, tags, uploads, contests, registrations
 │   │   ├── admin/                  # Dashboard quản trị (role = 'admin')
 │   │   │   ├── bucket/             # Quản lý Storage bucket
 │   │   │   ├── database/           # Xem dữ liệu DB
 │   │   │   └── posts/              # Tạo / sửa bài viết (new, [id]/edit)
 │   │   ├── auth/                   # Trang đăng nhập Google
-│   │   ├── contest-management/     # Quản lý cuộc thi (admin)
-│   │   ├── contests/               # Placeholder "Under development"
-│   │   ├── post/                   # Danh sách + chi tiết bài viết
+│   │   ├── profile/                # Hồ sơ cá nhân (FR_USER_01–05)
+│   │   ├── contest-management/     # Quản lý cuộc thi (admin) — list/form/registrations
+│   │   ├── contests/               # Public list + [slug] detail (FR_CONTEST_10–13)
+│   │   ├── post/                   # Danh sách + [slug] chi tiết (cover image + category badge)
+│   │   ├── tag/[slug]/             # Lọc bài viết theo tag (FR_POST_04)
+│   │   ├── category/[type]/        # Lọc theo category news/announcement/tutorial/result
 │   │   ├── not-found.tsx           # Trang 404
 │   │   └── page.tsx                # Trang chủ
 │   ├── components/
@@ -170,9 +182,11 @@ Supabase (Postgres + Auth + Storage, RLS bật trên mọi bảng)
 
 ## Notes
 
-- **Contest UI: Under development.** Backend API đầy đủ; frontend cho Contest sẽ ra ở M4. Hiện `/contests` hiển thị placeholder "Chức năng đang được phát triển".
+- **MVP hoàn chỉnh.** Tất cả MUST-priority requirements đã implement (xem `docs/PLAN-FINAL.md`). Nút "Đăng ký tham gia" trên trang chi tiết cuộc thi cố ý disable theo FR_CONTEST_12 — backend sẵn sàng, UI sẽ mở ở giai đoạn enrollment.
+- **No author / no series.** Blog không có khái niệm tác giả hay series; mọi bài viết thuộc về tổ chức và phân loại theo `category` (news / announcement / tutorial / result).
 - **Login: Google only.** Không có email/mật khẩu. Muốn thêm provider khác, bật trong Supabase Dashboard và cập nhật `src/app/auth/page.tsx`.
 - **Next.js 16 proxy.** File `src/proxy.ts` (xuất hàm `proxy`) thay thế cho `middleware.ts` theo convention mới của Next.js 16.
+- **Migrations.** Các thay đổi schema sau lần áp đầu tiên nằm trong `supabase/migrations/` — apply tuần tự qua Supabase SQL Editor.
 
 ---
 
