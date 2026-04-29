@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import { getAllPostsMeta, getAllTags, getAllLevels } from "@/lib/posts";
 import { PostListClient } from "@/components/features/post";
 import MobileSearchBar from "@/components/layout/MobileSearchBar";
@@ -24,6 +25,7 @@ const getCachedPostsData = unstable_cache(
 
 export default async function PostPage() {
     const { posts, allTags, allLevels } = await getCachedPostsData();
+    const t = await getTranslations("post");
 
     return (
         <>
@@ -33,8 +35,8 @@ export default async function PostPage() {
             <div className="w-full py-4 px-4 md:px-10">
                 {/* Centered container */}
                 <div className="mx-auto">
-                    <h1 className="text-xl font-bold text-center text-accent tracking-widest">POSTS</h1>
-                    <p className="text-xs mt-0.5 mb-4 text-foreground/70 text-center">Thoughts, notes, and experiments about software, systems, and learning</p>
+                    <h1 className="text-xl font-bold text-left text-accent tracking-widest">{t("pageTitle")}</h1>
+                    <p className="text-xs mt-0.5 mb-4 text-foreground/70 text-left">{t("pageSubtitle")}</p>
 
                     <Suspense fallback={<div>Loading...</div>}>
                         <PostListClient
@@ -45,7 +47,7 @@ export default async function PostPage() {
                     </Suspense>
 
                     {posts.length === 0 && (
-                        <p className="mt-6 text-foreground/50">No posts yet. Add your first post in the database.</p>
+                        <p className="mt-6 text-foreground/50">{t("emptyState")}</p>
                     )}
                 </div>
             </div>

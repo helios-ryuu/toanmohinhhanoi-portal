@@ -51,16 +51,13 @@ export default function PostShareActions({ post }: PostShareActionsProps) {
             {showQRPopup && (
                 <ShareQRPopup
                     image={post.image}
-                    author={post.author}
-                    authorTitle={post.authorTitle}
                     title={post.title}
                     description={post.description}
                     date={post.date}
                     readingTime={post.readingTime}
                     level={post.level}
                     tags={post.tags}
-                    type={post.type}
-                    seriesOrder={post.seriesOrder}
+                    category={post.category}
                     postUrl={postUrl}
                     onClose={handleCloseQRPopup}
                 />

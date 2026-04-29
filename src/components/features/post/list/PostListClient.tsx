@@ -9,6 +9,7 @@ import MultiSelect from "@/components/ui/MultiSelect";
 import { Button } from "@/components/ui";
 import { ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react";
 import type { PostMeta, Level } from "@/types/post";
+import type { PostCategory } from "@/types/database";
 
 type ViewMode = "card" | "list";
 
@@ -16,6 +17,7 @@ interface PostListClientProps {
     posts: PostMeta[];
     allTags: string[];
     allLevels: Level[];
+    allCategories?: PostCategory[];
 }
 
 const variants = {
@@ -30,11 +32,11 @@ const variants = {
     }),
 };
 
-// Helper: Parse time string "5 min read" -> 5 (kept for potential future use)
-const _parseReadTime = (timeStr?: string): number => {
-    if (!timeStr) return 0;
-    const match = timeStr.match(/(\d+)/);
-    return match ? parseInt(match[1], 10) : 0;
+const CATEGORY_LABEL: Record<PostCategory, string> = {
+    news: "Tin tức",
+    announcement: "Thông báo",
+    tutorial: "Hướng dẫn",
+    result: "Kết quả",
 };
 
 // Helper: Level weight
@@ -47,7 +49,7 @@ const getLevelWeight = (level?: Level): number => {
     }
 };
 
-export default function PostListClient({ posts, allTags, allLevels }: PostListClientProps) {
+export default function PostListClient({ posts, allTags, allLevels, allCategories }: PostListClientProps) {
     const searchParams = useSearchParams();
     const router = useRouter();
     // Derived state from URL (Source of Truth)
@@ -61,7 +63,7 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
         return l ? l.split(",").map(s => s.trim()).filter(Boolean) : [];
     }, [searchParams]);
 
-    const selectedType = searchParams.get("type") || "";
+    const selectedCategory = (searchParams.get("category") || "") as PostCategory | "";
     const selectedSort = searchParams.get("sort") || "newest";
     const viewMode = (searchParams.get("view") as ViewMode) || "card";
 
@@ -80,35 +82,30 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
 
             if (viewMode === "list") {
                 setPostsPerPage(10);
-            } else if (mobile) { // < sm - mobile shows all posts
+            } else if (mobile) {
                 setPostsPerPage(Infinity);
-            } else { // All other card views (Tablet, Laptop, Desktop)
+            } else {
                 setPostsPerPage(4);
             }
         };
 
-        // Set initial value
         handleResize();
 
         window.addEventListener("resize", handleResize);
         return () => window.removeEventListener("resize", handleResize);
     }, [viewMode]);
 
-    // Sync URL -> State effect removed - state is now derived directly from searchParams
-
-
-    // Helper to update URL based on current state + new changes
-    const updateUrl = (newParams: Partial<{ tags: string[], levels: string[], type: string, sort: string, view: ViewMode }>) => {
+    const updateUrl = (newParams: Partial<{ tags: string[], levels: string[], category: string, sort: string, view: ViewMode }>) => {
         const t = newParams.tags !== undefined ? newParams.tags : selectedTags;
         const l = newParams.levels !== undefined ? newParams.levels : selectedLevels;
-        const ty = newParams.type !== undefined ? newParams.type : selectedType;
+        const c = newParams.category !== undefined ? newParams.category : selectedCategory;
         const s = newParams.sort !== undefined ? newParams.sort : selectedSort;
         const v = newParams.view !== undefined ? newParams.view : viewMode;
 
         const params = new URLSearchParams();
         if (t.length > 0) params.set("tag", t.join(","));
         if (l.length > 0) params.set("level", l.join(","));
-        if (ty) params.set("type", ty);
+        if (c) params.set("category", c);
         if (s !== "newest") params.set("sort", s);
         if (v !== "card") params.set("view", v);
 
@@ -116,8 +113,6 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
         router.push(query ? `/post?${query}` : "/post", { scroll: false });
     };
 
-    // Handlers
-    // Handlers - Only update URL, state updates automatically via derivation
     const handleTagsChange = (values: string[]) => {
         const newTags = values.includes("") ? [] : values;
         updateUrl({ tags: newTags });
@@ -128,9 +123,8 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
         updateUrl({ levels: newLevels });
     };
 
-    const handleTypeChange = (value: string) => {
-        const newType = value === "" ? "" : value;
-        updateUrl({ type: newType });
+    const handleCategoryChange = (value: string) => {
+        updateUrl({ category: value });
     };
 
     const handleSortChange = (value: string) => {
@@ -142,7 +136,6 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
     const filteredPosts = useMemo(() => {
         let result = [...posts];
 
-        // Filters
         if (selectedTags.length > 0) {
             result = result.filter((post) =>
                 post.tags?.some((t) =>
@@ -155,27 +148,23 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                 post.level && selectedLevels.includes(post.level)
             );
         }
-        if (selectedType) {
-            result = result.filter((post) => {
-                const postType = post.type || "standalone";
-                return postType === selectedType;
-            });
+        if (selectedCategory) {
+            result = result.filter((post) => post.category === selectedCategory);
         }
 
-        // Single Sort
         result.sort((a, b) => {
             switch (selectedSort) {
-                case "newest": // Date Desc
+                case "newest":
                     return new Date(b.date || '').getTime() - new Date(a.date || '').getTime();
-                case "oldest": // Date Asc
+                case "oldest":
                     return new Date(a.date || '').getTime() - new Date(b.date || '').getTime();
-                case "a-z": // Title Asc
+                case "a-z":
                     return a.title.localeCompare(b.title);
-                case "z-a": // Title Desc
+                case "z-a":
                     return b.title.localeCompare(a.title);
-                case "easiest": // Level Asc (Beginner -> Advanced)
+                case "easiest":
                     return getLevelWeight(a.level) - getLevelWeight(b.level);
-                case "most-advanced": // Level Desc (Advanced -> Beginner)
+                case "most-advanced":
                     return getLevelWeight(b.level) - getLevelWeight(a.level);
                 default:
                     return 0;
@@ -183,15 +172,14 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
         });
 
         return result;
-    }, [posts, selectedTags, selectedLevels, selectedType, selectedSort]);
+    }, [posts, selectedTags, selectedLevels, selectedCategory, selectedSort]);
 
     const clearFilters = () => {
-        updateUrl({ tags: [], levels: [], type: "", sort: "newest" });
+        updateUrl({ tags: [], levels: [], category: "", sort: "newest" });
     };
 
-    const hasActiveFilters = selectedTags.length > 0 || selectedLevels.length > 0 || selectedType !== "" || selectedSort !== "newest";
+    const hasActiveFilters = selectedTags.length > 0 || selectedLevels.length > 0 || selectedCategory !== "" || selectedSort !== "newest";
 
-    // Options
     const tagOptions = [
         { value: "", label: "All" },
         ...allTags.map((tag) => ({ value: tag, label: tag }))
@@ -205,10 +193,12 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
         }))
     ];
 
-    const typeOptions = [
+    const categoryOptions = [
         { value: "", label: "All" },
-        { value: "standalone", label: "Standalone" },
-        { value: "series", label: "Series" },
+        ...((allCategories ?? (["news", "announcement", "tutorial", "result"] as PostCategory[])).map((c) => ({
+            value: c,
+            label: CATEGORY_LABEL[c],
+        }))),
     ];
 
     const sortOptions = [
@@ -225,7 +215,6 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
         { value: "list", label: "List", icon: List },
     ];
 
-    // Header Renderer (Static now)
     const renderHeader = (label: string) => {
         return (
             <div className="flex items-center gap-1 select-none text-(--foreground-dim)">
@@ -239,10 +228,8 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
             {/* Filters & Sort Bar */}
             <div className="mt-6">
                 <div className="grid grid-cols-[1fr_auto] sm:flex sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center">
-                    {/* Left side - Filters */}
                     <div className="flex flex-col sm:flex-row flex-wrap gap-4 flex-1">
-                        {/* Filter by Tags */}
-                        <div className="grid grid-cols-[3rem_1fr] sm:flex items-center gap-2">
+                        <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
                             <label className="text-xs text-(--foreground-dim) shrink-0">Tags:</label>
                             <MultiSelect
                                 values={selectedTags}
@@ -254,8 +241,7 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                             />
                         </div>
 
-                        {/* Filter by Levels */}
-                        <div className="grid grid-cols-[3rem_1fr] sm:flex items-center gap-2">
+                        <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
                             <label className="text-xs text-(--foreground-dim) shrink-0">Level:</label>
                             <MultiSelect
                                 values={selectedLevels}
@@ -267,21 +253,19 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                             />
                         </div>
 
-                        {/* Filter by Type */}
-                        <div className="grid grid-cols-[3rem_1fr] sm:flex items-center gap-2">
-                            <label className="text-xs text-(--foreground-dim) shrink-0">Type:</label>
+                        <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
+                            <label className="text-xs text-(--foreground-dim) shrink-0">Loại:</label>
                             <Select
-                                value={selectedType}
-                                onValueChange={handleTypeChange}
-                                options={typeOptions}
+                                value={selectedCategory}
+                                onValueChange={handleCategoryChange}
+                                options={categoryOptions}
                                 placeholder="All"
                                 className="flex-1 cursor-pointer text-xs"
-                                isActive={selectedType !== ""}
+                                isActive={selectedCategory !== ""}
                             />
                         </div>
 
-                        {/* Sort Dropdown */}
-                        <div className="grid grid-cols-[3rem_1fr] sm:flex items-center gap-2">
+                        <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
                             <label className="text-xs text-(--foreground-dim) shrink-0">Sort:</label>
                             <Select
                                 value={selectedSort}
@@ -293,7 +277,6 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                             />
                         </div>
 
-                        {/* Reset Filters */}
                         {hasActiveFilters && (
                             <Button
                                 onClick={clearFilters}
@@ -305,7 +288,6 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                         )}
                     </div>
 
-                    {/* Right side - View Mode */}
                     <div className="flex items-center gap-2 ml-auto self-end">
                         <div className="flex items-center gap-1.5 text-xs text-(--foreground-dim)">
                             {viewMode === "card" ? <LayoutGrid className="w-3.5 h-3.5" /> : <List className="w-3.5 h-3.5" />}
@@ -324,12 +306,13 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                 </div>
             </div>
 
-            {/* Delimiter */}
             <div className="w-full border-t border-(--foreground-dim)/30 mt-2"></div>
 
-            {/* Results count */}
             <p className="mt-2 mb-2 text-xs text-(--foreground-dim)">
-                Showing {filteredPosts.length} of {posts.length} <span className="text-accent">{selectedType ? ` ${selectedType}` : ""}</span> posts
+                Showing {filteredPosts.length} of {posts.length}
+                {selectedCategory && (
+                    <> <span className="text-accent">{CATEGORY_LABEL[selectedCategory]}</span></>
+                )}{" "}posts
                 {selectedTags.length > 0 && (
                     <> tagged &quot;<span className="text-accent">{selectedTags.join(", ")}</span>&quot;</>
                 )}
@@ -338,28 +321,22 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                 )}
             </p>
 
-            {/* No posts found */}
             {filteredPosts.length === 0 && (
                 <p className="mt-10 text-foreground/50">No posts match your filters.</p>
             )}
 
-            {/* Posts grid - mobile shows all posts as feed, desktop uses pagination */}
             <div className={`mt-4 relative overflow-hidden ${!isMobile ? 'min-h-[300px]' : ''}`}>
                 {viewMode === "list" ? (
-                    // List view (Desktop & Mobile with scroll)
                     <div className="flex flex-col gap-2 overflow-x-auto pb-2">
-                        <div className="min-w-[1100px]">
-                            {/* Header row */}
-                            <div className="grid grid-cols-[4fr_3fr_90px_80px_95px_110px_100px] gap-4 px-4 py-2 text-xs font-semibold text-(--foreground-dim) border-b border-(--border-color) mb-4">
+                        <div className="min-w-[1000px]">
+                            <div className="grid grid-cols-[4fr_3fr_90px_80px_95px_120px] gap-4 px-4 py-2 text-xs font-semibold text-(--foreground-dim) border-b border-(--border-color) mb-4">
                                 {renderHeader("Title")}
                                 <span>Tags</span>
                                 {renderHeader("Date")}
                                 {renderHeader("Read")}
                                 {renderHeader("Level")}
-                                {renderHeader("Author")}
-                                {renderHeader("Type")}
+                                {renderHeader("Loại")}
                             </div>
-                            {/* List items */}
                             <AnimatePresence initial={false} mode="wait" custom={direction}>
                                 <motion.div
                                     key={currentPage}
@@ -378,16 +355,13 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                                                 key={post.slug}
                                                 slug={post.slug}
                                                 image={post.image}
-                                                author={post.author}
-                                                authorTitle={post.authorTitle}
                                                 title={post.title}
                                                 description={post.description}
                                                 date={post.date}
                                                 readingTime={post.readingTime}
                                                 level={post.level}
                                                 tags={post.tags}
-                                                type={post.type}
-                                                seriesOrder={post.seriesOrder}
+                                                category={post.category}
                                                 onClick={() => router.push(`/post/${post.slug}`)}
                                             />
                                         ))}
@@ -396,29 +370,24 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                         </div>
                     </div>
                 ) : isMobile ? (
-                    // Mobile: Show all posts as feed (Card mode)
                     <div className="flex flex-col gap-4">
                         {filteredPosts.map((post) => (
                             <PostCard
                                 key={post.slug}
                                 slug={post.slug}
                                 image={post.image}
-                                author={post.author}
-                                authorTitle={post.authorTitle}
                                 title={post.title}
                                 description={post.description}
                                 date={post.date}
                                 readingTime={post.readingTime}
                                 level={post.level}
                                 tags={post.tags}
-                                type={post.type}
-                                seriesOrder={post.seriesOrder}
+                                category={post.category}
                                 onClick={() => router.push(`/post/${post.slug}`)}
                             />
                         ))}
                     </div>
                 ) : (
-                    // Desktop/Tablet: Paginated card grid
                     <AnimatePresence initial={false} mode="wait" custom={direction}>
                         <motion.div
                             key={currentPage}
@@ -428,7 +397,7 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                             animate="center"
                             exit="exit"
                             transition={{ duration: 0.3, ease: "easeInOut" }}
-                            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                            className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
                         >
                             {filteredPosts
                                 .slice((currentPage - 1) * postsPerPage, currentPage * postsPerPage)
@@ -437,16 +406,13 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                                         key={post.slug}
                                         slug={post.slug}
                                         image={post.image}
-                                        author={post.author}
-                                        authorTitle={post.authorTitle}
                                         title={post.title}
                                         description={post.description}
                                         date={post.date}
                                         readingTime={post.readingTime}
                                         level={post.level}
                                         tags={post.tags}
-                                        type={post.type}
-                                        seriesOrder={post.seriesOrder}
+                                        category={post.category}
                                         onClick={() => router.push(`/post/${post.slug}`)}
                                     />
                                 ))}
@@ -455,7 +421,6 @@ export default function PostListClient({ posts, allTags, allLevels }: PostListCl
                 )}
             </div>
 
-            {/* Pagination */}
             {filteredPosts.length > postsPerPage && (
                 <div className="mt-2 flex items-center justify-center gap-4">
                     <button

@@ -1,18 +1,15 @@
+import type { PostCategory } from "./database";
+
 export type Level = "beginner" | "intermediate" | "advanced";
-export type PostType = "standalone" | "series";
 
 export interface PostFrontmatter {
-    author?: string;
-    authorTitle?: string;
     title: string;
     description: string;
     date: string;
     image?: string;
     tags?: string[];
     level?: Level;
-    type?: PostType;
-    seriesId?: string;
-    seriesOrder?: number;
+    category?: PostCategory;
 }
 
 export interface Post extends PostFrontmatter {
@@ -30,16 +27,13 @@ export interface PostMeta extends PostFrontmatter {
 export interface PostItemProps {
     slug: string;
     image?: string;
-    author?: string;
-    authorTitle?: string;
     title: string;
     description: string;
     date?: string;
     readingTime?: string;
     level?: Level;
     tags?: string[];
-    type?: PostType;
-    seriesOrder?: number;
+    category?: PostCategory;
     onClick?: () => void;
     className?: string;
 }

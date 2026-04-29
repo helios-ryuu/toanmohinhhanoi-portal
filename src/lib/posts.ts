@@ -17,6 +17,7 @@ function toPost(row: DbPostWithRelations): Post {
         date: new Date(date).toISOString().split("T")[0],
         tags: row.tags.map((t) => t.name),
         readingTime: "",
+        category: row.category,
     };
 }
 
@@ -73,7 +74,3 @@ export async function getRelatedPosts(
         .map((x) => x.p);
 }
 
-export async function getSeriesPosts(_seriesSlug: string): Promise<PostMeta[]> {
-    void _seriesSlug;
-    return [];
-}

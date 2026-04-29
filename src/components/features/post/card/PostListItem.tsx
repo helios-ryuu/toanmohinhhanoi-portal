@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { TagList } from "@/components/ui";
 import PostCardContextMenu from "./PostCardContextMenu";
+import PostCategoryBadge from "./PostCategoryBadge";
 import ShareQRPopup from "../share/PostShareQRPopup";
 import { usePostShareInteractions } from "@/hooks/usePostShareInteractions";
 import type { PostItemProps } from "@/types/post";
@@ -11,16 +12,13 @@ import type { PostItemProps } from "@/types/post";
 export default function PostListItem({
     slug,
     image,
-    author,
-    authorTitle,
     title,
     description,
     date,
     readingTime,
     level,
     tags,
-    type,
-    seriesOrder,
+    category,
     onClick,
     className = ""
 }: PostItemProps) {
@@ -50,9 +48,9 @@ export default function PostListItem({
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
                 className={`
-                    grid grid-cols-[4fr_3fr_90px_80px_95px_110px_100px] gap-4 px-4 py-2 
-                    rounded-xl border border-(--border-color) bg-(--post-card) 
-                    hover:border-(--border-color-hover) hover:bg-(--post-card-hover) 
+                    grid grid-cols-[4fr_3fr_90px_80px_95px_120px] gap-4 px-4 py-2
+                    rounded-xl border border-(--border-color) bg-(--post-card)
+                    hover:border-(--border-color-hover) hover:bg-(--post-card-hover)
                     cursor-pointer transition-colors items-center select-none
                     ${className}
                 `}
@@ -69,19 +67,9 @@ export default function PostListItem({
                     }`}>
                     {level ? level.charAt(0).toUpperCase() + level.slice(1) : '-'}
                 </span>
-                <span className="text-xs text-accent/90 truncate">{author || '-'}</span>
-
-                {/* Type Badge */}
-                {type === 'series' ? (
-                    <div className="flex items-center justify-center bg-accent/30 border rounded-md border-accent/50 w-full max-w-[100px]">
-                        <span className="text-[10px] font-bold tracking-wider text-accent-hover px-1.5 py-0.5 border-r border-accent/50">SERIES</span>
-                        <span className="text-[10px] font-bold text-accent-hover px-1.5 py-0.5 flex-1 text-center">{seriesOrder ?? "?"}</span>
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-center bg-blue-500/20 border rounded-md border-blue-500/40 w-full max-w-[100px]">
-                        <span className="text-[10px] font-bold tracking-wider text-blue-500 px-1.5 py-0.5">STANDALONE</span>
-                    </div>
-                )}
+                <span className="w-fit">
+                    {category ? <PostCategoryBadge category={category} /> : <span className="text-xs text-foreground/40">-</span>}
+                </span>
             </div>
 
             {/* Context Menu */}
@@ -102,16 +90,13 @@ export default function PostListItem({
             {showQRPopup && (
                 <ShareQRPopup
                     image={image}
-                    author={author}
-                    authorTitle={authorTitle}
                     title={title}
                     description={description}
                     date={date}
                     readingTime={readingTime}
                     level={level}
                     tags={tags}
-                    type={type}
-                    seriesOrder={seriesOrder}
+                    category={category}
                     postUrl={postUrl}
                     onClose={handleCloseQRPopup}
                 />

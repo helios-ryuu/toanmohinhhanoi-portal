@@ -2,9 +2,10 @@
 
 import { useCallback } from "react";
 import Image from "next/image";
-import { FadeText, TagList } from "@/components/ui";
+import { TagList } from "@/components/ui";
 import StatColumns from "./PostStatColumns";
 import PostCardContextMenu from "./PostCardContextMenu";
+import PostCategoryBadge from "./PostCategoryBadge";
 import ShareQRPopup from "../share/PostShareQRPopup";
 import { usePostShareInteractions } from "@/hooks/usePostShareInteractions";
 import type { PostItemProps } from "@/types/post";
@@ -12,16 +13,13 @@ import type { PostItemProps } from "@/types/post";
 export default function PostCard({
     slug,
     image,
-    author,
-    authorTitle,
     title,
     description,
     date,
     readingTime,
     level,
     tags,
-    type,
-    seriesOrder,
+    category,
     onClick,
     className = ""
 }: PostItemProps) {
@@ -72,15 +70,10 @@ export default function PostCard({
                         </div>
                     )}
 
-                    {/* Author */}
-                    {author && (
-                        <div className="flex items-center gap-2 mt-2 text-xs text-foreground/50">
-                            <FadeText
-                                text={author.toUpperCase() + (authorTitle ? " • " + authorTitle : "")}
-                                duration={200}
-                                isVisible={true}
-                                className="tracking-widest text-accent/90"
-                            />
+                    {/* Category */}
+                    {category && (
+                        <div className="mt-2 mb-1">
+                            <PostCategoryBadge category={category} />
                         </div>
                     )}
 
@@ -129,23 +122,6 @@ export default function PostCard({
                         }] : []),
                     ]} />
                 </div>
-                {/* Series Badge */}
-                {type === "series" ? (
-                    <div className="mt-2 w-6/7 mx-auto flex items-center justify-center bg-accent/30 border rounded-md border-accent/50">
-                        <span className="text-center text-xs font-bold tracking-widest text-accent-hover px-2 py-0.5 border-r border-accent/50">
-                            SERIES
-                        </span>
-                        <span className="flex-1 text-center text-xs font-bold text-accent-hover px-2 py-0.5">
-                            {seriesOrder ?? "?"}
-                        </span>
-                    </div>
-                ) : (
-                    <div className="mt-2 w-6/7 mx-auto flex items-center justify-center bg-blue-500/20 border rounded-md border-blue-500/40">
-                        <span className="text-center text-xs font-bold tracking-widest text-blue-500 px-2 py-0.5">
-                            STANDALONE
-                        </span>
-                    </div>
-                )}
             </div>
 
             {/* Context Menu */}
@@ -166,16 +142,13 @@ export default function PostCard({
             {showQRPopup && (
                 <ShareQRPopup
                     image={image}
-                    author={author}
-                    authorTitle={authorTitle}
                     title={title}
                     description={description}
                     date={date}
                     readingTime={readingTime}
                     level={level}
                     tags={tags}
-                    type={type}
-                    seriesOrder={seriesOrder}
+                    category={category}
                     postUrl={postUrl}
                     onClose={handleCloseQRPopup}
                 />

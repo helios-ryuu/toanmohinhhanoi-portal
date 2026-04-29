@@ -52,7 +52,10 @@ export async function listPosts(
 
     if (opts.publishedOnly !== false) query = query.eq("published", true);
     if (opts.category) query = query.eq("category", opts.category);
-    if (opts.q) query = query.ilike("title", `%${opts.q}%`);
+    if (opts.q) {
+        const escaped = opts.q.replace(/[%,()]/g, " ").trim();
+        if (escaped) query = query.or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`);
+    }
 
     if (opts.tag) {
         const { data: tagRow } = await supabase.from("tag").select("id").eq("slug", opts.tag).single();

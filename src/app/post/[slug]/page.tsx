@@ -1,10 +1,11 @@
-import { getPostBySlug, getAllPostsMeta, getRelatedPosts, getSeriesPosts } from "@/lib/posts";
+import { getPostBySlug, getAllPostsMeta, getRelatedPosts } from "@/lib/posts";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { mdxComponents } from "../../../../mdx-components";
 import rehypePrettyCode from "rehype-pretty-code";
 import remarkGfm from "remark-gfm";
-import { PostMeta, RelatedPosts, MobileTocBar, SeriesNavigation, PostShareActions } from "@/components/features/post";
+import Image from "next/image";
+import { PostMeta, RelatedPosts, MobileTocBar, PostShareActions, PostCategoryBadge } from "@/components/features/post";
 import SidebarInjector from "@/components/layout/SidebarInjector";
 import { TagList } from "@/components/ui";
 import { Metadata } from "next";
@@ -20,12 +21,6 @@ const getCachedPost = unstable_cache(
 const getCachedRelatedPosts = unstable_cache(
     async (slug: string, tags: string[]) => getRelatedPosts(slug, tags),
     ["related-posts"],
-    { revalidate: 60, tags: ["posts"] }
-);
-
-const getCachedSeriesPosts = unstable_cache(
-    async (seriesId: string) => getSeriesPosts(seriesId),
-    ["series-posts"],
     { revalidate: 60, tags: ["posts"] }
 );
 
@@ -50,16 +45,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         };
     }
 
-    const baseUrl = "https://blog.helios.id.vn";
-
     return {
-        title: `${post.title} - Helios Blog`,
+        title: `${post.title} - Toán Mô Hình Hà Nội`,
         description: post.description,
         openGraph: {
             title: post.title,
             description: post.description,
-            url: `${baseUrl}/post/${slug}`,
-            siteName: "Helios Blog",
+            siteName: "Toán Mô Hình Hà Nội",
             images: post.image ? [
                 {
                     url: post.image,
@@ -94,11 +86,7 @@ export default async function BlogPostPage({ params }: Props) {
         notFound();
     }
 
-    // Fetch related and series posts in parallel
-    const [relatedPosts, seriesPosts] = await Promise.all([
-        getCachedRelatedPosts(slug, post.tags || []),
-        post.seriesId ? getCachedSeriesPosts(post.seriesId) : Promise.resolve([])
-    ]);
+    const relatedPosts = await getCachedRelatedPosts(slug, post.tags || []);
 
     return (
         <div className="flex flex-col lg:h-full lg:overflow-hidden">
@@ -113,6 +101,28 @@ export default async function BlogPostPage({ params }: Props) {
                 {/* Main Content */}
                 <article className="flex-1 min-w-0 mx-auto lg:h-full lg:overflow-y-auto py-6 md:py-4 md:px-6">
                     <header className="mb-8">
+                        {/* Cover image (FR_POST_03) */}
+                        {post.image && (
+                            <div className="relative w-full h-56 md:h-72 mb-6 rounded-xl overflow-hidden border border-(--border-color)">
+                                <Image
+                                    src={post.image}
+                                    alt={post.title}
+                                    fill
+                                    sizes="(max-width: 768px) 100vw, 800px"
+                                    className="object-cover"
+                                    priority
+                                />
+                                <div className="absolute inset-0 bg-linear-to-t from-background/30 via-transparent to-transparent" />
+                            </div>
+                        )}
+
+                        {/* Category badge (FR_POST_03) */}
+                        {post.category && (
+                            <div className="mb-3">
+                                <PostCategoryBadge category={post.category} />
+                            </div>
+                        )}
+
                         <h1 className="text-3xl font-bold mb-2">{post.title}</h1>
                         <p className="text-sm mt-2 text-foreground/70">{post.description}</p>
                         <PostMeta date={post.date} readingTime={post.readingTime} level={post.level} className="mt-4 mb-3" />
@@ -132,11 +142,6 @@ export default async function BlogPostPage({ params }: Props) {
                         />
                         <PostShareActions post={post} />
                     </div>
-
-                    {/* Series Navigation */}
-                    {post.seriesId && seriesPosts.length > 1 && (
-                        <SeriesNavigation currentPost={post} seriesPosts={seriesPosts} />
-                    )}
                 </article>
 
                 {/* Right Sidebar - Related Posts */}
