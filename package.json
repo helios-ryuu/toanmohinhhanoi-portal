@@ -1,6 +1,6 @@
 {
   "name": "toanmohinhhanoi-portal",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Portal chính thức của Toán Mô Hình Hà Nội — blog, CMS và quản lý cuộc thi",
   "private": true,
   "scripts": {

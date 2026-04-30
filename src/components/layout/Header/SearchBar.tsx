@@ -32,9 +32,11 @@ export default function SearchBar() {
     useEffect(() => {
         fetch("/api/search")
             .then((res) => res.json())
-            .then((data) => {
-                setPosts(data.posts || []);
-                setTags(data.tags || []);
+            .then((json) => {
+                if (json.success) {
+                    setPosts(json.data.posts || []);
+                    setTags(json.data.tags || []);
+                }
             })
             .catch(console.error);
     }, []);

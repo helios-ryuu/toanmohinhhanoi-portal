@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { requireAdmin } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { POST_IMAGE_BUCKET, SUBMISSION_BUCKET } from "@/lib/storage";
@@ -154,7 +154,7 @@ export async function PATCH(req: NextRequest) {
         if (removeErr) return apiError(removeErr.message, 500);
 
         const { data: pub } = supabase.storage.from(bucket).getPublicUrl(to);
-        return NextResponse.json({ success: true, data: { path: to, publicUrl: pub.publicUrl } });
+        return apiSuccess({ path: to, publicUrl: pub.publicUrl });
     } catch (err) {
         return handleRouteError(err);
     }

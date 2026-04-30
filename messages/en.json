@@ -30,7 +30,7 @@
         "signOut": "Sign out"
     },
     "footer": {
-        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.8.3"
+        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.8.4"
     },
     "post": {
         "pageTitle": "POSTS",
@@ -42,7 +42,12 @@
         "share": "Share",
         "copyLink": "Copy link",
         "showQR": "Show QR",
-        "openInNewTab": "Open in new tab"
+        "openInNewTab": "Open in new tab",
+        "qrReady": "QR Code ready to share",
+        "imageDownloaded": "Image downloaded successfully",
+        "imageDownloadFailed": "Failed to download image",
+        "imageCopied": "Image copied to clipboard",
+        "imageCopyFailed": "Failed to copy image"
     },
     "contests": {
         "pageTitle": "CONTESTS",
@@ -255,6 +260,7 @@
         "joinedAt": "Joined",
         "submissions": "Submissions",
         "noSubmissions": "No submissions yet.",
+        "isFinal": "Final",
         "download": "Download",
         "downloadError": "Download failed",
         "linkError": "Failed to generate link",
@@ -289,7 +295,7 @@
         "aq2": "How do I add and configure stages?",
         "aa2": "In the Contest Form, scroll to the Stages section and click \"Add stage\". Each stage has a name, start/end dates (must fit inside the grand timeline), and toggles for Allow Registration and Allow Submission. You can add as many stages as needed.",
         "aq3": "How do I approve or reject registrations?",
-        "aa3": "In Contest Management, click \"Quản lý đội thi\" for a contest. Use the status filter chips to find pending registrations and click Approve or Reject.",
+        "aa3": "In Contest Management, click \"Team Management\" for a contest. Use the status filter chips to find pending registrations and click Approve or Reject.",
         "aq4": "How do I view team submissions?",
         "aa4": "In the team management panel, expand any registration row to see all submissions. Click the Download button next to a file to download it via a 5-minute signed URL.",
         "aq5": "How do I manage posts and tags?",
@@ -300,5 +306,48 @@
         "aa7": "Scroll to the Database section at the bottom of Admin Workspace. It shows read-only tables for users, posts, tags, and post-tag relationships. Click Refresh to reload.",
         "aq8": "How do I promote a user to admin?",
         "aa8": "Run the following SQL in the Supabase SQL Editor: UPDATE public.users SET role = 'admin' WHERE id = '<auth-uid>'; There is no UI for role promotion — it must be done directly in the database."
+    },
+    "myContests": {
+        "backToProfile": "Back to profile",
+        "pageTitle": "My Contests",
+        "emptyState": "You have not registered for any contest yet.",
+        "registeredAt": "Registered:",
+        "team": "Team:",
+        "members": "Members",
+        "untitledContest": "Untitled contest",
+        "anonymous": "Anonymous",
+        "selectFile": "Please select a file to submit",
+        "fileTooLarge": "File size must not exceed 5 MB",
+        "replaceSuccess": "Submission replaced!",
+        "submitSuccess": "Submission successful!",
+        "submitError": "Error submitting",
+        "submitNetworkError": "Unable to submit, please try again later.",
+        "replaceTitle": "Replace submission",
+        "submitTitle": "Submit",
+        "fileLabel": "Attachment (max 5 MB)",
+        "noteLabel": "Note (optional)",
+        "notePlaceholder": "Notes about your solution…",
+        "confirmReplace": "Confirm replace",
+        "confirmSubmit": "Confirm submit",
+        "deleteSuccess": "Submission deleted",
+        "deleteError": "Delete failed",
+        "submitted": "Submitted",
+        "replaceBtn": "Replace",
+        "deleteBtn": "Delete",
+        "noResubmit": "This stage does not allow resubmission after submission."
+    },
+    "deletePopup": {
+        "title": "Delete {type}",
+        "message": "You are about to delete this {type}. This action cannot be undone.",
+        "confirmText": "Delete",
+        "typePost": "post",
+        "typeTag": "tag",
+        "labelName": "Name",
+        "labelSlug": "Slug",
+        "labelCategory": "Category",
+        "labelStatus": "Status",
+        "labelTags": "Tags",
+        "published": "Published",
+        "draft": "Draft"
     }
 }

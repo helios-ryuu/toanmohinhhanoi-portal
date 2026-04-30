@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { getAllPostsMeta, getAllTags } from "@/lib/posts";
 import { unstable_cache } from "next/cache";
+import { getAllPostsMeta, getAllTags } from "@/lib/posts";
+import { apiSuccess, apiError } from "@/lib/api-helpers";
 
 // Cache search data for 60 seconds to reduce database calls
 const getCachedSearchData = unstable_cache(
@@ -33,9 +33,9 @@ const getCachedSearchData = unstable_cache(
 export async function GET() {
     try {
         const data = await getCachedSearchData();
-        return NextResponse.json(data);
+        return apiSuccess(data);
     } catch (error) {
         console.error("Search API error:", error);
-        return NextResponse.json({ posts: [], tags: [] });
+        return apiError("Search unavailable", 500);
     }
 }

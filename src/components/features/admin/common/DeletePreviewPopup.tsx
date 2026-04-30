@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, Tag } from "lucide-react";
+import { useTranslations } from "next-intl";
 import ConfirmPopup from "./ConfirmPopup";
 
 interface DeletePreviewData {
@@ -20,7 +21,6 @@ interface DeletePreviewPopupProps {
 }
 
 const typeIcons = { post: FileText, tag: Tag };
-const typeLabels = { post: "Post", tag: "Tag" };
 
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
     return (
@@ -32,23 +32,26 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
 }
 
 export default function DeletePreviewPopup({ data, onCancel, onConfirmDelete }: DeletePreviewPopupProps) {
+    const t = useTranslations("deletePopup");
+    const typeLabel = data.type === "post" ? t("typePost") : t("typeTag");
+
     return (
         <ConfirmPopup
             variant="danger"
             icon={typeIcons[data.type]}
-            title={`Delete ${typeLabels[data.type]}`}
-            message={`You are about to delete this ${data.type}. This action cannot be undone.`}
-            confirmText="Delete"
+            title={t("title", { type: typeLabel })}
+            message={t("message", { type: typeLabel })}
+            confirmText={t("confirmText")}
             onConfirm={onConfirmDelete}
             onCancel={onCancel}
         >
             <div className="space-y-3">
-                <InfoRow label="Name">
+                <InfoRow label={t("labelName")}>
                     <p className="font-medium text-foreground">{data.name}</p>
                 </InfoRow>
 
                 {data.slug && (
-                    <InfoRow label="Slug">
+                    <InfoRow label={t("labelSlug")}>
                         <p className="text-sm text-foreground font-mono">{data.slug}</p>
                     </InfoRow>
                 )}
@@ -57,20 +60,20 @@ export default function DeletePreviewPopup({ data, onCancel, onConfirmDelete }: 
                     <>
                         <div className="grid grid-cols-2 gap-3">
                             {data.category && (
-                                <InfoRow label="Category">
+                                <InfoRow label={t("labelCategory")}>
                                     <p className="text-sm text-foreground capitalize">{data.category}</p>
                                 </InfoRow>
                             )}
                             {data.published !== undefined && (
-                                <InfoRow label="Status">
+                                <InfoRow label={t("labelStatus")}>
                                     <p className={`text-sm ${data.published ? "text-green-500" : "text-yellow-500"}`}>
-                                        {data.published ? "Published" : "Draft"}
+                                        {data.published ? t("published") : t("draft")}
                                     </p>
                                 </InfoRow>
                             )}
                         </div>
                         {data.tags && data.tags.length > 0 && (
-                            <InfoRow label="Tags">
+                            <InfoRow label={t("labelTags")}>
                                 <div className="flex flex-wrap gap-1 mt-1">
                                     {data.tags.map((tag) => (
                                         <span key={tag} className="px-2 py-0.5 text-xs rounded-full bg-accent/20 text-accent">

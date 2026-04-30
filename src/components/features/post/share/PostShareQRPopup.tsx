@@ -6,6 +6,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { toPng } from "html-to-image";
 import Image from "next/image";
 
+import { useTranslations } from "next-intl";
 import { TagList } from "@/components/ui";
 import { useToast } from "@/components/ui/Toast";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
@@ -43,6 +44,7 @@ export default function ShareQRPopup({
     const [copied, setCopied] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const { showToast } = useToast();
+    const t = useTranslations("post");
 
     const toastShownRef = useRef(false);
 
@@ -50,7 +52,7 @@ export default function ShareQRPopup({
 
     useEffect(() => {
         if (!toastShownRef.current) {
-            showToast("info", "QR Code ready to share");
+            showToast("info", t("qrReady"));
             toastShownRef.current = true;
         }
     }, [showToast]);
@@ -84,10 +86,10 @@ export default function ShareQRPopup({
             link.download = `${title.replace(/[^a-z0-9]/gi, "-").toLowerCase()}-share.png`;
             link.href = dataUrl;
             link.click();
-            showToast("success", "Image downloaded successfully");
+            showToast("success", t("imageDownloaded"));
         } catch (err) {
             console.error("Failed to generate image:", err);
-            showToast("error", "Failed to download image");
+            showToast("error", t("imageDownloadFailed"));
         } finally {
             setDownloading(false);
         }
@@ -108,11 +110,11 @@ export default function ShareQRPopup({
                 new ClipboardItem({ "image/png": blob }),
             ]);
             setCopied(true);
-            showToast("success", "Image copied to clipboard");
+            showToast("success", t("imageCopied"));
             setTimeout(() => setCopied(false), 2000);
         } catch (err) {
             console.error("Failed to copy image:", err);
-            showToast("error", "Failed to copy image");
+            showToast("error", t("imageCopyFailed"));
         }
     };
 

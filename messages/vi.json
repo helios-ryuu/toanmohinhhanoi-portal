@@ -30,7 +30,7 @@
         "signOut": "Đăng xuất"
     },
     "footer": {
-        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.8.3"
+        "copyright": "© 2026 Helios và Toán Mô Hình Hà Nội. Mọi quyền được bảo lưu. Portal v0.8.4"
     },
     "post": {
         "pageTitle": "BÀI VIẾT",
@@ -42,7 +42,12 @@
         "share": "Chia sẻ",
         "copyLink": "Sao chép liên kết",
         "showQR": "Hiện mã QR",
-        "openInNewTab": "Mở trong tab mới"
+        "openInNewTab": "Mở trong tab mới",
+        "qrReady": "QR Code sẵn sàng chia sẻ",
+        "imageDownloaded": "Đã tải ảnh thành công",
+        "imageDownloadFailed": "Không thể tải ảnh",
+        "imageCopied": "Đã sao chép ảnh vào bộ nhớ tạm",
+        "imageCopyFailed": "Không thể sao chép ảnh"
     },
     "contests": {
         "pageTitle": "KỲ THI",
@@ -255,6 +260,7 @@
         "joinedAt": "Tham gia",
         "submissions": "Bài nộp",
         "noSubmissions": "Chưa có bài nộp",
+        "isFinal": "Cuối",
         "download": "Tải",
         "downloadError": "Lỗi tải file",
         "linkError": "Lỗi tạo link",
@@ -300,5 +306,48 @@
         "aa7": "Kéo xuống phần Cơ sở dữ liệu ở cuối trang Admin Workspace. Hiển thị các bảng chỉ đọc cho users, posts, tags và quan hệ post-tag. Nhấn Làm mới để tải lại.",
         "aq8": "Làm thế nào để cấp quyền admin cho người dùng?",
         "aa8": "Chạy SQL sau trong Supabase SQL Editor: UPDATE public.users SET role = 'admin' WHERE id = '<auth-uid>'; Không có giao diện để nâng cấp quyền — phải thực hiện trực tiếp trong cơ sở dữ liệu."
+    },
+    "myContests": {
+        "backToProfile": "Về hồ sơ",
+        "pageTitle": "Cuộc thi của tôi",
+        "emptyState": "Bạn chưa đăng ký tham gia cuộc thi nào.",
+        "registeredAt": "Đăng ký lúc:",
+        "team": "Đội:",
+        "members": "Thành viên",
+        "untitledContest": "Cuộc thi không tên",
+        "anonymous": "Ẩn danh",
+        "selectFile": "Vui lòng chọn file để nộp",
+        "fileTooLarge": "Kích thước file không được vượt quá 5 MB",
+        "replaceSuccess": "Đã thay thế bài nộp!",
+        "submitSuccess": "Nộp bài thành công!",
+        "submitError": "Lỗi khi nộp bài",
+        "submitNetworkError": "Không thể nộp bài, vui lòng thử lại sau.",
+        "replaceTitle": "Thay thế bài nộp",
+        "submitTitle": "Nộp bài",
+        "fileLabel": "File đính kèm (tối đa 5 MB)",
+        "noteLabel": "Ghi chú (tuỳ chọn)",
+        "notePlaceholder": "Ghi chú về bài giải…",
+        "confirmReplace": "Xác nhận thay thế",
+        "confirmSubmit": "Xác nhận nộp bài",
+        "deleteSuccess": "Đã xoá bài nộp",
+        "deleteError": "Xoá thất bại",
+        "submitted": "Đã nộp bài",
+        "replaceBtn": "Thay thế",
+        "deleteBtn": "Xoá",
+        "noResubmit": "Giai đoạn này không cho phép nộp lại sau khi đã nộp."
+    },
+    "deletePopup": {
+        "title": "Xoá {type}",
+        "message": "Bạn sắp xoá {type} này. Hành động này không thể hoàn tác.",
+        "confirmText": "Xoá",
+        "typePost": "bài viết",
+        "typeTag": "thẻ",
+        "labelName": "Tên",
+        "labelSlug": "Slug",
+        "labelCategory": "Danh mục",
+        "labelStatus": "Trạng thái",
+        "labelTags": "Thẻ",
+        "published": "Đã xuất bản",
+        "draft": "Bản nháp"
     }
 }

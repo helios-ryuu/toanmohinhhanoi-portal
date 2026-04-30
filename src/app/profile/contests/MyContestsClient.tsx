@@ -5,13 +5,33 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Clock, Users, Upload, FileText, CheckCircle2, RefreshCw, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import type { DbContest, DbContestStage, DbContestRegistration, DbRegistrationMember, DbSubmission, RegistrationStatus } from "@/types/database";
+
+// ─── types ──────────────────────────────────────────────────────────────────
+
+interface ContestWithStages extends DbContest {
+    contest_stage: DbContestStage[];
+}
+
+interface MemberWithUser extends DbRegistrationMember {
+    users?: {
+        username: string;
+        display_name: string | null;
+    };
+}
+
+interface RegistrationForProfile extends DbContestRegistration {
+    contest: ContestWithStages;
+    submission: DbSubmission[];
+    registration_member: MemberWithUser[];
+}
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-function isSubmissionOpen(contest: any): boolean {
+function isSubmissionOpen(contest: ContestWithStages): boolean {
     if (!contest || contest.status !== "active" || !contest.contest_stage) return false;
     const now = Date.now();
-    return contest.contest_stage.some((stage: any) => {
+    return contest.contest_stage.some((stage) => {
         if (!stage.allow_submission) return false;
         const start = new Date(stage.start_at).getTime();
         const end = new Date(stage.end_at).getTime();
@@ -19,11 +39,11 @@ function isSubmissionOpen(contest: any): boolean {
     });
 }
 
-function getActiveSubmissionStage(contest: any): any | null {
+function getActiveSubmissionStage(contest: ContestWithStages): DbContestStage | null {
     if (!contest?.contest_stage) return null;
     const now = Date.now();
     return (
-        contest.contest_stage.find((s: any) => {
+        contest.contest_stage.find((s) => {
             if (!s.allow_submission) return false;
             return new Date(s.start_at).getTime() <= now && now <= new Date(s.end_at).getTime();
         }) ?? null
@@ -48,14 +68,15 @@ function UploadForm({
     replacing: boolean;
 }) {
     const { showToast } = useToast();
+    const t = useTranslations("myContests");
     const [file, setFile] = useState<File | null>(null);
     const [note, setNote] = useState("");
     const [uploading, setUploading] = useState(false);
 
     async function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
-        if (!file) { showToast("warning", "Vui lòng chọn file để nộp"); return; }
-        if (file.size > 5 * 1024 * 1024) { showToast("error", "Kích thước file không được vượt quá 5MB"); return; }
+        if (!file) { showToast("warning", t("selectFile")); return; }
+        if (file.size > 5 * 1024 * 1024) { showToast("error", t("fileTooLarge")); return; }
 
         setUploading(true);
         try {
@@ -67,13 +88,13 @@ function UploadForm({
             const res = await fetch("/api/submissions", { method: "POST", body: fd });
             const json = await res.json();
             if (json.success) {
-                showToast("success", replacing ? "Đã thay thế bài nộp!" : "Nộp bài thành công!");
+                showToast("success", replacing ? t("replaceSuccess") : t("submitSuccess"));
                 onSuccess();
             } else {
-                showToast("error", json.message || "Lỗi khi nộp bài");
+                showToast("error", json.message || t("submitError"));
             }
         } catch {
-            showToast("error", "Không thể nộp bài, vui lòng thử lại sau.");
+            showToast("error", t("submitNetworkError"));
         } finally {
             setUploading(false);
         }
@@ -83,11 +104,11 @@ function UploadForm({
         <form onSubmit={handleSubmit} className="p-4 rounded-xl bg-background border border-(--border-color) space-y-3">
             <h4 className="text-sm font-semibold flex items-center gap-2">
                 {replacing ? <RefreshCw className="w-4 h-4 text-accent" /> : <Upload className="w-4 h-4 text-accent" />}
-                {replacing ? "Thay thế bài nộp" : "Nộp bài"}
+                {replacing ? t("replaceTitle") : t("submitTitle")}
             </h4>
             <div>
                 <label className="block text-xs font-medium text-foreground/70 mb-1.5">
-                    File đính kèm (tối đa 5 MB)
+                    {t("fileLabel")}
                 </label>
                 <input
                     type="file"
@@ -97,14 +118,14 @@ function UploadForm({
                 />
             </div>
             <div>
-                <label className="block text-xs font-medium text-foreground/70 mb-1.5">Ghi chú (tuỳ chọn)</label>
+                <label className="block text-xs font-medium text-foreground/70 mb-1.5">{t("noteLabel")}</label>
                 <textarea
                     rows={2}
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     disabled={uploading}
                     className="w-full px-3 py-2 rounded-md border border-(--border-color) bg-background text-sm focus:outline-none focus:ring-2 focus:ring-accent/50"
-                    placeholder="Ghi chú về bài giải…"
+                    placeholder={t("notePlaceholder")}
                 />
             </div>
             <div className="flex justify-end">
@@ -120,7 +141,7 @@ function UploadForm({
                     ) : (
                         <Upload className="w-4 h-4" />
                     )}
-                    {replacing ? "Xác nhận thay thế" : "Xác nhận nộp bài"}
+                    {replacing ? t("confirmReplace") : t("confirmSubmit")}
                 </button>
             </div>
         </form>
@@ -129,14 +150,15 @@ function UploadForm({
 
 // ─── SubmissionSection ───────────────────────────────────────────────────────
 
-function SubmissionSection({ registration, onRefresh }: { registration: any; onRefresh: () => void }) {
+function SubmissionSection({ registration, onRefresh }: { registration: RegistrationForProfile; onRefresh: () => void }) {
     const { showToast } = useToast();
+    const t = useTranslations("myContests");
     const [showReplaceForm, setShowReplaceForm] = useState(false);
     const [deleting, setDeleting] = useState(false);
 
     const open = isSubmissionOpen(registration.contest);
     const activeStage = getActiveSubmissionStage(registration.contest);
-    const submissions: any[] = registration.submission ?? [];
+    const submissions: DbSubmission[] = registration.submission ?? [];
     const existing = submissions[0] ?? null; // API returns most recent first
     const canResubmit: boolean = open && !!activeStage?.allow_resubmit;
 
@@ -147,13 +169,13 @@ function SubmissionSection({ registration, onRefresh }: { registration: any; onR
             const res = await fetch(`/api/submissions/${existing.id}`, { method: "DELETE" });
             const json = await res.json();
             if (json.success) {
-                showToast("success", "Đã xoá bài nộp");
+                showToast("success", t("deleteSuccess"));
                 onRefresh();
             } else {
-                showToast("error", json.message || "Xoá thất bại");
+                showToast("error", json.message || t("deleteError"));
             }
         } catch {
-            showToast("error", "Xoá thất bại");
+            showToast("error", t("deleteError"));
         } finally {
             setDeleting(false);
         }
@@ -181,7 +203,7 @@ function SubmissionSection({ registration, onRefresh }: { registration: any; onR
             <div className="flex items-start gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                 <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-green-600">Đã nộp bài</p>
+                    <p className="text-sm font-medium text-green-600">{t("submitted")}</p>
                     <div className="flex items-center gap-1.5 mt-1">
                         <FileText className="w-3.5 h-3.5 text-foreground/50 shrink-0" />
                         <span className="text-xs text-foreground/70 truncate">{existing.file_name}</span>
@@ -202,7 +224,7 @@ function SubmissionSection({ registration, onRefresh }: { registration: any; onR
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs rounded border border-(--border-color) hover:border-accent hover:text-accent transition-colors cursor-pointer"
                         >
                             <RefreshCw className="w-3 h-3" />
-                            Thay thế
+                            {t("replaceBtn")}
                         </button>
                         <button
                             type="button"
@@ -211,7 +233,7 @@ function SubmissionSection({ registration, onRefresh }: { registration: any; onR
                             className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs rounded border border-(--border-color) text-red-400 hover:border-red-400 hover:bg-red-400/10 transition-colors cursor-pointer disabled:opacity-50"
                         >
                             <Trash2 className="w-3 h-3" />
-                            {deleting ? "..." : "Xoá"}
+                            {deleting ? "..." : t("deleteBtn")}
                         </button>
                     </div>
                 )}
@@ -227,7 +249,7 @@ function SubmissionSection({ registration, onRefresh }: { registration: any; onR
 
             {!canResubmit && open && (
                 <p className="text-xs text-foreground/50 italic">
-                    Giai đoạn này không cho phép nộp lại sau khi đã nộp.
+                    {t("noResubmit")}
                 </p>
             )}
         </div>
@@ -238,8 +260,8 @@ function SubmissionSection({ registration, onRefresh }: { registration: any; onR
 
 export function MyContestsClient() {
     const t = useTranslations("contests");
-    const { showToast } = useToast();
-    const [registrations, setRegistrations] = useState<any[]>([]);
+    const tMC = useTranslations("myContests");
+    const [registrations, setRegistrations] = useState<RegistrationForProfile[]>([]);
     const [loading, setLoading] = useState(true);
 
     async function fetchRegs() {
@@ -265,9 +287,9 @@ export function MyContestsClient() {
                     href="/profile"
                     className="inline-flex items-center gap-2 text-sm text-foreground/60 hover:text-foreground mb-2 transition-colors"
                 >
-                    <ArrowLeft className="w-4 h-4" /> Về hồ sơ
+                    <ArrowLeft className="w-4 h-4" /> {tMC("backToProfile")}
                 </Link>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Cuộc thi của tôi</h1>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{tMC("pageTitle")}</h1>
             </div>
 
             {loading ? (
@@ -276,7 +298,7 @@ export function MyContestsClient() {
                 </div>
             ) : registrations.length === 0 ? (
                 <div className="text-center py-12 border border-dashed border-(--border-color) rounded-xl">
-                    <p className="text-foreground/60">Bạn chưa đăng ký tham gia cuộc thi nào.</p>
+                    <p className="text-foreground/60">{tMC("emptyState")}</p>
                 </div>
             ) : (
                 <div className="space-y-4">
@@ -285,17 +307,17 @@ export function MyContestsClient() {
                             <div className="flex items-start justify-between gap-3">
                                 <div>
                                     <Link href={`/contests/${reg.contest?.slug}`} className="text-lg font-semibold hover:text-accent transition-colors">
-                                        {reg.contest?.title || "Cuộc thi không tên"}
+                                        {reg.contest?.title || tMC("untitledContest")}
                                     </Link>
                                     <div className="flex items-center gap-3 mt-1 text-sm text-foreground/60 flex-wrap">
                                         <span className="flex items-center gap-1">
                                             <Clock className="w-3.5 h-3.5" />
-                                            Đăng ký lúc: {new Date(reg.registered_at).toLocaleDateString("vi-VN")}
+                                            {tMC("registeredAt")} {new Date(reg.registered_at).toLocaleDateString("vi-VN")}
                                         </span>
                                         {reg.team_name && (
                                             <span className="flex items-center gap-1">
                                                 <Users className="w-3.5 h-3.5" />
-                                                Đội: {reg.team_name}
+                                                {tMC("team")} {reg.team_name}
                                             </span>
                                         )}
                                     </div>
@@ -305,17 +327,17 @@ export function MyContestsClient() {
                                     reg.status === "rejected" ? "bg-red-500/10 text-red-500 border-red-500/20" :
                                     "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
                                 }`}>
-                                    {t(`status_${reg.status}`)}
+                                    {t(`status_${reg.status}` as `status_${RegistrationStatus}`)}
                                 </span>
                             </div>
 
                             {reg.registration_member?.length > 0 && (
                                 <div className="pt-3 border-t border-(--border-color)/50">
-                                    <p className="text-xs font-medium text-foreground/50 mb-2 uppercase tracking-wide">Thành viên</p>
+                                    <p className="text-xs font-medium text-foreground/50 mb-2 uppercase tracking-wide">{tMC("members")}</p>
                                     <div className="flex flex-wrap gap-2">
-                                        {reg.registration_member.map((m: any) => (
+                                        {reg.registration_member.map((m) => (
                                             <span key={m.user_id} className="text-xs px-2 py-1 rounded bg-foreground/5 border border-(--border-color)">
-                                                {m.users?.username || "Ẩn danh"} {m.role === "leader" && "👑"}
+                                                {m.users?.username || tMC("anonymous")} {m.role === "leader" && "👑"}
                                             </span>
                                         ))}
                                     </div>

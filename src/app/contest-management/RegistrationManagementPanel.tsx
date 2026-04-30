@@ -88,7 +88,7 @@ function SubmissionRow({ sub }: { sub: DbSubmission }) {
                     {new Date(sub.submitted_at).toLocaleString("vi-VN")}
                     {sub.is_final && (
                         <span className="ml-1.5 px-1 py-0.5 bg-accent/20 text-accent rounded text-[9px] uppercase tracking-wider">
-                            Cuối
+                            {t("isFinal")}
                         </span>
                     )}
                     {sub.note && <span className="ml-1 text-foreground/40 italic">"{sub.note}"</span>}
