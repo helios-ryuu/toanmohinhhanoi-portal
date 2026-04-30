@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { RefreshCw } from "lucide-react";
+import { useTranslations } from "next-intl";
 import DataTable from "../common/DataTable";
 import { Button } from "../common/Button";
 import { useToast } from "../../../ui/Toast";
@@ -17,6 +18,8 @@ const EMPTY: TableData = { users: [], post: [], tag: [], post_tags: [] };
 
 export default function DatabaseTab() {
     const { showToast } = useToast();
+    const t = useTranslations("admin");
+    const tCommon = useTranslations("common");
     const [data, setData] = useState<TableData>(EMPTY);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -26,30 +29,30 @@ export default function DatabaseTab() {
             const res = await fetch("/api/admin/data");
             const json = await res.json();
             if (json.success) setData(json.data);
-            else showToast("error", json.message || "Failed to load data");
+            else showToast("error", json.message || t("loadError"));
         } catch (e) {
-            showToast("error", e instanceof Error ? e.message : "Failed to load data");
+            showToast("error", e instanceof Error ? e.message : t("loadError"));
         } finally {
             setIsLoading(false);
         }
-    }, [showToast]);
+    }, [showToast, t]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
 
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">Database Tables</h2>
+                <h2 className="text-lg font-semibold text-foreground">{t("database")}</h2>
                 <Button
                     variant="utility"
                     size="sm"
                     onClick={fetchData}
                     disabled={isLoading}
                     isLoading={isLoading}
-                    loadingText="Loading..."
+                    loadingText={tCommon("loading")}
                     icon={<RefreshCw size={14} />}
                 >
-                    Refresh
+                    {tCommon("refresh")}
                 </Button>
             </div>
 

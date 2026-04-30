@@ -60,7 +60,7 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
             )}
 
             {/* Logo & Breadcrumb - Fixed width for balance */}
-            <div className="hidden md:flex flex-none items-center h-full text-foreground w-60">
+            <div className="hidden md:flex flex-none items-center h-full text-foreground w-80">
                 <Link href="/" className="ml-16 mr-2">
                     <Image src="/favicon.ico" alt="Helios" width={24} height={24} className="w-6 h-6" />
                 </Link>
@@ -132,14 +132,14 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
                     className="flex-none mr-2"
                 />
                 <LanguageSwitcher />
+                <div className="ml-2 min-w-0">
+                    <AuthSection />
+                </div>
                 {!isPostEditor && (
                     <IconButton onClick={toggleTheme} className={`flex-none text-(--foreground-dim) bg-background-hover ${theme === "light" ? "hover:text-blue-500" : "hover:text-yellow-500"}`}>
                         {theme === "light" ? <Moon strokeWidth={3} /> : <Sun strokeWidth={3} />}
                     </IconButton>
                 )}
-                <div className="ml-2 min-w-0">
-                    <AuthSection />
-                </div>
             </div>
         </header>
     );
