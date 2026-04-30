@@ -90,7 +90,7 @@ function ContestManagementWorkspace() {
             <header className="mb-6 flex items-start justify-between gap-4 flex-wrap">
                 <div>
                     <h1 className="text-2xl font-bold tracking-widest text-accent">{t("title")}</h1>
-                    <p className="text-sm text-foreground/60 mt-1">{t("subtitle")}</p>
+                    <p className="text-sm text-foreground/70 mt-0.5">{t("subtitle")}</p>
                 </div>
                 <Button
                     variant="primary"

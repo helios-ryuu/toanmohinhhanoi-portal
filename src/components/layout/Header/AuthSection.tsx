@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useEffect } from "react";
 import { LogOut, Trophy, User } from "lucide-react";
 import { useUser } from "@/contexts/UserContext";
+import { useTranslations } from "next-intl";
 
 export default function AuthSection() {
     const { user, isLoading, logout } = useUser();
     const router = useRouter();
+    const tNav = useTranslations("nav");
+    const tMyContests = useTranslations("myContests");
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +35,7 @@ export default function AuthSection() {
                 href="/auth"
                 className="text-sm text-foreground/70 hover:text-accent transition-colors px-2 py-1 rounded-md hover:bg-accent/10"
             >
-                Sign in
+                {tNav("signIn")}
             </Link>
         );
     }
@@ -46,19 +49,24 @@ export default function AuthSection() {
     }
 
     return (
-        <div ref={dropdownRef} className="relative flex items-center gap-2">
-            {/* Username — hidden on mobile */}
-            <span className="hidden md:block text-sm text-foreground/60 select-none">
-                @{user.username}
-            </span>
-
-            {/* Avatar button */}
+        <div ref={dropdownRef} className="relative">
+            {/* Combined username + avatar trigger */}
             <button
                 onClick={() => setIsOpen((v) => !v)}
-                className="w-7 h-7 rounded-full overflow-hidden border border-(--border-color) bg-accent/20 flex items-center justify-center text-sm font-semibold text-accent hover:border-accent transition-colors flex-shrink-0"
+                className="flex items-center gap-2 px-2 py-1 rounded-md hover:bg-foreground/10 transition-colors cursor-pointer"
                 aria-label="User menu"
             >
-                {initial}
+                <div className="w-7 h-7 rounded-full overflow-hidden border border-(--border-color) bg-accent/20 flex items-center justify-center text-sm font-semibold text-accent flex-shrink-0">
+                    {initial}
+                </div>
+                <span className="hidden md:block text-sm text-foreground/60 select-none">
+                    @{user.username}
+                </span>
+                {user.role === "admin" && (
+                    <span className="hidden md:inline-flex items-center px-1.5 py-0.5 text-[10px] font-medium rounded border border-red-500/60 bg-red-500/20 text-red-500 select-none leading-none">
+                        Admin
+                    </span>
+                )}
             </button>
 
             {/* Dropdown */}
@@ -70,7 +78,7 @@ export default function AuthSection() {
                         onClick={() => setIsOpen(false)}
                     >
                         <User size={14} />
-                        Profile
+                        {tNav("profile")}
                     </Link>
                     {user.role !== "admin" && (
                         <Link
@@ -79,7 +87,7 @@ export default function AuthSection() {
                             onClick={() => setIsOpen(false)}
                         >
                             <Trophy size={14} />
-                            My Contests
+                            {tMyContests("pageTitle")}
                         </Link>
                     )}
                     <div className="border-t border-(--border-color) my-1" />
@@ -88,7 +96,7 @@ export default function AuthSection() {
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10 transition-colors"
                     >
                         <LogOut size={14} />
-                        Logout
+                        {tNav("signOut")}
                     </button>
                 </div>
             )}

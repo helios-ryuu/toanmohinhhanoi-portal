@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import {
     Upload,
     Trash2,
@@ -52,9 +53,9 @@ interface BucketManagerProps {
     onPick?: (file: BucketEntry) => void;
 }
 
-const BUCKET_LABELS: Record<BucketName, string> = {
-    "post-images": "Post Images",
-    submissions: "Submissions",
+const BUCKET_KEYS: Record<BucketName, "bucketPostImages" | "bucketSubmissions"> = {
+    "post-images": "bucketPostImages",
+    submissions: "bucketSubmissions",
 };
 
 const IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg"];
@@ -74,6 +75,8 @@ export default function BucketManager({
     onPick,
 }: BucketManagerProps) {
     const { showToast } = useToast();
+    const t = useTranslations("admin");
+    const tCommon = useTranslations("common");
     const [bucket, setBucket] = useState<BucketName>(initialBucket);
     const [prefix, setPrefix] = useState<string>("");
     const [folders, setFolders] = useState<BucketFolder[]>([]);
@@ -228,10 +231,10 @@ export default function BucketManager({
             <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                     <div className="flex items-center gap-2">
-                        <h2 className="text-lg font-semibold text-foreground">Storage Bucket</h2>
+                        <h2 className="text-lg font-semibold text-foreground">{t("storageBucket")}</h2>
                         {allowBucketSwitch && (
                             <div className="flex items-center gap-1 ml-3 p-0.5 rounded-md border border-(--border-color) bg-foreground/5">
-                                {(Object.keys(BUCKET_LABELS) as BucketName[]).map((b) => (
+                                {(Object.keys(BUCKET_KEYS) as BucketName[]).map((b) => (
                                     <button
                                         key={b}
                                         onClick={() => changeBucket(b)}
@@ -239,7 +242,7 @@ export default function BucketManager({
                                             ? "bg-accent text-white"
                                             : "text-foreground/70 hover:text-foreground"}`}
                                     >
-                                        {BUCKET_LABELS[b]}
+                                        {t(BUCKET_KEYS[b])}
                                     </button>
                                 ))}
                             </div>
@@ -253,11 +256,11 @@ export default function BucketManager({
                             disabled={isLoading}
                             icon={<RefreshCw size={14} className={isLoading ? "animate-spin" : ""} />}
                         >
-                            Refresh
+                            {tCommon("refresh")}
                         </Button>
                         <label className="inline-flex items-center justify-center font-medium rounded-md transition-colors px-3 py-1.5 text-sm gap-1.5 bg-accent text-white hover:bg-accent/90 cursor-pointer">
                             <Upload size={14} />
-                            {isUploading ? "Uploading..." : "Upload"}
+                            {isUploading ? t("uploading") : t("upload")}
                             <input
                                 ref={fileInputRef}
                                 type="file"
@@ -278,7 +281,7 @@ export default function BucketManager({
                         className="flex items-center gap-1 px-1.5 py-0.5 rounded hover:bg-foreground/5 hover:text-foreground transition-colors cursor-pointer"
                     >
                         <Home size={12} />
-                        {BUCKET_LABELS[bucket]}
+                        {t(BUCKET_KEYS[bucket])}
                     </button>
                     {breadcrumbs.map((crumb, idx) => {
                         const target = breadcrumbs.slice(0, idx + 1).join("/");
@@ -303,7 +306,7 @@ export default function BucketManager({
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Filter in current folder..."
+                        placeholder={t("filterFolder")}
                         className="w-full pl-8 pr-3 py-1.5 text-sm rounded-md border border-(--border-color) bg-background focus:outline-none focus:ring-2 focus:ring-accent/50"
                     />
                 </div>
@@ -315,7 +318,7 @@ export default function BucketManager({
             ) : filteredFolders.length === 0 && filteredFiles.length === 0 ? (
                 <div className="p-8 rounded-lg border border-(--border-color) bg-(--post-card) text-center">
                     <FileImage size={40} className="mx-auto mb-3 text-foreground/30" />
-                    <p className="text-foreground/50 text-sm">Empty folder</p>
+                    <p className="text-foreground/50 text-sm">{t("emptyFolder")}</p>
                 </div>
             ) : (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) divide-y divide-(--border-color)">
@@ -330,7 +333,7 @@ export default function BucketManager({
                             </div>
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-medium text-foreground truncate">{f.name}/</p>
-                                <p className="text-xs text-foreground/50">Folder</p>
+                                <p className="text-xs text-foreground/50">{t("folderLabel")}</p>
                             </div>
                             <ChevronRight size={16} className="text-foreground/40" />
                         </button>
@@ -384,7 +387,7 @@ export default function BucketManager({
                                         onPick?.(file);
                                     }}
                                 >
-                                    Use
+                                    {t("useFilePicker")}
                                 </Button>
                             ) : (
                                 <button
@@ -393,7 +396,7 @@ export default function BucketManager({
                                         copyUrl(file.publicUrl);
                                     }}
                                     className="p-2 rounded-md hover:bg-foreground/10 transition-colors text-foreground/50 hover:text-foreground cursor-pointer"
-                                    title="Copy URL"
+                                    title={t("copyUrl")}
                                 >
                                     {copiedUrl === file.publicUrl ? (
                                         <Check size={16} className="text-green-500" />
@@ -451,15 +454,15 @@ export default function BucketManager({
                         </div>
 
                         <div className="text-sm text-foreground/60 mb-4 space-y-1">
-                            <p><span className="text-foreground/80">Size:</span> {formatSize(selectedFile.size)}</p>
-                            <p className="break-all"><span className="text-foreground/80">Path:</span> {selectedFile.path}</p>
+                            <p><span className="text-foreground/80">{t("fileSize")}:</span> {formatSize(selectedFile.size)}</p>
+                            <p className="break-all"><span className="text-foreground/80">{t("filePath")}:</span> {selectedFile.path}</p>
                         </div>
 
                         {renameState && renameState.from === selectedFile.path && (
                             <div className="mb-4">
-                                <p className="text-sm text-foreground/70 mb-2">New name:</p>
+                                <p className="text-sm text-foreground/70 mb-2">{t("newName")}</p>
                                 <p className="text-yellow-500 text-xs mb-2">
-                                    ⚠️ Posts referencing this file by URL won&apos;t auto-update.
+                                    ⚠️ {t("renameWarning")}
                                 </p>
                                 <div className="flex gap-2">
                                     <input
@@ -473,18 +476,18 @@ export default function BucketManager({
                                             if (e.key === "Escape") setRenameState(null);
                                         }}
                                     />
-                                    <Button variant="cancel" size="sm" onClick={() => setRenameState(null)}>Cancel</Button>
-                                    <Button variant="primary" size="sm" onClick={handleRename}>Save</Button>
+                                    <Button variant="cancel" size="sm" onClick={() => setRenameState(null)}>{tCommon("cancel")}</Button>
+                                    <Button variant="primary" size="sm" onClick={handleRename}>{tCommon("save")}</Button>
                                 </div>
                             </div>
                         )}
 
                         {deleteConfirm === selectedFile.path && (
                             <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
-                                <p className="text-sm text-foreground font-medium mb-2">Delete this file?</p>
+                                <p className="text-sm text-foreground font-medium mb-2">{t("deleteFileConfirm")}</p>
                                 <div className="flex gap-2">
-                                    <Button variant="cancel" size="sm" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
-                                    <Button variant="danger" size="sm" onClick={() => handleDelete(selectedFile.path)}>Delete</Button>
+                                    <Button variant="cancel" size="sm" onClick={() => setDeleteConfirm(null)}>{tCommon("cancel")}</Button>
+                                    <Button variant="danger" size="sm" onClick={() => handleDelete(selectedFile.path)}>{tCommon("delete")}</Button>
                                 </div>
                             </div>
                         )}
@@ -498,7 +501,7 @@ export default function BucketManager({
                                         icon={<Check size={14} />}
                                         onClick={() => onPick?.(selectedFile)}
                                     >
-                                        Use this file
+                                        {t("useFile")}
                                     </Button>
                                 )}
                                 <Button
@@ -507,7 +510,7 @@ export default function BucketManager({
                                     icon={copiedUrl === selectedFile.publicUrl ? <Check size={14} className="text-green-500" /> : <Copy size={14} />}
                                     onClick={() => copyUrl(selectedFile.publicUrl)}
                                 >
-                                    {copiedUrl === selectedFile.publicUrl ? "Copied!" : "Copy URL"}
+                                    {copiedUrl === selectedFile.publicUrl ? t("copied") : t("copyUrl")}
                                 </Button>
                                 <a
                                     href={selectedFile.publicUrl}
@@ -516,7 +519,7 @@ export default function BucketManager({
                                     className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-(--border-color) text-foreground/70 hover:border-accent hover:text-accent transition-colors"
                                 >
                                     <ExternalLink size={14} />
-                                    Open
+                                    {t("openFile")}
                                 </a>
                                 {mode === "manage" && (
                                     <>
@@ -526,7 +529,7 @@ export default function BucketManager({
                                             icon={<Pencil size={14} />}
                                             onClick={() => setRenameState({ from: selectedFile.path, to: selectedFile.name })}
                                         >
-                                            Rename
+                                            {t("rename")}
                                         </Button>
                                         <Button
                                             variant="danger"
@@ -534,7 +537,7 @@ export default function BucketManager({
                                             icon={<Trash2 size={14} />}
                                             onClick={() => setDeleteConfirm(selectedFile.path)}
                                         >
-                                            Delete
+                                            {tCommon("delete")}
                                         </Button>
                                     </>
                                 )}

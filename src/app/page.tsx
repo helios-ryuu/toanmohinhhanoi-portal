@@ -3,6 +3,7 @@ import Image from "next/image";
 import { ArrowRight, BookOpen, Trophy, Users } from "lucide-react";
 import { getAllPostsMeta } from "@/lib/posts";
 import { unstable_cache } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import type { PostMeta } from "@/types/post";
 
 const getCachedPosts = unstable_cache(
@@ -59,6 +60,7 @@ function FeaturedPostCard({ post }: { post: PostMeta }) {
 export default async function Home() {
   const allPosts = await getCachedPosts();
   const featured = pickRandom(allPosts, 3);
+  const t = await getTranslations("home");
 
   return (
     <div className="flex-1 flex flex-col">
@@ -69,9 +71,11 @@ export default async function Home() {
             Toán Mô Hình Hà Nội
           </h1>
           <p className="text-foreground/60 text-sm md:text-base leading-relaxed max-w-xl mx-auto">
-            Cổng thông tin chính thức - chia sẻ kiến thức về{" "}
-            <span className="text-foreground font-medium">toán mô hình</span> và
-            cập nhật cuộc thi với tài nguyên cho cộng đồng toán học Việt Nam.
+            {t.rich("heroSubtitle", {
+              bold: (chunks) => (
+                <span className="text-foreground font-medium">{chunks}</span>
+              ),
+            })}
           </p>
 
           <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
@@ -79,7 +83,7 @@ export default async function Home() {
               href="/post"
               className="group flex items-center gap-2 px-5 py-2.5 rounded-full border border-accent bg-accent/20 text-accent text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all"
             >
-              Khám phá bài viết
+              {t("explorePosts")}
               <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
@@ -87,7 +91,7 @@ export default async function Home() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-(--border-color) text-foreground/70 text-sm font-medium hover:border-foreground/30 hover:text-foreground transition-all"
             >
               <Trophy className="w-4 h-4" />
-              Cuộc thi
+              {t("contestsBtn")}
             </Link>
           </div>
         </div>
@@ -99,27 +103,27 @@ export default async function Home() {
           <div className="flex items-start gap-3 p-4 rounded-xl border border-(--border-color) bg-(--post-card)">
             <BookOpen className="w-5 h-5 text-accent mt-0.5 shrink-0" />
             <div>
-              <h3 className="text-sm font-semibold mb-1">Bài viết chuyên sâu</h3>
+              <h3 className="text-sm font-semibold mb-1">{t("card1Title")}</h3>
               <p className="text-xs text-foreground/60 leading-relaxed">
-                Phân tích bài toán, lời giải mẫu, và tài liệu tham khảo về toán mô hình.
+                {t("card1Desc")}
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3 p-4 rounded-xl border border-(--border-color) bg-(--post-card)">
             <Trophy className="w-5 h-5 text-accent mt-0.5 shrink-0" />
             <div>
-              <h3 className="text-sm font-semibold mb-1">Cuộc thi & Sự kiện</h3>
+              <h3 className="text-sm font-semibold mb-1">{t("card2Title")}</h3>
               <p className="text-xs text-foreground/60 leading-relaxed">
-                Đăng ký tham gia, theo dõi lịch thi, và nộp bài giải trực tiếp trên portal.
+                {t("card2Desc")}
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3 p-4 rounded-xl border border-(--border-color) bg-(--post-card)">
             <Users className="w-5 h-5 text-accent mt-0.5 shrink-0" />
             <div>
-              <h3 className="text-sm font-semibold mb-1">Cộng đồng</h3>
+              <h3 className="text-sm font-semibold mb-1">{t("card3Title")}</h3>
               <p className="text-xs text-foreground/60 leading-relaxed">
-                Kết nối với những người yêu thích toán mô hình tại Hà Nội và trên cả nước.
+                {t("card3Desc")}
               </p>
             </div>
           </div>
@@ -131,12 +135,12 @@ export default async function Home() {
         <section className="px-6 pb-16 md:pb-20">
           <div className="max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold tracking-tight">Bài viết nổi bật</h2>
+              <h2 className="text-lg font-semibold tracking-tight">{t("featuredPosts")}</h2>
               <Link
                 href="/post"
                 className="group flex items-center gap-1 text-xs text-accent hover:underline"
               >
-                Xem tất cả
+                {t("viewAll")}
                 <ArrowRight className="w-3 h-3 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </div>

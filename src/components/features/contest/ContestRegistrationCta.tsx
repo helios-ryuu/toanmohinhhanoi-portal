@@ -169,13 +169,13 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
             <div className="mt-8 pt-6 border-t border-(--border-color) flex flex-col gap-3">
                 <div className="p-4 rounded-md border border-accent/20 bg-accent/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                        <p className="font-medium text-foreground">Bạn đã đăng ký tham gia</p>
+                        <p className="font-medium text-foreground">{t("alreadyRegisteredTitle")}</p>
                         <p className="text-sm text-foreground/70 mt-1">
-                            Trạng thái: <span className="font-semibold">{t(`status_${existingReg.status}`)}</span>
+                            {t("statusLabel")} <span className="font-semibold">{t(`status_${existingReg.status}`)}</span>
                         </p>
                         {existingReg.team_name && (
                             <p className="text-sm text-foreground/70">
-                                Đội: <span className="font-semibold">{existingReg.team_name}</span>
+                                {t("teamLabel")} <span className="font-semibold">{existingReg.team_name}</span>
                             </p>
                         )}
                     </div>
@@ -185,7 +185,7 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
                             onClick={() => router.push("/profile/contests")}
                             className="flex items-center justify-center gap-2 px-4 py-2 bg-accent/10 hover:bg-accent/20 text-accent font-medium rounded-md transition-colors text-sm whitespace-nowrap cursor-pointer"
                         >
-                            Đến trang Cuộc thi của tôi <ExternalLink className="w-4 h-4" />
+                            {t("goToMyContests")} <ExternalLink className="w-4 h-4" />
                         </button>
                     )}
                 </div>
@@ -194,7 +194,22 @@ export default function ContestRegistrationCta({ contest }: { contest: ContestWi
     }
 
     if (!canRegister) {
-        return null; // or you could return a disabled CTA if you want. Right now keeping current logic mostly, but without existing form.
+        return null;
+    }
+
+    if (!isLoading && !loadingReg && !user) {
+        return (
+            <div className="mt-8 pt-6 border-t border-(--border-color) flex flex-col gap-3">
+                <p className="text-sm text-foreground/60">{t("registerHintLogin")}</p>
+                <button
+                    type="button"
+                    onClick={() => router.push(`/auth?next=/contests/${contest.slug}`)}
+                    className="inline-flex items-center justify-center px-5 py-2.5 rounded-md bg-accent text-white font-medium text-sm hover:bg-accent/90 transition-colors cursor-pointer w-fit"
+                >
+                    {t("loginToRegister")}
+                </button>
+            </div>
+        );
     }
 
     return (

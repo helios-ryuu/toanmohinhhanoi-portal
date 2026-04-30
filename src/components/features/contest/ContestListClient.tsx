@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import ContestCard from "./ContestCard";
+import Select from "@/components/ui/Select";
 import type { ContestWithStages } from "@/types/database";
 
 const STATUS_ORDER: Record<string, number> = {
@@ -85,17 +86,18 @@ export default function ContestListClient({ contests }: Props) {
                         className="w-full pl-8 pr-3 py-1.5 text-sm rounded-md border border-(--border-color) bg-(--post-card) text-foreground focus:outline-none focus:ring-1 focus:ring-accent/50"
                     />
                 </div>
-                <select
+                <Select
                     value={sortVal}
-                    onChange={(e) => updateUrl({ sort: e.target.value })}
-                    className="pl-1.5 py-1.5 text-sm rounded-md border border-(--border-color) bg-(--post-card) text-foreground focus:outline-none cursor-pointer"
-                >
-                    <option value="newest">{t("sortNewest")}</option>
-                    <option value="oldest">{t("sortOldest")}</option>
-                    <option value="az">{t("sortAZ")}</option>
-                    <option value="za">{t("sortZA")}</option>
-                    <option value="status">{t("sortStatus")}</option>
-                </select>
+                    onValueChange={(v) => updateUrl({ sort: v })}
+                    options={[
+                        { value: "newest", label: t("sortNewest") },
+                        { value: "oldest", label: t("sortOldest") },
+                        { value: "az", label: t("sortAZ") },
+                        { value: "za", label: t("sortZA") },
+                        { value: "status", label: t("sortStatus") },
+                    ]}
+                    className="text-sm cursor-pointer"
+                />
                 {hasFilter && (
                     <button
                         type="button"

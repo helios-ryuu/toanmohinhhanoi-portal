@@ -72,7 +72,7 @@ export default async function CategoryPage({ params }: Props) {
                 <h1 className="text-2xl font-bold tracking-widest text-accent uppercase">
                     {CATEGORY_LABEL[category]}
                 </h1>
-                <p className="text-sm text-foreground/60 mt-1 mb-6">
+                <p className="text-sm text-foreground/70 mt-0.5 mb-6">
                     {CATEGORY_DESCRIPTION[category]}
                 </p>
 

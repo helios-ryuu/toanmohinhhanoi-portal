@@ -10,6 +10,7 @@ import { PostFormBody } from "./PostFormBody";
 import { PostPreviewPanel } from "../common/PostPreviewPanel";
 import { usePostForm } from "@/hooks/usePostForm";
 import { useResizablePanel } from "@/hooks/useResizablePanel";
+import { useTranslations } from "next-intl";
 
 interface AddPostFormProps {
     onSuccess?: (post: { id: number; slug: string }) => void;
@@ -19,6 +20,8 @@ interface AddPostFormProps {
 }
 
 export default function AddPostForm({ onSuccess, onShowToast, existingTitles = [], existingSlugs = [] }: AddPostFormProps) {
+    const t = useTranslations("admin");
+    const tCommon = useTranslations("common");
     const [showAddTag, setShowAddTag] = useState(false);
     const { ratio, containerRef, handleMouseDown } = useResizablePanel(0.5, 0.2);
     const form = usePostForm({
@@ -46,7 +49,7 @@ export default function AddPostForm({ onSuccess, onShowToast, existingTitles = [
                         >
                             <ArrowLeft size={18} />
                         </Link>
-                        <h2 className="text-lg font-semibold">Add New Post</h2>
+                        <h2 className="text-lg font-semibold">{t("addNewPost")}</h2>
                     </div>
                 </div>
 
@@ -68,16 +71,16 @@ export default function AddPostForm({ onSuccess, onShowToast, existingTitles = [
 
                 <div className="p-4 border-t border-(--border-color) flex justify-end gap-2">
                     <Link href="/admin">
-                        <Button type="button" variant="cancel">Cancel</Button>
+                        <Button type="button" variant="cancel">{tCommon("cancel")}</Button>
                     </Link>
                     <Button
                         type="submit"
                         variant="primary"
                         isLoading={isLoading}
-                        loadingText="Creating..."
+                        loadingText={t("creatingPost")}
                         disabled={validation.hasValidationErrors}
                     >
-                        Create Post
+                        {t("createPostBtn")}
                     </Button>
                 </div>
             </form>

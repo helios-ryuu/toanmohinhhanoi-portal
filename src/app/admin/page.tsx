@@ -67,7 +67,7 @@ function AdminWorkspace() {
         <div className="max-w-6xl mx-auto px-4 py-8">
             <header className="mb-6">
                 <h1 className="text-2xl font-bold tracking-widest text-accent">{t("title")}</h1>
-                <p className="text-sm text-foreground/60 mt-1">{t("subtitle")}</p>
+                <p className="text-sm text-foreground/70 mt-0.5">{t("subtitle")}</p>
             </header>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">

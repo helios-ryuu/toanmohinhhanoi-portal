@@ -62,7 +62,7 @@ export default async function TagPage({ params }: Props) {
                     </Link>
                 </div>
                 <h1 className="text-2xl font-bold tracking-widest text-accent">#{tag.name.toUpperCase()}</h1>
-                <p className="text-sm text-foreground/60 mt-1 mb-6">
+                <p className="text-sm text-foreground/70 mt-0.5 mb-6">
                     {items.length} bài viết với tag này
                 </p>
 

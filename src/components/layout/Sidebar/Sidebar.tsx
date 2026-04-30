@@ -64,15 +64,15 @@ export default function Sidebar() {
             {/* Menu title / Back button for Post mode */}
             <div className="flex items-center p-2 relative">
                 <div className={`absolute m-1`}>
-                    <Menu strokeWidth={3} className="w-4 h-4 text-foreground/50" />
+                    <Menu strokeWidth={3} className="w-[18px] h-[18px] text-foreground/50" />
                 </div>
 
                 {isPostPage && isExpanded ? (
                     <div className="flex items-center gap-2 ml-1 text-foreground/50">
-                        <FadeText text={tCommon("tableOfContents")} isVisible={isExpanded} duration={100} className="ml-6 font-medium text-xs" />
+                        <FadeText text={tCommon("tableOfContents")} isVisible={isExpanded} duration={100} className="ml-7 font-medium text-sm" />
                     </div>
                 ) : (
-                    <FadeText text={tCommon("menu")} isVisible={isExpanded} duration={100} className="ml-7 font-medium text-xs text-foreground/50" />
+                    <FadeText text={tCommon("menu")} isVisible={isExpanded} duration={100} className="ml-8 font-medium text-sm text-foreground/50" />
                 )}
             </div>
 

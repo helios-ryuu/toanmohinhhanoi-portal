@@ -99,7 +99,7 @@ function ProfileForm() {
     return (
         <div className="max-w-2xl mx-auto px-4 py-8">
             <h1 className="text-2xl font-bold tracking-widest text-accent">{t("pageTitle")}</h1>
-            <p className="text-sm text-foreground/60 mt-1 mb-6">{t("pageSubtitle")}</p>
+            <p className="text-sm text-foreground/70 mt-0.5 mb-6">{t("pageSubtitle")}</p>
 
             <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-6 mb-6 space-y-4">
                 <ReadonlyRow label={t("username")} value={profile.username} />

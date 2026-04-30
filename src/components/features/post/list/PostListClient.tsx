@@ -8,6 +8,7 @@ import Select from "@/components/ui/Select";
 import MultiSelect from "@/components/ui/MultiSelect";
 import { Button } from "@/components/ui";
 import { ChevronLeft, ChevronRight, LayoutGrid, List } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { PostMeta, Level } from "@/types/post";
 import type { PostCategory } from "@/types/database";
 
@@ -32,13 +33,6 @@ const variants = {
     }),
 };
 
-const CATEGORY_LABEL: Record<PostCategory, string> = {
-    news: "Tin tức",
-    announcement: "Thông báo",
-    tutorial: "Hướng dẫn",
-    result: "Kết quả",
-};
-
 // Helper: Level weight
 const getLevelWeight = (level?: Level): number => {
     switch (level) {
@@ -50,12 +44,13 @@ const getLevelWeight = (level?: Level): number => {
 };
 
 export default function PostListClient({ posts, allTags, allLevels, allCategories }: PostListClientProps) {
+    const t = useTranslations("post");
     const searchParams = useSearchParams();
     const router = useRouter();
-    // Derived state from URL (Source of Truth)
+
     const selectedTags = useMemo(() => {
-        const t = searchParams.get("tag");
-        return t ? t.split(",").map(s => s.trim()).filter(Boolean) : [];
+        const tag = searchParams.get("tag");
+        return tag ? tag.split(",").map(s => s.trim()).filter(Boolean) : [];
     }, [searchParams]);
 
     const selectedLevels = useMemo(() => {
@@ -71,7 +66,6 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
     const [direction, setDirection] = useState(0);
     const [postsPerPage, setPostsPerPage] = useState(4);
     const [isMobile, setIsMobile] = useState(false);
-
 
     // Responsive posts per page and mobile detection
     useEffect(() => {
@@ -96,14 +90,14 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
     }, [viewMode]);
 
     const updateUrl = (newParams: Partial<{ tags: string[], levels: string[], category: string, sort: string, view: ViewMode }>) => {
-        const t = newParams.tags !== undefined ? newParams.tags : selectedTags;
+        const tag = newParams.tags !== undefined ? newParams.tags : selectedTags;
         const l = newParams.levels !== undefined ? newParams.levels : selectedLevels;
         const c = newParams.category !== undefined ? newParams.category : selectedCategory;
         const s = newParams.sort !== undefined ? newParams.sort : selectedSort;
         const v = newParams.view !== undefined ? newParams.view : viewMode;
 
         const params = new URLSearchParams();
-        if (t.length > 0) params.set("tag", t.join(","));
+        if (tag.length > 0) params.set("tag", tag.join(","));
         if (l.length > 0) params.set("level", l.join(","));
         if (c) params.set("category", c);
         if (s !== "newest") params.set("sort", s);
@@ -138,8 +132,8 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
 
         if (selectedTags.length > 0) {
             result = result.filter((post) =>
-                post.tags?.some((t) =>
-                    selectedTags.some((st) => t.toLowerCase() === st.toLowerCase())
+                post.tags?.some((tag) =>
+                    selectedTags.some((st) => tag.toLowerCase() === st.toLowerCase())
                 )
             );
         }
@@ -180,13 +174,18 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
 
     const hasActiveFilters = selectedTags.length > 0 || selectedLevels.length > 0 || selectedCategory !== "" || selectedSort !== "newest";
 
+    const categoryLabel = (c: PostCategory) => {
+        const key = `category${c.charAt(0).toUpperCase()}${c.slice(1)}` as "categoryNews" | "categoryAnnouncement" | "categoryTutorial" | "categoryResult";
+        return t(key);
+    };
+
     const tagOptions = [
-        { value: "", label: "All" },
+        { value: "", label: t("filterAll") },
         ...allTags.map((tag) => ({ value: tag, label: tag }))
     ];
 
     const levelOptions = [
-        { value: "", label: "All" },
+        { value: "", label: t("filterAll") },
         ...allLevels.map((level) => ({
             value: level,
             label: level.charAt(0).toUpperCase() + level.slice(1),
@@ -194,25 +193,25 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
     ];
 
     const categoryOptions = [
-        { value: "", label: "All" },
+        { value: "", label: t("filterAll") },
         ...((allCategories ?? (["news", "announcement", "tutorial", "result"] as PostCategory[])).map((c) => ({
             value: c,
-            label: CATEGORY_LABEL[c],
+            label: categoryLabel(c),
         }))),
     ];
 
     const sortOptions = [
-        { value: "newest", label: "Newest" },
-        { value: "oldest", label: "Oldest" },
-        { value: "a-z", label: "A-Z" },
-        { value: "z-a", label: "Z-A" },
-        { value: "easiest", label: "Easiest" },
-        { value: "most-advanced", label: "Most Advanced" },
+        { value: "newest", label: t("sortNewest") },
+        { value: "oldest", label: t("sortOldest") },
+        { value: "a-z", label: t("sortAZ") },
+        { value: "z-a", label: t("sortZA") },
+        { value: "easiest", label: t("sortEasiest") },
+        { value: "most-advanced", label: t("sortMostAdvanced") },
     ];
 
     const viewOptions = [
-        { value: "card", label: "Card", icon: LayoutGrid },
-        { value: "list", label: "List", icon: List },
+        { value: "card", label: t("viewCard"), icon: LayoutGrid },
+        { value: "list", label: t("viewList"), icon: List },
     ];
 
     const renderHeader = (label: string) => {
@@ -230,48 +229,48 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
                 <div className="grid grid-cols-[1fr_auto] sm:flex sm:flex-row sm:flex-wrap gap-4 items-start sm:items-center">
                     <div className="flex flex-col sm:flex-row flex-wrap gap-4 flex-1">
                         <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
-                            <label className="text-xs text-(--foreground-dim) shrink-0">Tags:</label>
+                            <label className="text-xs text-(--foreground-dim) shrink-0">{t("filterTag")}:</label>
                             <MultiSelect
                                 values={selectedTags}
                                 onValuesChange={handleTagsChange}
                                 options={tagOptions}
-                                placeholder="All"
+                                placeholder={t("filterAll")}
                                 className="flex-1 cursor-pointer text-xs"
                                 isActive={selectedTags.length > 0}
                             />
                         </div>
 
                         <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
-                            <label className="text-xs text-(--foreground-dim) shrink-0">Level:</label>
+                            <label className="text-xs text-(--foreground-dim) shrink-0">{t("filterLevel")}:</label>
                             <MultiSelect
                                 values={selectedLevels}
                                 onValuesChange={handleLevelsChange}
                                 options={levelOptions}
-                                placeholder="All"
+                                placeholder={t("filterAll")}
                                 className="flex-1 cursor-pointer text-xs"
                                 isActive={selectedLevels.length > 0}
                             />
                         </div>
 
                         <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
-                            <label className="text-xs text-(--foreground-dim) shrink-0">Loại:</label>
+                            <label className="text-xs text-(--foreground-dim) shrink-0">{t("filterCategory")}:</label>
                             <Select
                                 value={selectedCategory}
                                 onValueChange={handleCategoryChange}
                                 options={categoryOptions}
-                                placeholder="All"
+                                placeholder={t("filterAll")}
                                 className="flex-1 cursor-pointer text-xs"
                                 isActive={selectedCategory !== ""}
                             />
                         </div>
 
                         <div className="grid grid-cols-[3.5rem_1fr] sm:flex items-center gap-2">
-                            <label className="text-xs text-(--foreground-dim) shrink-0">Sort:</label>
+                            <label className="text-xs text-(--foreground-dim) shrink-0">{t("filterSort")}:</label>
                             <Select
                                 value={selectedSort}
                                 onValueChange={handleSortChange}
                                 options={sortOptions}
-                                placeholder="Newest"
+                                placeholder={t("sortNewest")}
                                 className="flex-1 cursor-pointer text-xs"
                                 isActive={selectedSort !== "newest"}
                             />
@@ -283,7 +282,7 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
                                 variant="secondary"
                                 className="mx-auto sm:mx-0"
                             >
-                                Reset filters
+                                {t("resetFilters")}
                             </Button>
                         )}
                     </div>
@@ -299,7 +298,7 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
                                 updateUrl({ view: newView });
                             }}
                             options={viewOptions.map(o => ({ value: o.value, label: o.label }))}
-                            placeholder="Card"
+                            placeholder={t("viewCard")}
                             className="cursor-pointer text-xs"
                         />
                     </div>
@@ -309,20 +308,20 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
             <div className="w-full border-t border-(--foreground-dim)/30 mt-2"></div>
 
             <p className="mt-2 mb-2 text-xs text-(--foreground-dim)">
-                Showing {filteredPosts.length} of {posts.length}
+                {t("showingCount", { shown: filteredPosts.length, total: posts.length })}
                 {selectedCategory && (
-                    <> <span className="text-accent">{CATEGORY_LABEL[selectedCategory]}</span></>
-                )}{" "}posts
+                    <> <span className="text-accent">{categoryLabel(selectedCategory)}</span></>
+                )}
                 {selectedTags.length > 0 && (
-                    <> tagged &quot;<span className="text-accent">{selectedTags.join(", ")}</span>&quot;</>
+                    <> — <span className="text-accent">{selectedTags.join(", ")}</span></>
                 )}
                 {selectedLevels.length > 0 && (
-                    <> with level &quot;<span className="text-accent">{selectedLevels.map(l => l.charAt(0).toUpperCase() + l.slice(1)).join(", ")}</span>&quot;</>
+                    <> — <span className="text-accent">{selectedLevels.map(l => l.charAt(0).toUpperCase() + l.slice(1)).join(", ")}</span></>
                 )}
             </p>
 
             {filteredPosts.length === 0 && (
-                <p className="mt-10 text-foreground/50">No posts match your filters.</p>
+                <p className="mt-10 text-foreground/50">{t("noResults")}</p>
             )}
 
             <div className={`mt-4 relative overflow-hidden ${!isMobile ? 'min-h-[300px]' : ''}`}>
@@ -330,12 +329,12 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
                     <div className="flex flex-col gap-2 overflow-x-auto pb-2">
                         <div className="min-w-[1000px]">
                             <div className="grid grid-cols-[4fr_3fr_90px_80px_95px_120px] gap-4 px-4 py-2 text-xs font-semibold text-(--foreground-dim) border-b border-(--border-color) mb-4">
-                                {renderHeader("Title")}
+                                {renderHeader(t("colTitle"))}
                                 <span>Tags</span>
-                                {renderHeader("Date")}
-                                {renderHeader("Read")}
-                                {renderHeader("Level")}
-                                {renderHeader("Loại")}
+                                {renderHeader(t("colDate"))}
+                                {renderHeader(t("colRead"))}
+                                {renderHeader(t("filterLevel"))}
+                                {renderHeader(t("filterCategory"))}
                             </div>
                             <AnimatePresence initial={false} mode="wait" custom={direction}>
                                 <motion.div
@@ -434,7 +433,7 @@ export default function PostListClient({ posts, allTags, allLevels, allCategorie
                         <ChevronLeft className="w-5 h-5" />
                     </button>
                     <span className="text-xs text-(--foreground-dim)">
-                        Page {currentPage} of {Math.ceil(filteredPosts.length / postsPerPage)}
+                        {t("pagination", { current: currentPage, total: Math.ceil(filteredPosts.length / postsPerPage) })}
                     </span>
                     <button
                         onClick={() => {

@@ -10,6 +10,7 @@ import { CATEGORIES, CHAR_LIMITS } from "@/types/admin";
 import type { PostFormData } from "@/hooks/usePostFormValidation";
 import { handlePostFormChange, slugify } from "@/hooks/usePostFormValidation";
 import type { PostCategory } from "@/types/database";
+import { useTranslations } from "next-intl";
 
 interface PostFormBodyProps {
     formData: PostFormData;
@@ -36,6 +37,7 @@ export function PostFormBody({
     autoSlug = false,
     submitted = false,
 }: PostFormBodyProps) {
+    const t = useTranslations("admin");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isPickerOpen, setIsPickerOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
@@ -84,7 +86,7 @@ export function PostFormBody({
     return (
         <div className="space-y-4">
             <FormField
-                label="Title"
+                label={t("fieldTitle")}
                 required
                 error={showError("title")}
                 charCount={{ current: formData.title.length, max: CHAR_LIMITS.title }}
@@ -103,7 +105,7 @@ export function PostFormBody({
                 />
             </FormField>
 
-            <FormField label="Slug" required error={showError("slug")} hint="lowercase, hyphens">
+            <FormField label="Slug" required error={showError("slug")} hint={t("slugFieldHint")}>
                 <FormInput
                     name="slug"
                     value={formData.slug}
@@ -114,7 +116,7 @@ export function PostFormBody({
             </FormField>
 
             <FormField
-                label="Description"
+                label={t("fieldDescription")}
                 required
                 error={showError("description")}
                 charCount={{ current: formData.description.length, max: CHAR_LIMITS.description }}
@@ -129,7 +131,7 @@ export function PostFormBody({
                 />
             </FormField>
 
-            <FormField label="Category" required>
+            <FormField label={t("fieldCategory")} required>
                 <FormSelectDropdown
                     name="category"
                     value={formData.category}
@@ -138,13 +140,13 @@ export function PostFormBody({
                 />
             </FormField>
 
-            <FormField label="Image" warning={validationWarnings.image_url}>
+            <FormField label={t("fieldImage")} warning={validationWarnings.image_url}>
                 <div className="space-y-2">
                     <FormInput
                         name="image_url"
                         value={formData.image_url}
                         hasWarning={!!validationWarnings.image_url}
-                        placeholder="https://... or pick / upload below"
+                        placeholder={t("imagePlaceholder")}
                         onChange={(e) => handlePostFormChange(e, setFormData)}
                     />
                     <div className="flex flex-wrap gap-2">
@@ -154,7 +156,7 @@ export function PostFormBody({
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-(--border-color) bg-foreground/5 hover:bg-foreground/10 transition-colors cursor-pointer"
                         >
                             <FolderOpen size={14} />
-                            Pick from bucket
+                            {t("pickFromBucket")}
                         </button>
                         <button
                             type="button"
@@ -163,7 +165,7 @@ export function PostFormBody({
                             className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md border border-(--border-color) bg-foreground/5 hover:bg-foreground/10 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {isUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                            {isUploading ? "Uploading…" : "Upload"}
+                            {isUploading ? t("uploading") : t("upload")}
                         </button>
                         <input
                             ref={fileInputRef}
@@ -186,7 +188,7 @@ export function PostFormBody({
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-6">
                     <div className="bg-background border border-(--border-color) rounded-lg w-full max-w-5xl h-[80vh] flex flex-col shadow-xl">
                         <div className="flex items-center justify-between px-6 py-4 border-b border-(--border-color)">
-                            <h2 className="text-lg font-semibold">Pick image from bucket</h2>
+                            <h2 className="text-lg font-semibold">{t("pickImageModalTitle")}</h2>
                             <button
                                 type="button"
                                 onClick={() => setIsPickerOpen(false)}
@@ -219,7 +221,7 @@ export function PostFormBody({
             />
 
             <FormField
-                label="Content (MDX)"
+                label={t("fieldContent")}
                 required
                 error={showError("content")}
                 warning={validationWarnings.content}
@@ -237,15 +239,18 @@ export function PostFormBody({
                 />
             </FormField>
 
-            <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer">
+            <label className="flex items-start gap-2 text-sm text-foreground/70 cursor-pointer">
                 <input
                     type="checkbox"
                     name="published"
                     checked={formData.published}
                     onChange={(e) => handlePostFormChange(e, setFormData)}
-                    className="accent-accent"
+                    className="accent-accent mt-0.5"
                 />
-                Publish immediately
+                <div>
+                    <span>{t("publishImmediately")}</span>
+                    <p className="text-xs text-foreground/50 mt-0.5">{t("publishImmediatelyHint")}</p>
+                </div>
             </label>
         </div>
     );

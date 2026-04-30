@@ -71,7 +71,7 @@ export default function FAQPage() {
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
             <header>
                 <h1 className="text-2xl font-bold tracking-widest text-accent">{t("pageTitle")}</h1>
-                <p className="text-sm text-foreground/60 mt-1">{t("pageSubtitle")}</p>
+                <p className="text-sm text-foreground/70 mt-0.5">{t("pageSubtitle")}</p>
             </header>
 
             <section>

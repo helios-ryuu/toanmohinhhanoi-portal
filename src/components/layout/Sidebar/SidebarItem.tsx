@@ -35,7 +35,7 @@ export default function SidebarItem({
     const isActive = isActiveHref(pathname, href);
 
     const baseClasses = `
-        flex items-center gap-x-2 px-2 py-1 my-0.5 mx-1 rounded-sm text-[12px]
+        w-full flex items-center gap-x-2 px-4 py-1.5 my-0.5 rounded-sm text-[14px]
         ${className}
     `;
 
@@ -45,7 +45,7 @@ export default function SidebarItem({
                 className={`${baseClasses} text-(--foreground-dim) opacity-40 cursor-not-allowed`}
                 title={underDevelopment ? "Under development" : undefined}
             >
-                {icon && <span className="flex-none size-4 flex items-center justify-center [&>svg]:size-4">{icon}</span>}
+                {icon && <span className="flex-none size-[18px] flex items-center justify-center [&>svg]:size-[18px]">{icon}</span>}
                 <span className="whitespace-nowrap">{label}</span>
             </span>
         );
@@ -63,7 +63,7 @@ export default function SidebarItem({
                 }
             `}
         >
-            {icon && <span className="flex-none size-4 flex items-center justify-center [&>svg]:size-4">{icon}</span>}
+            {icon && <span className="flex-none size-[18px] flex items-center justify-center [&>svg]:size-[18px]">{icon}</span>}
             <span className="whitespace-nowrap">{label}</span>
         </Link>
     );

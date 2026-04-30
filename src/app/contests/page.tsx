@@ -26,7 +26,7 @@ export default async function ContestsPage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
             <header className="mb-6">
                 <h1 className="text-2xl font-bold tracking-widest text-accent">{t("pageTitle")}</h1>
-                <p className="text-sm text-foreground/60 mt-1">{t("pageSubtitle")}</p>
+                <p className="text-sm text-foreground/70 mt-0.5">{t("pageSubtitle")}</p>
             </header>
 
             <Suspense>

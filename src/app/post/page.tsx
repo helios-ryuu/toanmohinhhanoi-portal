@@ -35,8 +35,8 @@ export default async function PostPage() {
             <div className="w-full py-4 px-4 md:px-10">
                 {/* Centered container */}
                 <div className="mx-auto">
-                    <h1 className="text-xl font-bold text-left text-accent tracking-widest">{t("pageTitle")}</h1>
-                    <p className="text-xs mt-0.5 mb-4 text-foreground/70 text-left">{t("pageSubtitle")}</p>
+                    <h1 className="text-2xl font-bold text-left text-accent tracking-widest">{t("pageTitle")}</h1>
+                    <p className="text-sm mt-0.5 mb-4 text-foreground/70 text-left">{t("pageSubtitle")}</p>
 
                     <Suspense fallback={<div>Loading...</div>}>
                         <PostListClient

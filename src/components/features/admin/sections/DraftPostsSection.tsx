@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Edit3, Clock, Send, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import type { AdminPost } from "@/types/admin";
 
 interface DraftPostsSectionProps {
@@ -20,6 +21,8 @@ export default function DraftPostsSection({
     onPublished,
     onShowToast,
 }: DraftPostsSectionProps) {
+    const t = useTranslations("admin");
+    const tCommon = useTranslations("common");
     const drafts = posts.filter((p) => !p.published);
     const [publishingId, setPublishingId] = useState<number | null>(null);
 
@@ -33,7 +36,7 @@ export default function DraftPostsSection({
             });
             const json = await res.json();
             if (!json.success) throw new Error(json.message || "Publish failed");
-            onShowToast?.("success", "Post published");
+            onShowToast?.("success", t("publishPost"));
             onPublished?.();
         } catch (e) {
             onShowToast?.("error", e instanceof Error ? e.message : "Publish failed");
@@ -46,7 +49,7 @@ export default function DraftPostsSection({
         <section>
             <h3 className="text-sm font-semibold text-foreground/70 uppercase tracking-wider mb-3 flex items-center gap-2">
                 <Edit3 size={14} className="text-yellow-500" />
-                Draft Posts
+                {t("draftPosts")}
                 {drafts.length > 0 && (
                     <span className="text-xs font-normal bg-yellow-500/20 text-yellow-600 dark:text-yellow-400 px-1.5 py-0.5 rounded">
                         {drafts.length}
@@ -55,10 +58,10 @@ export default function DraftPostsSection({
             </h3>
 
             {isLoading ? (
-                <div className="text-foreground/50 text-center py-8">Loading drafts...</div>
+                <div className="text-foreground/50 text-center py-8">{t("loadingDrafts")}</div>
             ) : drafts.length === 0 ? (
                 <div className="text-foreground/50 text-center py-6 border border-dashed border-(--border-color) rounded-lg text-sm">
-                    No draft posts. New posts are saved as drafts by default.
+                    {t("noDraftPosts")}
                 </div>
             ) : (
                 <div className="grid gap-2">
@@ -67,7 +70,6 @@ export default function DraftPostsSection({
                             key={draft.id}
                             className="p-3 rounded-lg border border-(--border-color) bg-yellow-500/5 hover:border-yellow-500/40 transition-colors flex items-center gap-3"
                         >
-                            {/* Thumbnail */}
                             <div className="w-12 h-12 rounded-md overflow-hidden bg-foreground/10 shrink-0 relative">
                                 {draft.image_url && (
                                     <Image
@@ -80,7 +82,6 @@ export default function DraftPostsSection({
                                 )}
                             </div>
 
-                            {/* Info */}
                             <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-foreground text-sm truncate">
                                     {draft.title}
@@ -100,13 +101,12 @@ export default function DraftPostsSection({
                                 </div>
                             </div>
 
-                            {/* Actions */}
                             <div className="flex items-center gap-1.5 shrink-0">
                                 <button
                                     onClick={() => onEditDraft(draft.id)}
                                     className="px-2.5 py-1.5 text-xs rounded-md border border-(--border-color) bg-foreground/5 hover:bg-foreground/10 transition-colors cursor-pointer text-foreground/70 hover:text-foreground"
                                 >
-                                    Edit
+                                    {tCommon("edit")}
                                 </button>
                                 <button
                                     onClick={() => publishPost(draft.id)}
@@ -118,7 +118,7 @@ export default function DraftPostsSection({
                                     ) : (
                                         <Send size={12} />
                                     )}
-                                    Publish
+                                    {t("publishPost")}
                                 </button>
                             </div>
                         </div>
