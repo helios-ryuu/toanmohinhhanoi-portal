@@ -4,68 +4,62 @@
 
 /* Dark theme (default) */
 :root {
-  --background: #121212;
-  --background-hover: #292929;
-  --foreground: #fcfcfc;
-  --accent: #f56325;
-  --accent-hover: #f76f35;
-  --border-color: #2d2d2d;
-  --border-color-hover: #363636;
-  --foreground-dim: #595959;
-  --post-card: #1a1a1a;
-  --post-card-hover: #212121;
-  --code-block: #1c1c1c;
-  --code-block-border: #333333;
-  --scrollbar-track: #1a1a1a;
-  --scrollbar-thumb: #3a3a3a;
-  --scrollbar-thumb-hover: #4a4a4a;
+  --font-lexend: "Lexend", "Avenir Next", "Segoe UI", sans-serif;
+  --font-fira-code: "Fira Code", "SFMono-Regular", "Consolas", monospace;
+  --background: #111111;
+  --background-hover: #2b2b2b;
+  --foreground: #ffffff;
+  --accent: #1f51ff;
+  --accent-hover: #4770ff;
+  --border-color: #303030;
+  --border-color-hover: #3a3a3a;
+  --foreground-dim: #666666;
+  --post-card: #1c1c1c;
+  --post-card-hover: #242424;
+  --code-block: #1e1e1e;
+  --code-block-border: #353535;
+  --scrollbar-track: #1c1c1c;
+  --scrollbar-thumb: #3d3d3d;
+  --scrollbar-thumb-hover: #4d4d4d;
   --radius: 0.625rem;
   /* shadcn variables - dark theme values */
-  --card: #1f1f1f;
-  --card-foreground: #fcfcfc;
-  --popover: #1f1f1f;
-  --popover-foreground: #fcfcfc;
-  --primary: #fcfcfc;
+  --card: #202020;
+  --card-foreground: #ffffff;
+  --popover: #202020;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
   --primary-foreground: #171717;
-  --secondary: #292929;
-  --secondary-foreground: #fcfcfc;
-  --muted: #292929;
-  --muted-foreground: #a0a0a0;
-  --accent-foreground: #fcfcfc;
+  --secondary: #2b2b2b;
+  --secondary-foreground: #ffffff;
+  --muted: #2b2b2b;
+  --muted-foreground: #ababab;
+  --accent-foreground: #ffffff;
   --destructive: #dc2626;
-  --border: #2d2d2d;
-  --input: #2d2d2d;
-  --ring: #595959;
-  --chart-1: #f56325;
-  --chart-2: #3b82f6;
+  --border: #303030;
+  --input: #303030;
+  --ring: #666666;
+  --chart-1: #1f51ff;
+  --chart-2: #60a5fa;
   --chart-3: #10b981;
   --chart-4: #f59e0b;
   --chart-5: #8b5cf6;
-  --sidebar: #1a1a1a;
-  --sidebar-foreground: #fcfcfc;
-  --sidebar-primary: #f56325;
-  --sidebar-primary-foreground: #fcfcfc;
-  --sidebar-accent: #292929;
-  --sidebar-accent-foreground: #fcfcfc;
-  --sidebar-border: #2d2d2d;
-  --sidebar-ring: #595959;
 }
 
 /* Light theme */
 :root.light {
-  --background: #fcfcfc;
-  --background-hover: #e2e2e2;
-  --foreground: #171717;
-  --accent: #f56325;
-  --accent-hover: #f85007;
-  --border-color: #dcdcdc;
-  --border-color-hover: #cccccc;
-  --foreground-dim: #aaaaaa;
-  --post-card: #f5f5f5;
-  --post-card-hover: #e8e8e8;
-  --scrollbar-track: #f0f0f0;
-  --scrollbar-thumb: #c0c0c0;
-  --scrollbar-thumb-hover: #a0a0a0;
+  --background: #ffffff;
+  --background-hover: #eeeeee;
+  --foreground: #151515;
+  --accent: #1f51ff;
+  --accent-hover: #0b3ee8;
+  --border-color: #d8d8d8;
+  --border-color-hover: #c8c8c8;
+  --foreground-dim: #8f8f8f;
+  --post-card: #f7f7f7;
+  --post-card-hover: #ececec;
+  --scrollbar-track: #f2f2f2;
+  --scrollbar-thumb: #bcbcbc;
+  --scrollbar-thumb-hover: #9c9c9c;
 }
 
 /* Tailwind theme tokens */
@@ -81,14 +75,6 @@
   --radius-md: 8px;
   --radius-lg: 16px;
   --radius-xl: 22px;
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
   --color-chart-5: var(--chart-5);
   --color-chart-4: var(--chart-4);
   --color-chart-3: var(--chart-3);
@@ -122,7 +108,7 @@ html {
 
 body {
   height: 100%;
-  font-family: var(--font-lexend), Arial, Helvetica, sans-serif;
+  font-family: var(--font-lexend), sans-serif;
 }
 
 /* Global transitions for theme switching */
@@ -132,7 +118,7 @@ body {
   transition-timing-function: ease-out;
 }
 
-/* Sidebar width transition */
+/* Side panel width transition */
 aside {
   transition: width 0.2s ease-out, transform 0.2s ease-out, background-color 0.2s ease-out, border-color 0.2s ease-out;
 }

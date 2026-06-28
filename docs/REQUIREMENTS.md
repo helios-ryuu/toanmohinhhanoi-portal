@@ -1,32 +1,32 @@
-# Requirements v0.9.0
+# Requirements v1.0.0
 
 ## Auth và tài khoản
 
 - Admin cấp tài khoản thủ công trong `/admin/accounts`.
 - Người dùng đăng nhập bằng `username/password`.
-- Password lưu plaintext theo yêu cầu phiên bản v0.9.0.
-- Người dùng không tự tạo tài khoản qua Google hoặc OAuth.
-- Admin có thể tạo, sửa, xoá tài khoản và reset mật khẩu.
+- `username`, `password`, `full_name` là bắt buộc khi tạo/sửa tài khoản.
+- Khi tài khoản có vai trò `admin`, thông tin trường/tổ chức không hiển thị trong form quản trị.
+- Màn quản lý tài khoản có tìm kiếm, filter, sort, highlight row đang sửa và pagination 50 dòng/trang.
 
-## Contest
+## Contest và đội thi
 
-- Public contest page chỉ hiển thị thông tin cuộc thi, mô tả, timeline và hướng dẫn đăng nhập/nộp bài.
-- Người dùng không tự đăng ký tham gia cuộc thi.
-- Admin quản lý đội thi trong `/contest-management`.
-- `TEAM_CODE`, `TEAM_NAME`, `LEVEL` thuộc đội/registration.
-- `FULLNAME`, `EMAIL`, `PHONE`, `SCHOOL` thuộc tài khoản user.
+- Public contest page hiển thị thông tin cuộc thi, mô tả, timeline và hướng dẫn nộp bài.
+- Admin quản lý cuộc thi và đội thi trong `/contest-management`.
+- Đội thi được tạo trực tiếp bằng `TEAM_CODE`, `TEAM_NAME`, `LEVEL`, leader và members; không có bước duyệt/từ chối.
 - Thành viên đội xem cuộc thi của mình trong `/profile/contests`.
 
 ## Submission
 
-- Web phục vụ nộp bài vòng 1 và vòng 2 thông qua stage có `allow_submission=true`.
-- Chỉ thành viên đội được admin gán và có registration `approved` mới được nộp.
+- Web phục vụ nộp bài qua stage có `allow_submission=true`.
+- Thành viên của đội được admin gán có thể nộp bài khi stage nộp bài đang mở.
 - Resubmit phụ thuộc `allow_resubmit` của stage đang mở.
+- Bài nộp mới lưu trong Storage theo cấu trúc `contestSlug/TEAM_CODE/file`.
 - Admin xem và tải bài nộp trong panel quản lý đội.
 
 ## UI
 
-- Header có navigation panel dùng chung: Home, Post, Contest, About, Q&A.
-- Admin thấy thêm các mục quản trị.
-- Sidebar điều hướng cũ bị loại bỏ; post detail vẫn giữ ToC.
-- Footer là panel đầy đủ với logo, navigation và placeholder liên hệ.
+- Accent chính là `#1F51FF`; toàn site dùng font Lexend.
+- Header có navigation panel dùng chung và không hiển thị GitHub.
+- Footer hiển thị địa chỉ, số điện thoại, email và copyright chính thức.
+- Homepage có `Bài viết nổi bật` và danh sách compact `Các cuộc thi`.
+- Bucket manager hiển thị rõ cây thư mục/file, hỗ trợ tạo, đổi tên và xoá folder/file.

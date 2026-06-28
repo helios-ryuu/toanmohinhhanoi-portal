@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAuth, getCurrentUser } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getSubmission, isApprovedMember } from "@/lib/contests-db";
+import { getSubmission, isRegistrationMember } from "@/lib/contests-db";
 import { createSubmissionSignedUrl } from "@/lib/storage";
 import { apiSuccess, apiError, handleRouteError } from "@/lib/api-helpers";
 
@@ -21,7 +21,7 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
 
         const isAdmin = current.profile.role === "admin";
         if (!isAdmin) {
-            const member = await isApprovedMember(supabase, sub.registration_id, current.profile.id);
+            const member = await isRegistrationMember(supabase, sub.registration_id, current.profile.id);
             if (!member) {
                 // also allow pending members read access
                 const { data } = await supabase

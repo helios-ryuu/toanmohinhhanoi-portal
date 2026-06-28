@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { listContests } from "@/lib/contests-db";
 import ContestListClient from "@/components/features/contest/ContestListClient";
+import PageHeader from "@/components/layout/PageHeader";
 
 export const metadata = {
     title: "Contests — Toán Mô Hình Hà Nội",
@@ -24,10 +25,7 @@ export default async function ContestsPage() {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
-            <header className="mb-6">
-                <h1 className="text-2xl font-bold tracking-widest text-accent">{t("pageTitle")}</h1>
-                <p className="text-sm text-foreground/70 mt-0.5">{t("pageSubtitle")}</p>
-            </header>
+            <PageHeader title={t("pageTitle")} description={t("pageSubtitle")} />
 
             <Suspense>
                 <ContestListClient contests={contests as import("@/types/database").ContestWithStages[]} />

@@ -42,7 +42,7 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
     const stages = contest.stages ?? [];
     if (stages.length === 0) {
         return (
-            <p className="text-sm text-foreground/60 italic">
+            <p className="text-sm text-foreground/66 italic">
                 {t("stagesEmpty")}
             </p>
         );
@@ -57,12 +57,12 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
 
     return (
         <div className="space-y-3">
-            <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-4">
-                <p className="text-xs uppercase tracking-widest text-foreground/60 mb-2">
+            <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
+                <p className="text-xs uppercase tracking-widest text-foreground/66 mb-2">
                     {t("currentlyIn")}
                 </p>
                 {activeStages.length === 0 ? (
-                    <p className="text-sm text-foreground/70">
+                    <p className="text-sm text-foreground/74">
                         {t("noActiveStage")}
                     </p>
                 ) : (
@@ -70,7 +70,7 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                         {activeStages.map((s) => (
                             <span
                                 key={s.id}
-                                className="px-2 py-1 rounded text-xs bg-accent/20 text-accent border border-accent/40"
+                                className="px-2 py-1 rounded-[4px] text-xs bg-accent/20 text-accent border border-accent/40"
                             >
                                 {s.name}
                             </span>
@@ -79,10 +79,10 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                 )}
                 <div className="mt-3 flex flex-wrap gap-3 text-xs">
                     <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded ${
+                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[4px] ${
                             canSubmit
                                 ? "bg-amber-500/15 text-amber-500"
-                                : "bg-foreground/5 text-foreground/40"
+                                : "bg-foreground/5 text-foreground/50"
                         }`}
                     >
                         <Upload size={12} /> {canSubmit ? t("submissionOpen") : t("submissionClosed")}
@@ -90,7 +90,7 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                 </div>
             </div>
 
-            <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-4">
+            <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
                 <div className="space-y-3">
                     {stages.map((s) => {
                         const sStart = new Date(s.start_at).getTime();
@@ -127,7 +127,7 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                                             </span>
                                         )}
                                     </div>
-                                    <div className="text-foreground/60 whitespace-nowrap text-[10px]">
+                                    <div className="text-foreground/66 whitespace-nowrap text-[10px]">
                                         {formatDateTime(s.start_at)} – {formatDateTime(s.end_at)}
                                     </div>
                                 </div>
@@ -138,7 +138,7 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                                     />
                                 </div>
                                 {s.description && (
-                                    <p className="text-[11px] text-foreground/60 leading-relaxed">
+                                    <p className="text-[11px] text-foreground/66 leading-relaxed">
                                         {s.description}
                                     </p>
                                 )}
@@ -147,7 +147,7 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                     })}
                 </div>
                 {now !== null && (
-                    <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-[11px] text-foreground/60">
+                    <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-[11px] text-foreground/66">
                         <Calendar size={12} />
                         <span>
                             {t("grandWindow", {

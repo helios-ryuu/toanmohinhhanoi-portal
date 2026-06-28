@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Pencil, Plus, Save, Trash2, X } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Pencil, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/features/admin/common/Button";
 import type { User } from "@/types/user";
@@ -27,31 +28,48 @@ const EMPTY_DRAFT: AccountDraft = {
     role: "user",
 };
 
+const PAGE_SIZE = 50;
+
+type RoleFilter = "all" | "user" | "admin";
+type AccountSort = "newest" | "oldest" | "usernameAsc" | "usernameDesc" | "nameAsc" | "role";
+
 function AccountManagement() {
     const { showToast } = useToast();
+    const t = useTranslations("accounts");
+    const tCommon = useTranslations("common");
     const [accounts, setAccounts] = useState<User[]>([]);
     const [draft, setDraft] = useState<AccountDraft>(EMPTY_DRAFT);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
+    const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+    const [sort, setSort] = useState<AccountSort>("newest");
+    const [page, setPage] = useState(1);
+    const [glowForm, setGlowForm] = useState(false);
+    const formRef = useRef<HTMLElement>(null);
 
     const refresh = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch("/api/admin/accounts", { cache: "no-store" });
             const json = await res.json();
-            if (!json.success) throw new Error(json.message || "Không thể tải tài khoản.");
+            if (!json.success) throw new Error(json.message || t("loadError"));
             setAccounts(json.data ?? []);
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Không thể tải tài khoản.");
+            showToast("error", err instanceof Error ? err.message : t("loadError"));
         } finally {
             setLoading(false);
         }
-    }, [showToast]);
+    }, [showToast, t]);
 
     useEffect(() => {
         refresh();
     }, [refresh]);
+
+    useEffect(() => {
+        setPage(1);
+    }, [search, roleFilter, sort]);
 
     function edit(account: User) {
         setDraft({
@@ -64,36 +82,47 @@ function AccountManagement() {
             school: account.school ?? "",
             role: account.role,
         });
+        setGlowForm(true);
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.setTimeout(() => setGlowForm(false), 900);
+    }
+
+    function updateDraft(patch: Partial<AccountDraft>) {
+        setDraft((current) => {
+            const next = { ...current, ...patch };
+            if (patch.role === "admin") next.school = "";
+            return next;
+        });
     }
 
     async function save() {
-        if (!draft.username.trim() || !draft.full_name.trim() || (!draft.id && !draft.password)) {
-            showToast("warning", "Username, họ tên và mật khẩu là bắt buộc khi tạo mới.");
+        if (!draft.username.trim() || !draft.password.trim() || !draft.full_name.trim()) {
+            showToast("warning", t("requiredWarning"));
             return;
         }
         setSaving(true);
         try {
-            const body: Record<string, string> = {
+            const body: Record<string, string | null> = {
                 username: draft.username,
+                password: draft.password,
                 full_name: draft.full_name,
                 email: draft.email,
                 phone: draft.phone,
-                school: draft.school,
+                school: draft.role === "admin" ? null : draft.school,
                 role: draft.role,
             };
-            if (draft.password) body.password = draft.password;
             const res = await fetch(draft.id ? `/api/admin/accounts/${draft.id}` : "/api/admin/accounts", {
                 method: draft.id ? "PATCH" : "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(body),
             });
             const json = await res.json();
-            if (!json.success) throw new Error(json.message || "Lưu tài khoản thất bại.");
-            showToast("success", draft.id ? "Đã cập nhật tài khoản." : "Đã tạo tài khoản.");
+            if (!json.success) throw new Error(json.message || t("saveError"));
+            showToast("success", draft.id ? t("updateSuccess") : t("createSuccess"));
             setDraft(EMPTY_DRAFT);
             refresh();
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Lưu tài khoản thất bại.");
+            showToast("error", err instanceof Error ? err.message : t("saveError"));
         } finally {
             setSaving(false);
         }
@@ -104,37 +133,71 @@ function AccountManagement() {
         try {
             const res = await fetch(`/api/admin/accounts/${id}`, { method: "DELETE" });
             const json = await res.json();
-            if (!json.success) throw new Error(json.message || "Xoá tài khoản thất bại.");
-            showToast("success", "Đã xoá tài khoản.");
+            if (!json.success) throw new Error(json.message || t("deleteError"));
+            showToast("success", t("deleteSuccess"));
             refresh();
         } catch (err) {
-            showToast("error", err instanceof Error ? err.message : "Xoá tài khoản thất bại.");
+            showToast("error", err instanceof Error ? err.message : t("deleteError"));
         } finally {
             setDeletingId(null);
         }
     }
 
+    const filtered = useMemo(() => {
+        const q = search.trim().toLowerCase();
+        const result = accounts.filter((account) => {
+            if (roleFilter !== "all" && account.role !== roleFilter) return false;
+            if (!q) return true;
+            return [
+                account.username,
+                account.full_name,
+                account.email,
+                account.phone,
+                account.school,
+            ].some((value) => value?.toLowerCase().includes(q));
+        });
+
+        result.sort((a, b) => {
+            if (sort === "oldest") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+            if (sort === "usernameAsc") return a.username.localeCompare(b.username);
+            if (sort === "usernameDesc") return b.username.localeCompare(a.username);
+            if (sort === "nameAsc") return a.full_name.localeCompare(b.full_name);
+            if (sort === "role") return a.role.localeCompare(b.role) || a.username.localeCompare(b.username);
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        return result;
+    }, [accounts, roleFilter, search, sort]);
+
+    const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-8">
             <header className="mb-6">
-                <h1 className="text-2xl font-bold tracking-widest text-accent">QUẢN LÝ TÀI KHOẢN</h1>
+                <h1 className="text-2xl font-bold tracking-widest text-accent">{t("title")}</h1>
                 <p className="text-sm text-foreground/70 mt-0.5">
-                    Cấp tài khoản username/password cho thí sinh và quản trị viên.
+                    {t("subtitle")}
                 </p>
             </header>
 
             <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
-                <section className="rounded-lg border border-(--border-color) bg-(--post-card) p-4 h-fit">
+                <section
+                    ref={formRef}
+                    className={`h-fit rounded-lg border bg-(--post-card) p-4 transition-shadow ${
+                        glowForm ? "border-accent shadow-[0_0_0_3px_rgba(31,81,255,0.16),0_0_34px_rgba(31,81,255,0.22)]" : "border-(--border-color)"
+                    }`}
+                >
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-sm font-semibold uppercase tracking-widest">
-                            {draft.id ? "Sửa tài khoản" : "Tạo tài khoản"}
+                            {draft.id ? t("editTitle", { username: draft.username }) : t("createTitle")}
                         </h2>
                         {draft.id && (
                             <button
                                 type="button"
                                 onClick={() => setDraft(EMPTY_DRAFT)}
                                 className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-foreground/10"
-                                aria-label="Đóng form sửa"
+                                aria-label={t("closeEdit")}
                             >
                                 <X className="w-4 h-4" />
                             </button>
@@ -142,21 +205,23 @@ function AccountManagement() {
                     </div>
 
                     <div className="space-y-3">
-                        <Field label="Username" value={draft.username} onChange={(v) => setDraft((d) => ({ ...d, username: v }))} />
-                        <Field label={draft.id ? "Mật khẩu mới" : "Mật khẩu"} value={draft.password} type="password" onChange={(v) => setDraft((d) => ({ ...d, password: v }))} />
-                        <Field label="Họ và tên" value={draft.full_name} onChange={(v) => setDraft((d) => ({ ...d, full_name: v }))} />
-                        <Field label="Email" value={draft.email} type="email" onChange={(v) => setDraft((d) => ({ ...d, email: v }))} />
-                        <Field label="Số điện thoại" value={draft.phone} onChange={(v) => setDraft((d) => ({ ...d, phone: v }))} />
-                        <Field label="Trường/Tổ chức" value={draft.school} onChange={(v) => setDraft((d) => ({ ...d, school: v }))} />
+                        <Field required label={t("username")} value={draft.username} onChange={(v) => updateDraft({ username: v })} />
+                        <Field required label={draft.id ? t("newPassword") : t("password")} value={draft.password} type="password" onChange={(v) => updateDraft({ password: v })} />
+                        <Field required label={t("fullName")} value={draft.full_name} onChange={(v) => updateDraft({ full_name: v })} />
+                        <Field label={t("email")} value={draft.email} type="email" onChange={(v) => updateDraft({ email: v })} />
+                        <Field label={t("phone")} value={draft.phone} onChange={(v) => updateDraft({ phone: v })} />
+                        {draft.role !== "admin" && (
+                            <Field label={t("school")} value={draft.school} onChange={(v) => updateDraft({ school: v })} />
+                        )}
                         <label className="block text-xs text-foreground/70">
-                            Vai trò
+                            {t("role")}
                             <select
                                 value={draft.role}
-                                onChange={(e) => setDraft((d) => ({ ...d, role: e.target.value as "user" | "admin" }))}
-                                className="mt-1 w-full rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm text-foreground outline-none"
+                                onChange={(e) => updateDraft({ role: e.target.value as "user" | "admin" })}
+                                className="mt-1 w-full rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-accent/50"
                             >
-                                <option value="user">Thí sinh</option>
-                                <option value="admin">Admin</option>
+                                <option value="user">{t("roleUser")}</option>
+                                <option value="admin">{t("roleAdmin")}</option>
                             </select>
                         </label>
                     </div>
@@ -166,62 +231,128 @@ function AccountManagement() {
                         icon={draft.id ? <Save className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
                         onClick={save}
                         isLoading={saving}
-                        loadingText="Đang lưu..."
+                        loadingText={t("saving")}
                         fullWidth
                         className="mt-4"
                     >
-                        {draft.id ? "Lưu thay đổi" : "Tạo tài khoản"}
+                        {draft.id ? t("saveChanges") : t("createButton")}
                     </Button>
                 </section>
 
-                <section className="rounded-lg border border-(--border-color) bg-(--post-card) overflow-hidden">
-                    <div className="hidden md:grid grid-cols-[1.2fr_1.5fr_1.2fr_100px_130px] gap-3 px-4 py-3 text-xs font-semibold text-foreground/60 border-b border-(--border-color) bg-foreground/5">
-                        <span>Username</span>
-                        <span>Thông tin</span>
-                        <span>Trường</span>
-                        <span>Vai trò</span>
-                        <span className="text-right">Thao tác</span>
+                <section className="overflow-hidden rounded-lg border border-(--border-color) bg-(--post-card)">
+                    <div className="flex flex-wrap items-center gap-2 border-b border-(--border-color) bg-foreground/5 px-3 py-2">
+                        <div className="relative min-w-[220px] flex-1">
+                            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-foreground/40" />
+                            <input
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder={t("search")}
+                                className="w-full rounded-md border border-(--border-color) bg-background py-1.5 pl-8 pr-3 text-xs outline-none focus:ring-1 focus:ring-accent/50"
+                            />
+                        </div>
+                        <select
+                            value={roleFilter}
+                            onChange={(e) => setRoleFilter(e.target.value as RoleFilter)}
+                            className="rounded-md border border-(--border-color) bg-background px-2 py-1.5 text-xs outline-none"
+                        >
+                            <option value="all">{t("filterAll")}</option>
+                            <option value="user">{t("roleUser")}</option>
+                            <option value="admin">{t("roleAdmin")}</option>
+                        </select>
+                        <select
+                            value={sort}
+                            onChange={(e) => setSort(e.target.value as AccountSort)}
+                            className="rounded-md border border-(--border-color) bg-background px-2 py-1.5 text-xs outline-none"
+                        >
+                            <option value="newest">{t("sortNewest")}</option>
+                            <option value="oldest">{t("sortOldest")}</option>
+                            <option value="usernameAsc">{t("sortUsernameAsc")}</option>
+                            <option value="usernameDesc">{t("sortUsernameDesc")}</option>
+                            <option value="nameAsc">{t("sortNameAsc")}</option>
+                            <option value="role">{t("sortRole")}</option>
+                        </select>
+                    </div>
+
+                    <div className="hidden md:grid grid-cols-[1.1fr_1.4fr_1.1fr_82px_118px] gap-2 px-3 py-2 text-[11px] font-semibold text-foreground/60 border-b border-(--border-color)">
+                        <span>{t("colUsername")}</span>
+                        <span>{t("colInfo")}</span>
+                        <span>{t("colSchool")}</span>
+                        <span>{t("colRole")}</span>
+                        <span className="text-right">{t("colActions")}</span>
                     </div>
                     {loading ? (
-                        <div className="p-8 text-sm text-foreground/60 text-center">Đang tải...</div>
-                    ) : accounts.length === 0 ? (
-                        <div className="p-8 text-sm text-foreground/60 text-center">Chưa có tài khoản nào.</div>
+                        <div className="p-8 text-sm text-foreground/60 text-center">{tCommon("loading")}</div>
+                    ) : filtered.length === 0 ? (
+                        <div className="p-8 text-sm text-foreground/60 text-center">{t("empty")}</div>
                     ) : (
                         <div className="divide-y divide-(--border-color)">
-                            {accounts.map((account) => (
-                                <div key={account.id} className="grid grid-cols-1 md:grid-cols-[1.2fr_1.5fr_1.2fr_100px_130px] gap-3 px-4 py-3 items-center">
-                                    <div className="font-medium">@{account.username}</div>
-                                    <div className="text-sm min-w-0">
-                                        <div className="truncate">{account.full_name}</div>
-                                        <div className="text-xs text-foreground/50 truncate">
-                                            {[account.email, account.phone].filter(Boolean).join(" • ") || "—"}
+                            {pageItems.map((account) => {
+                                const isEditing = draft.id === account.id;
+                                return (
+                                    <div
+                                        key={account.id}
+                                        className={`grid grid-cols-1 items-center gap-2 px-3 py-2 text-[13px] transition-colors md:grid-cols-[1.1fr_1.4fr_1.1fr_82px_118px] ${
+                                            isEditing ? "bg-accent/10 ring-1 ring-inset ring-accent" : ""
+                                        }`}
+                                    >
+                                        <div className="font-medium">@{account.username}</div>
+                                        <div className="min-w-0">
+                                            <div className="truncate">{account.full_name}</div>
+                                            <div className="truncate text-[11px] text-foreground/50">
+                                                {[account.email, account.phone].filter(Boolean).join(" • ") || "—"}
+                                            </div>
+                                        </div>
+                                        <div className="truncate text-xs text-foreground/70">{account.school || "—"}</div>
+                                        <div>
+                                            <span className={`px-2 py-0.5 rounded text-[11px] ${account.role === "admin" ? "bg-red-500/15 text-red-400" : "bg-accent/15 text-accent"}`}>
+                                                {account.role === "admin" ? t("roleAdmin") : t("roleUser")}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-start gap-1.5 md:justify-end">
+                                            <Button size="sm" variant="save" icon={<Pencil className="w-3.5 h-3.5" />} onClick={() => edit(account)}>
+                                                {tCommon("edit")}
+                                            </Button>
+                                            <Button
+                                                size="sm"
+                                                variant="danger"
+                                                icon={<Trash2 className="w-3.5 h-3.5" />}
+                                                onClick={() => remove(account.id)}
+                                                isLoading={deletingId === account.id}
+                                                loadingText="..."
+                                            >
+                                                {tCommon("delete")}
+                                            </Button>
                                         </div>
                                     </div>
-                                    <div className="text-sm text-foreground/70 truncate">{account.school || "—"}</div>
-                                    <div>
-                                        <span className={`px-2 py-0.5 rounded text-xs ${account.role === "admin" ? "bg-red-500/15 text-red-400" : "bg-accent/15 text-accent"}`}>
-                                            {account.role === "admin" ? "Admin" : "User"}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-start md:justify-end gap-1.5">
-                                        <Button size="sm" variant="save" icon={<Pencil className="w-3.5 h-3.5" />} onClick={() => edit(account)}>
-                                            Sửa
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="danger"
-                                            icon={<Trash2 className="w-3.5 h-3.5" />}
-                                            onClick={() => remove(account.id)}
-                                            isLoading={deletingId === account.id}
-                                            loadingText="..."
-                                        >
-                                            Xoá
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     )}
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-(--border-color) px-3 py-2 text-xs text-foreground/60">
+                        <span>{t("showing", { shown: pageItems.length, total: filtered.length })}</span>
+                        <div className="flex items-center gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setPage((value) => Math.max(1, value - 1))}
+                                disabled={currentPage === 1}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded border border-(--border-color) disabled:opacity-40"
+                                aria-label={t("previousPage")}
+                            >
+                                <ChevronLeft className="h-4 w-4" />
+                            </button>
+                            <span>{t("pagination", { current: currentPage, total: totalPages })}</span>
+                            <button
+                                type="button"
+                                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+                                disabled={currentPage === totalPages}
+                                className="inline-flex h-7 w-7 items-center justify-center rounded border border-(--border-color) disabled:opacity-40"
+                                aria-label={t("nextPage")}
+                            >
+                                <ChevronRight className="h-4 w-4" />
+                            </button>
+                        </div>
+                    </div>
                 </section>
             </div>
         </div>
@@ -233,18 +364,22 @@ function Field({
     value,
     onChange,
     type = "text",
+    required = false,
 }: {
     label: string;
     value: string;
     onChange: (value: string) => void;
     type?: string;
+    required?: boolean;
 }) {
     return (
         <label className="block text-xs text-foreground/70">
             {label}
+            {required && <span className="ml-1 text-red-500">*</span>}
             <input
                 type={type}
                 value={value}
+                required={required}
                 onChange={(e) => onChange(e.target.value)}
                 className="mt-1 w-full rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-accent/50"
             />

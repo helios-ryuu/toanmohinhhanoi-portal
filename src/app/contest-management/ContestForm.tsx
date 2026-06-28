@@ -134,7 +134,7 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
     );
     const [maxTeamSize, setMaxTeamSize] = useState<number>(contest?.max_team_size ?? 1);
     const [status, setStatus] = useState<ContestStatus>(
-        // Map legacy values just in case
+        // Normalize stored participation values before editing.
         ((contest?.status as string) === "open" || (contest?.status as string) === "ongoing"
             ? "active"
             : contest?.status) as ContestStatus ?? "draft",

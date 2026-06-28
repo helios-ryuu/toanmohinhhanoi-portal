@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileText, Pencil, Plus, Search, Trash2, X as XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/features/admin/common/Button";
@@ -10,7 +10,6 @@ import type {
     DbContestRegistration,
     DbRegistrationMember,
     DbSubmission,
-    RegistrationStatus,
 } from "@/types/database";
 import type { User } from "@/types/user";
 
@@ -31,7 +30,6 @@ type TeamDraft = {
     team_code: string;
     team_name: string;
     level: string;
-    status: RegistrationStatus;
     leader_id: string;
     member_ids: string;
 };
@@ -40,7 +38,6 @@ const EMPTY_TEAM_DRAFT: TeamDraft = {
     team_code: "",
     team_name: "",
     level: "",
-    status: "approved",
     leader_id: "",
     member_ids: "",
 };
@@ -49,22 +46,6 @@ interface Props {
     contest: DbContest;
     onBack: () => void;
 }
-
-const STATUS_STYLES: Record<RegistrationStatus, string> = {
-    pending: "bg-yellow-500/20 text-yellow-500",
-    approved: "bg-green-500/20 text-green-500",
-    rejected: "bg-red-500/20 text-red-500",
-    withdrawn: "bg-foreground/10 text-foreground/60",
-};
-
-const FILTERS: Array<RegistrationStatus | "all"> = ["all", "pending", "approved", "rejected", "withdrawn"];
-
-const STATUS_ORDER: Record<RegistrationStatus, number> = {
-    pending: 0,
-    approved: 1,
-    rejected: 2,
-    withdrawn: 3,
-};
 
 function formatBytes(bytes: number): string {
     if (bytes < 1024) return `${bytes} B`;
@@ -113,7 +94,7 @@ function SubmissionRow({ sub }: { sub: DbSubmission }) {
                             {t("isFinal")}
                         </span>
                     )}
-                    {sub.note && <span className="ml-1 text-foreground/40 italic">"{sub.note}"</span>}
+                    {sub.note && <span className="ml-1 text-foreground/40 italic">&quot;{sub.note}&quot;</span>}
                 </div>
             </div>
             <button
@@ -133,25 +114,23 @@ function RegistrationCard({
     reg,
     submissions,
     actingId,
-    onSetStatus,
     onEdit,
     onDelete,
-    statusLabels,
+    isEditing,
 }: {
     reg: RegistrationWithMembers;
     submissions: DbSubmission[];
     actingId: number | null;
-    onSetStatus: (id: number, status: "approved" | "rejected") => Promise<void>;
     onEdit: (reg: RegistrationWithMembers) => void;
     onDelete: (id: number) => Promise<void>;
-    statusLabels: Record<RegistrationStatus, string>;
+    isEditing: boolean;
 }) {
     const t = useTranslations("registrations");
     const [expanded, setExpanded] = useState(false);
     const regSubs = submissions.filter((s) => s.registration_id === reg.id);
 
     return (
-        <div className="rounded-lg border border-(--border-color) bg-(--post-card) overflow-hidden">
+        <div className={`rounded-lg border bg-(--post-card) overflow-hidden transition-colors ${isEditing ? "border-accent shadow-[0_0_0_2px_rgba(31,81,255,0.14)]" : "border-(--border-color)"}`}>
             {/* Row header */}
             <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
                 <button
@@ -178,11 +157,6 @@ function RegistrationCard({
                                 {reg.level}
                             </span>
                         )}
-                        <span
-                            className={`px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-[4px] ${STATUS_STYLES[reg.status]}`}
-                        >
-                            {statusLabels[reg.status]}
-                        </span>
                         {regSubs.length > 0 && (
                             <span className="px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-[4px] bg-blue-500/20 text-blue-400">
                                 {t("submissionCount", { count: regSubs.length })}
@@ -195,30 +169,6 @@ function RegistrationCard({
                     </div>
                 </button>
 
-                {reg.status === "pending" && (
-                    <div className="flex gap-2 shrink-0">
-                        <Button
-                            size="sm"
-                            variant="publish"
-                            icon={<Check className="w-4 h-4" />}
-                            onClick={() => onSetStatus(reg.id, "approved")}
-                            isLoading={actingId === reg.id}
-                            loadingText="..."
-                        >
-                            {t("approve")}
-                        </Button>
-                        <Button
-                            size="sm"
-                            variant="danger"
-                            icon={<XIcon className="w-4 h-4" />}
-                            onClick={() => onSetStatus(reg.id, "rejected")}
-                            isLoading={actingId === reg.id}
-                            loadingText="..."
-                        >
-                            {t("reject")}
-                        </Button>
-                    </div>
-                )}
                 <div className="flex gap-2 shrink-0">
                     <Button size="sm" variant="save" icon={<Pencil className="w-4 h-4" />} onClick={() => onEdit(reg)}>
                         Sửa
@@ -300,28 +250,23 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
     const { showToast } = useToast();
     const t = useTranslations("registrations");
 
-    const statusLabels: Record<RegistrationStatus, string> = {
-        pending: t("statusPending"),
-        approved: t("statusApproved"),
-        rejected: t("statusRejected"),
-        withdrawn: t("statusWithdrawn"),
-    };
-
     const sortOptions = [
         { value: "newest", label: t("sortNewest") },
         { value: "oldest", label: t("sortOldest") },
-        { value: "status", label: t("sortStatus") },
+        { value: "code", label: t("sortCode") },
+        { value: "name", label: t("sortName") },
     ];
 
     const [regs, setRegs] = useState<RegistrationWithMembers[]>([]);
     const [accounts, setAccounts] = useState<User[]>([]);
     const [submissions, setSubmissions] = useState<DbSubmission[]>([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState<RegistrationStatus | "all">("all");
     const [actingId, setActingId] = useState<number | null>(null);
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("newest");
     const [draft, setDraft] = useState<TeamDraft>(EMPTY_TEAM_DRAFT);
+    const [glowForm, setGlowForm] = useState(false);
+    const formRef = useRef<HTMLDivElement>(null);
     const userOptions = accounts.filter((u) => u.role !== "admin");
 
     const refresh = useCallback(async () => {
@@ -371,33 +316,6 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
         };
     }, []);
 
-    async function setStatus(id: number, status: "approved" | "rejected") {
-        setActingId(id);
-        try {
-            const res = await fetch(`/api/admin/registrations/${id}`, {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ status }),
-            });
-            const ct = res.headers.get("content-type") ?? "";
-            if (!ct.includes("application/json")) {
-                throw new Error(
-                    res.status === 401 || res.status === 403
-                        ? t("sessionExpired")
-                        : t("serverError", { status: res.status }),
-                );
-            }
-            const json = await res.json();
-            if (!json.success) throw new Error(json.message || t("updateFailed"));
-            showToast("success", status === "approved" ? t("approveSuccess") : t("rejectSuccess"));
-            refresh();
-        } catch (err) {
-            showToast("error", err instanceof Error ? err.message : t("updateFailed"));
-        } finally {
-            setActingId(null);
-        }
-    }
-
     function editTeam(reg: RegistrationWithMembers) {
         const leader = reg.members.find((m) => m.role === "leader");
         const members = reg.members.filter((m) => m.role !== "leader").map((m) => m.user_id);
@@ -406,10 +324,12 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
             team_code: reg.team_code ?? "",
             team_name: reg.team_name ?? "",
             level: reg.level ?? "",
-            status: reg.status,
             leader_id: leader?.user_id ?? "",
             member_ids: members.join(", "),
         });
+        setGlowForm(true);
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        window.setTimeout(() => setGlowForm(false), 900);
     }
 
     async function saveTeam() {
@@ -433,7 +353,6 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                         team_code: draft.team_code,
                         team_name: draft.team_name || null,
                         level: draft.level || null,
-                        status: draft.status,
                         leader_id: draft.leader_id,
                         member_ids: memberIds,
                     }),
@@ -467,12 +386,14 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
     }
 
     const displayed = useMemo(() => {
-        let result = filter === "all" ? [...regs] : regs.filter((r) => r.status === filter);
+        let result = [...regs];
 
         if (search.trim()) {
             const q = search.trim().toLowerCase();
             result = result.filter((r) => {
                 if (r.team_name?.toLowerCase().includes(q)) return true;
+                if (r.team_code?.toLowerCase().includes(q)) return true;
+                if (r.level?.toLowerCase().includes(q)) return true;
                 return r.members.some(
                     (m) =>
                         m.users?.username?.toLowerCase().includes(q) ||
@@ -486,12 +407,13 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
         result.sort((a, b) => {
             if (sort === "oldest")
                 return new Date(a.registered_at).getTime() - new Date(b.registered_at).getTime();
-            if (sort === "status") return STATUS_ORDER[a.status] - STATUS_ORDER[b.status];
+            if (sort === "code") return a.team_code.localeCompare(b.team_code);
+            if (sort === "name") return (a.team_name ?? "").localeCompare(b.team_name ?? "");
             return new Date(b.registered_at).getTime() - new Date(a.registered_at).getTime();
         });
 
         return result;
-    }, [regs, filter, search, sort]);
+    }, [regs, search, sort]);
 
     return (
         <div>
@@ -510,10 +432,15 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                 <span className="text-xs text-foreground/40">— {t("panelTitle")}</span>
             </div>
 
-            <div className="mb-5 rounded-lg border border-(--border-color) bg-(--post-card) p-4">
+            <div
+                ref={formRef}
+                className={`mb-5 rounded-lg border bg-(--post-card) p-4 transition-shadow ${
+                    glowForm ? "border-accent shadow-[0_0_0_3px_rgba(31,81,255,0.16),0_0_34px_rgba(31,81,255,0.22)]" : "border-(--border-color)"
+                }`}
+            >
                 <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold uppercase tracking-widest">
-                        {draft.id ? "Sửa đội thi" : "Tạo đội thi"}
+                        {draft.id ? t("editTeamTitle", { code: draft.team_code }) : t("createTeamTitle")}
                     </h3>
                     {draft.id && (
                         <button
@@ -561,25 +488,15 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                         placeholder="Username hoặc ID thành viên, phân cách dấu phẩy"
                         className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none md:col-span-2"
                     />
-                    <select
-                        value={draft.status}
-                        onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as RegistrationStatus }))}
-                        className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none"
-                    >
-                        <option value="approved">Approved</option>
-                        <option value="pending">Pending</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="withdrawn">Withdrawn</option>
-                    </select>
                     <Button
                         variant="primary"
                         icon={draft.id ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                         onClick={saveTeam}
                         isLoading={actingId === (draft.id ?? -1)}
                         loadingText="..."
-                        className="md:col-span-2"
+                        className="md:col-span-3"
                     >
-                        {draft.id ? "Lưu đội" : "Tạo đội"}
+                        {draft.id ? t("saveTeam") : t("createTeam")}
                     </Button>
                 </div>
             </div>
@@ -606,30 +523,6 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                     ))}
                 </select>
             </div>
-
-            {/* Status filter chips */}
-            <div className="flex flex-wrap gap-2 mb-4">
-                {FILTERS.map((f) => {
-                    const active = filter === f;
-                    const count = f === "all" ? regs.length : regs.filter((r) => r.status === f).length;
-                    return (
-                        <button
-                            key={f}
-                            type="button"
-                            onClick={() => setFilter(f)}
-                            className={`px-3 py-1 rounded-full text-xs border transition-colors cursor-pointer ${
-                                active
-                                    ? "border-accent bg-accent/20 text-accent"
-                                    : "border-(--border-color) text-foreground/70 hover:border-(--border-color-hover) hover:bg-foreground/5"
-                            }`}
-                        >
-                            {f === "all" ? t("filterAll") : statusLabels[f]}
-                            <span className="ml-1.5 text-foreground/50">({count})</span>
-                        </button>
-                    );
-                })}
-            </div>
-
             {/* Content */}
             {loading ? (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-8 text-center text-sm text-foreground/60">
@@ -647,10 +540,9 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                             reg={r}
                             submissions={submissions}
                             actingId={actingId}
-                            onSetStatus={setStatus}
                             onEdit={editTeam}
                             onDelete={deleteTeam}
-                            statusLabels={statusLabels}
+                            isEditing={draft.id === r.id}
                         />
                     ))}
                 </div>

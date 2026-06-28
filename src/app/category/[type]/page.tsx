@@ -5,6 +5,7 @@ import { Metadata } from "next";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { listPosts } from "@/lib/posts-db";
 import { PostCard } from "@/components/features/post";
+import PageHeader from "@/components/layout/PageHeader";
 import type { PostCategory } from "@/types/database";
 
 const VALID_CATEGORIES: PostCategory[] = ["news", "announcement", "tutorial", "result"];
@@ -62,19 +63,18 @@ export default async function CategoryPage({ params }: Props) {
     const items = await getCachedCategoryPosts(category);
 
     return (
-        <div className="w-full py-4 px-4 md:px-10">
+        <div className="w-full px-4 py-8 md:px-10">
             <div className="max-w-6xl mx-auto">
                 <div className="flex items-center gap-3 mb-1">
                     <Link href="/post" className="text-xs text-foreground/60 hover:text-accent transition-colors">
                         ← Tất cả bài viết
                     </Link>
                 </div>
-                <h1 className="text-2xl font-bold tracking-widest text-accent uppercase">
-                    {CATEGORY_LABEL[category]}
-                </h1>
-                <p className="text-sm text-foreground/70 mt-0.5 mb-6">
-                    {CATEGORY_DESCRIPTION[category]}
-                </p>
+                <PageHeader
+                    title={CATEGORY_LABEL[category]}
+                    description={CATEGORY_DESCRIPTION[category]}
+                    className="mt-2"
+                />
 
                 {items.length === 0 ? (
                     <p className="mt-6 text-foreground/50">Chưa có bài viết nào trong mục này.</p>

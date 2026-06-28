@@ -3,6 +3,7 @@ import { getTranslations } from "next-intl/server";
 import { getAllPostsMeta, getAllTags, getAllLevels } from "@/lib/posts";
 import { PostListClient } from "@/components/features/post";
 import MobileSearchBar from "@/components/layout/MobileSearchBar";
+import PageHeader from "@/components/layout/PageHeader";
 import type { Level } from "@/types/post";
 import { unstable_cache } from "next/cache";
 
@@ -32,11 +33,9 @@ export default async function PostPage() {
             {/* Mobile Search Bar - below header */}
             <MobileSearchBar />
 
-            <div className="w-full py-4 px-4 md:px-10">
-                {/* Centered container */}
+            <div className="w-full px-4 py-8 md:px-10">
                 <div className="mx-auto">
-                    <h1 className="text-2xl font-bold text-left text-accent tracking-widest">{t("pageTitle")}</h1>
-                    <p className="text-sm mt-0.5 mb-4 text-foreground/70 text-left">{t("pageSubtitle")}</p>
+                    <PageHeader title={t("pageTitle")} description={t("pageSubtitle")} />
 
                     <Suspense fallback={<div>Loading...</div>}>
                         <PostListClient

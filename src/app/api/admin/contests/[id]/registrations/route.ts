@@ -37,7 +37,6 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
             member_ids,
             team_name: typeof body.team_name === "string" && body.team_name.trim() ? body.team_name.trim() : null,
             level: typeof body.level === "string" && body.level.trim() ? body.level.trim() : null,
-            status: body.status === "pending" || body.status === "approved" || body.status === "rejected" || body.status === "withdrawn" ? body.status : "approved",
         });
         return apiSuccess(created);
     } catch (err) {

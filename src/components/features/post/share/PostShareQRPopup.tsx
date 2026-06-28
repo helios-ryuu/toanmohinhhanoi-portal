@@ -218,7 +218,7 @@ export default function ShareQRPopup({
                 {/* QR Code Section */}
                 <div className="flex items-center justify-between mt-4 pt-2 border-t border-(--border-color)">
                     <div className="flex items-center ml-8 gap-2 text-xs text-foreground/60">
-                        <Image src="/favicon.ico" alt="Logo" width={26} height={26} className="rounded-sm" unoptimized />
+                        <Image src="/favicon.ico" alt="Toán Mô Hình Hà Nội" width={26} height={26} className="rounded-sm" unoptimized />
                         <span className="font-medium text-accent/80 tracking-widest text-[10px]">FIND OUT MORE:</span>
                     </div>
                     <div className="bg-[#fcfcfc] mr-12 p-1 rounded text-[#1a1a1a]">

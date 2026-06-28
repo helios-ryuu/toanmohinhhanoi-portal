@@ -6,10 +6,13 @@ import { Metadata } from "next";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { listPosts } from "@/lib/posts-db";
 import { PostCard } from "@/components/features/post";
+import PageHeader from "@/components/layout/PageHeader";
 
 interface Props {
     params: Promise<{ slug: string }>;
 }
+
+export const dynamic = "force-dynamic";
 
 const getCachedTagPosts = unstable_cache(
     async (slug: string) => {
@@ -26,12 +29,6 @@ const getCachedTagPosts = unstable_cache(
     ["tag-posts"],
     { revalidate: 60, tags: ["posts", "tags"] },
 );
-
-export async function generateStaticParams() {
-    const supabase = createSupabaseAdminClient();
-    const { data } = await supabase.from("tag").select("slug");
-    return ((data ?? []) as Array<{ slug: string }>).map((t) => ({ slug: t.slug }));
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
@@ -54,17 +51,18 @@ export default async function TagPage({ params }: Props) {
     const { tag, items } = data;
 
     return (
-        <div className="w-full py-4 px-4 md:px-10">
+        <div className="w-full px-4 py-8 md:px-10">
             <div className="max-w-6xl mx-auto">
                 <div className="flex items-center gap-3 mb-1">
                     <Link href="/post" className="text-xs text-foreground/60 hover:text-accent transition-colors">
                         ← Tất cả bài viết
                     </Link>
                 </div>
-                <h1 className="text-2xl font-bold tracking-widest text-accent">#{tag.name.toUpperCase()}</h1>
-                <p className="text-sm text-foreground/70 mt-0.5 mb-6">
-                    {items.length} bài viết với tag này
-                </p>
+                <PageHeader
+                    title={`#${tag.name}`}
+                    description={`${items.length} bài viết với tag này`}
+                    className="mt-2"
+                />
 
                 <Suspense fallback={<div className="text-foreground/60">Đang tải...</div>}>
                     {items.length === 0 ? (

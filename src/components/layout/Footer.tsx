@@ -18,23 +18,23 @@ export default function Footer({ transparent = false }: FooterProps) {
 
     return (
         <footer className={`flex-none border-t border-(--border-color) ${transparent ? "bg-transparent" : "bg-background"}`}>
-            <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 md:grid-cols-[1.2fr_1fr_1fr]">
+            <div className="mx-auto grid max-w-7xl gap-6 px-4 py-7 md:grid-cols-[1.2fr_1fr_1fr]">
                 <div>
                     <div className="flex items-center gap-3">
                         <Image src="/favicon.ico" alt="Toán Mô Hình Hà Nội" width={34} height={34} className="h-8 w-8" />
                         <div>
                             <div className="font-semibold text-foreground">Toán Mô Hình Hà Nội</div>
-                            <div className="text-xs text-foreground/50">Mathematical Modeling Hanoi</div>
+                            <div className="text-xs text-foreground/58">Mathematical Modeling Hanoi</div>
                         </div>
                     </div>
-                    <p className="mt-3 text-xs text-foreground/50">{t("copyright")}</p>
+                    <p className="mt-3 max-w-md text-xs leading-relaxed text-foreground/58">{t("copyright")}</p>
                 </div>
 
                 <div>
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground/60">{t("navigation")}</h3>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground/68">{t("navigation")}</h3>
                     <div className="grid grid-cols-2 gap-1">
                         {links.map((item) => (
-                            <Link key={item.href} href={item.href} className="text-sm text-foreground/65 hover:text-accent">
+                            <Link key={item.href} href={item.href} className="text-sm text-foreground/72 hover:text-accent">
                                 {tNav(item.labelKey)}
                             </Link>
                         ))}
@@ -42,11 +42,11 @@ export default function Footer({ transparent = false }: FooterProps) {
                 </div>
 
                 <div>
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground/60">{t("contact")}</h3>
-                    <div className="space-y-1 text-sm text-foreground/65">
-                        <div>{t("contactEmail")}</div>
-                        <div>{t("contactPhone")}</div>
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground/68">{t("contact")}</h3>
+                    <div className="space-y-1 text-sm text-foreground/72">
                         <div>{t("contactAddress")}</div>
+                        <div>{t("contactPhone")}</div>
+                        <div>{t("contactEmail")}</div>
                     </div>
                 </div>
             </div>

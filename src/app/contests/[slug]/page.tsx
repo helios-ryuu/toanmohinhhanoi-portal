@@ -7,7 +7,7 @@ import { getTranslations } from "next-intl/server";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getContestBySlug, listContests } from "@/lib/contests-db";
+import { getContestBySlug } from "@/lib/contests-db";
 import { mdxComponents } from "../../../../mdx-components";
 import {
     ContestStatusBadge,
@@ -15,11 +15,14 @@ import {
 } from "@/components/features/contest/ContestStatusBadge";
 import ContestCountdown from "@/components/features/contest/ContestCountdown";
 import ContestStageTimeline from "@/components/features/contest/ContestStageTimeline";
+import PageHeader from "@/components/layout/PageHeader";
 import type { ContestWithStages } from "@/types/database";
 
 interface Props {
     params: Promise<{ slug: string }>;
 }
+
+export const dynamic = "force-dynamic";
 
 const getCachedContest = unstable_cache(
     async (slug: string) => {
@@ -29,12 +32,6 @@ const getCachedContest = unstable_cache(
     ["public-contest"],
     { revalidate: 60, tags: ["contests"] },
 );
-
-export async function generateStaticParams() {
-    const supabase = createSupabaseAdminClient();
-    const contests = await listContests(supabase, {});
-    return contests.map((c) => ({ slug: c.slug }));
-}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
@@ -108,34 +105,25 @@ export default async function ContestDetailPage({ params }: Props) {
                 </div>
             )}
 
-            <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
                 <ContestStatusBadge status={contest.status} />
                 <ContestTypeBadge type={contest.participation_type} />
                 {contest.participation_type !== "individual" && (
-                    <span className="text-xs text-foreground/60">
+                    <span className="text-xs text-foreground/66">
                         {t("maxTeam", { count: contest.max_team_size })}
                     </span>
                 )}
             </div>
 
-            <h1 className="text-3xl font-bold tracking-wide mb-4">{contest.title}</h1>
+            <PageHeader title={contest.title} description={contest.description} />
 
             <div className="mb-6">
                 <ContestCountdown contest={contest} />
             </div>
 
-            <section className="mb-6">
-                <h2 className="text-sm font-bold tracking-widest text-foreground/80 uppercase mb-2">
-                    {t("intro")}
-                </h2>
-                <p className="text-sm text-foreground/80 whitespace-pre-line leading-relaxed">
-                    {contest.description}
-                </p>
-            </section>
-
             {rulesContent && (
                 <section className="mb-6">
-                    <h2 className="text-sm font-bold tracking-widest text-foreground/80 uppercase mb-2">
+                    <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                         {t("rules")}
                     </h2>
                     <div className="text-sm text-foreground/80 leading-relaxed">
@@ -145,31 +133,31 @@ export default async function ContestDetailPage({ params }: Props) {
             )}
 
             <section className="mb-6">
-                <h2 className="text-sm font-bold tracking-widest text-foreground/80 uppercase mb-2">
+                <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                     {t("timeline")}
                 </h2>
-                <div className="rounded-lg border border-(--border-color) bg-(--post-card) px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                        <div className="text-xs uppercase tracking-widest text-foreground/60">{t("grandStart")}</div>
+                        <div className="text-xs uppercase tracking-widest text-foreground/66">{t("grandStart")}</div>
                         <div className="text-sm">{formatDateTime(contest.start_at)}</div>
                     </div>
                     <div className="hidden sm:block text-foreground/30">→</div>
                     <div className="sm:text-right">
-                        <div className="text-xs uppercase tracking-widest text-foreground/60">{t("grandEnd")}</div>
+                        <div className="text-xs uppercase tracking-widest text-foreground/66">{t("grandEnd")}</div>
                         <div className="text-sm">{formatDateTime(contest.end_at)}</div>
                     </div>
                 </div>
             </section>
 
             <section className="mb-6">
-                <h2 className="text-sm font-bold tracking-widest text-foreground/80 uppercase mb-2">
+                <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                     {t("stages")}
                 </h2>
                 <ContestStageTimeline contest={contest} />
             </section>
 
             <section className="mb-6">
-                <h2 className="text-sm font-bold tracking-widest text-foreground/80 uppercase mb-2">
+                <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                     {t("participation")}
                 </h2>
                 <p className="text-sm text-foreground/80">
@@ -181,7 +169,7 @@ export default async function ContestDetailPage({ params }: Props) {
             </section>
 
             <section className="mt-8 border-t border-(--border-color) pt-6">
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-foreground/74">
                     Tài khoản, đội thi và thành viên được ban tổ chức cấp thủ công. Thí sinh đã được phân đội có thể
                     đăng nhập và nộp bài trong trang Cuộc thi của tôi khi vòng thi đang mở.
                 </p>

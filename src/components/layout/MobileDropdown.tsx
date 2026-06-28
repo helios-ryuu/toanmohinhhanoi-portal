@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSidebar } from "@/contexts/SidebarContext";
+import { useMobileMenu } from "@/contexts/MobileMenuContext";
 import { menuItems } from "@/config/navigation";
 import { useUser } from "@/contexts/UserContext";
 
 export default function MobileDropdown() {
-    const { isMobileOpen, setIsMobileOpen } = useSidebar();
+    const { isMobileOpen, setIsMobileOpen } = useMobileMenu();
     const pathname = usePathname();
     const { user } = useUser();
     const isAdmin = user?.role === "admin";

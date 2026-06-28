@@ -14,6 +14,7 @@ import {
     Pencil,
     X,
     Search,
+    FolderPlus,
     Folder,
     FolderOpen,
     ChevronRight,
@@ -84,9 +85,10 @@ export default function BucketManager({
     const [isLoading, setIsLoading] = useState(true);
     const [isUploading, setIsUploading] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [newFolderName, setNewFolderName] = useState("");
     const [selectedFile, setSelectedFile] = useState<BucketEntry | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-    const [renameState, setRenameState] = useState<{ from: string; to: string } | null>(null);
+    const [renameState, setRenameState] = useState<{ from: string; to: string; type: "file" | "folder" } | null>(null);
     const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -121,11 +123,36 @@ export default function BucketManager({
         setPrefix("");
         setSearchQuery("");
         setSelectedFile(null);
+        setRenameState(null);
     }
 
     function navigateInto(folder: BucketFolder) {
         setPrefix(folder.path);
         setSearchQuery("");
+    }
+
+    function pathInCurrentFolder(name: string) {
+        const cleanName = name.replace(/^\/+|\/+$/g, "");
+        return prefix ? `${prefix}/${cleanName}` : cleanName;
+    }
+
+    async function handleCreateFolder() {
+        const name = newFolderName.trim();
+        if (!name) return;
+        try {
+            const res = await fetch(`/api/admin/bucket?bucket=${bucket}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "create-folder", path: pathInCurrentFolder(name) }),
+            });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.message || t("createFolderError"));
+            showToast("success", t("createFolderSuccess"));
+            setNewFolderName("");
+            await fetchEntries();
+        } catch (e) {
+            showToast("error", e instanceof Error ? e.message : t("createFolderError"));
+        }
     }
 
     function navigateToCrumb(target: string) {
@@ -156,24 +183,24 @@ export default function BucketManager({
         }
     }
 
-    async function handleDelete(path: string) {
+    async function handleDelete(path: string, type: "file" | "folder" = "file") {
         try {
             const res = await fetch(`/api/admin/bucket?bucket=${bucket}`, {
                 method: "DELETE",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ path }),
+                body: JSON.stringify({ path, type }),
             });
             const json = await res.json();
             if (json.success) {
-                showToast("success", "File deleted");
+                showToast("success", type === "folder" ? t("folderDeleted") : t("fileDeleted"));
                 setSelectedFile(null);
                 setDeleteConfirm(null);
                 await fetchEntries();
             } else {
-                showToast("error", json.message || "Delete failed");
+                showToast("error", json.message || t("deleteFailed"));
             }
         } catch (e) {
-            showToast("error", e instanceof Error ? e.message : "Delete failed");
+            showToast("error", e instanceof Error ? e.message : t("deleteFailed"));
         }
     }
 
@@ -190,19 +217,19 @@ export default function BucketManager({
             const res = await fetch(`/api/admin/bucket?bucket=${bucket}`, {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ from: renameState.from, to: toBase }),
+                body: JSON.stringify({ from: renameState.from, to: toBase, type: renameState.type }),
             });
             const json = await res.json();
             if (json.success) {
-                showToast("success", "Renamed");
+                showToast("success", t("renameSuccess"));
                 setRenameState(null);
                 setSelectedFile(null);
                 await fetchEntries();
             } else {
-                showToast("error", json.message || "Rename failed");
+                showToast("error", json.message || t("renameFailed"));
             }
         } catch (e) {
-            showToast("error", e instanceof Error ? e.message : "Rename failed");
+            showToast("error", e instanceof Error ? e.message : t("renameFailed"));
         }
     }
 
@@ -310,6 +337,56 @@ export default function BucketManager({
                         className="w-full pl-8 pr-3 py-1.5 text-sm rounded-md border border-(--border-color) bg-background focus:outline-none focus:ring-2 focus:ring-accent/50"
                     />
                 </div>
+
+                {mode === "manage" && (
+                    <div className="flex flex-col gap-2 rounded-md border border-(--border-color) bg-foreground/5 p-2 sm:flex-row sm:items-center">
+                        <div className="flex min-w-0 flex-1 items-center gap-2">
+                            <FolderPlus size={15} className="shrink-0 text-accent" />
+                            <input
+                                value={newFolderName}
+                                onChange={(e) => setNewFolderName(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleCreateFolder();
+                                }}
+                                placeholder={t("newFolderPlaceholder")}
+                                className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+                            />
+                        </div>
+                        <Button variant="utility" size="sm" onClick={handleCreateFolder}>
+                            {t("createFolder")}
+                        </Button>
+                    </div>
+                )}
+
+                {renameState && (
+                    <div className="rounded-md border border-accent/40 bg-accent/10 p-2">
+                        <p className="mb-2 text-xs text-foreground/70">{t(renameState.type === "folder" ? "renameFolderTitle" : "newName")}</p>
+                        <div className="flex gap-2">
+                            <input
+                                value={renameState.to}
+                                onChange={(e) => setRenameState({ ...renameState, to: e.target.value })}
+                                className="min-w-0 flex-1 rounded-md border border-(--border-color) bg-background px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-accent/50"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") handleRename();
+                                    if (e.key === "Escape") setRenameState(null);
+                                }}
+                            />
+                            <Button variant="cancel" size="sm" onClick={() => setRenameState(null)}>{tCommon("cancel")}</Button>
+                            <Button variant="primary" size="sm" onClick={handleRename}>{tCommon("save")}</Button>
+                        </div>
+                    </div>
+                )}
+
+                {deleteConfirm && !selectedFile && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-red-500/30 bg-red-500/10 p-2">
+                        <span className="text-sm text-foreground/80">{t("deleteFolderConfirm")}</span>
+                        <div className="flex gap-2">
+                            <Button variant="cancel" size="sm" onClick={() => setDeleteConfirm(null)}>{tCommon("cancel")}</Button>
+                            <Button variant="danger" size="sm" onClick={() => handleDelete(deleteConfirm, "folder")}>{tCommon("delete")}</Button>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Body */}
@@ -323,20 +400,45 @@ export default function BucketManager({
             ) : (
                 <div className="rounded-lg border border-(--border-color) bg-(--post-card) divide-y divide-(--border-color)">
                     {filteredFolders.map((f) => (
-                        <button
+                        <div
                             key={f.path}
-                            onClick={() => navigateInto(f)}
-                            className="w-full flex items-center gap-3 p-3 hover:bg-foreground/5 transition-colors text-left cursor-pointer"
+                            className="w-full flex items-center gap-3 p-3 hover:bg-foreground/5 transition-colors text-left"
                         >
-                            <div className="w-10 h-10 rounded-md bg-foreground/5 flex items-center justify-center">
-                                <Folder size={18} className="text-accent" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-foreground truncate">{f.name}/</p>
-                                <p className="text-xs text-foreground/50">{t("folderLabel")}</p>
-                            </div>
-                            <ChevronRight size={16} className="text-foreground/40" />
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => navigateInto(f)}
+                                className="flex min-w-0 flex-1 items-center gap-3 text-left cursor-pointer"
+                            >
+                                <div className="w-10 h-10 rounded-md bg-foreground/5 flex items-center justify-center">
+                                    <Folder size={18} className="text-accent" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-foreground truncate">{f.name}/</p>
+                                    <p className="text-xs text-foreground/50 break-all">{f.path}</p>
+                                </div>
+                                <ChevronRight size={16} className="text-foreground/40" />
+                            </button>
+                            {mode === "manage" && (
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        type="button"
+                                        onClick={() => setRenameState({ from: f.path, to: f.name, type: "folder" })}
+                                        className="p-2 rounded-md hover:bg-foreground/10 text-foreground/50 hover:text-foreground"
+                                        title={t("rename")}
+                                    >
+                                        <Pencil size={15} />
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeleteConfirm(f.path)}
+                                        className="p-2 rounded-md hover:bg-red-500/10 text-red-400"
+                                        title={tCommon("delete")}
+                                    >
+                                        <Trash2 size={15} />
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     ))}
                     {filteredFiles.map((file) => (
                         <div
@@ -458,7 +560,7 @@ export default function BucketManager({
                             <p className="break-all"><span className="text-foreground/80">{t("filePath")}:</span> {selectedFile.path}</p>
                         </div>
 
-                        {renameState && renameState.from === selectedFile.path && (
+                        {renameState && renameState.from === selectedFile.path && renameState.type === "file" && (
                             <div className="mb-4">
                                 <p className="text-sm text-foreground/70 mb-2">{t("newName")}</p>
                                 <p className="text-yellow-500 text-xs mb-2">
@@ -487,7 +589,7 @@ export default function BucketManager({
                                 <p className="text-sm text-foreground font-medium mb-2">{t("deleteFileConfirm")}</p>
                                 <div className="flex gap-2">
                                     <Button variant="cancel" size="sm" onClick={() => setDeleteConfirm(null)}>{tCommon("cancel")}</Button>
-                                    <Button variant="danger" size="sm" onClick={() => handleDelete(selectedFile.path)}>{tCommon("delete")}</Button>
+                                    <Button variant="danger" size="sm" onClick={() => handleDelete(selectedFile.path, "file")}>{tCommon("delete")}</Button>
                                 </div>
                             </div>
                         )}
@@ -527,7 +629,7 @@ export default function BucketManager({
                                             variant="attention"
                                             size="sm"
                                             icon={<Pencil size={14} />}
-                                            onClick={() => setRenameState({ from: selectedFile.path, to: selectedFile.name })}
+                                            onClick={() => setRenameState({ from: selectedFile.path, to: selectedFile.name, type: "file" })}
                                         >
                                             {t("rename")}
                                         </Button>

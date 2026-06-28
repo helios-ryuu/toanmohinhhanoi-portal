@@ -2,7 +2,7 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Phiên bản hiện tại: v0.9.0**
+> **Phiên bản hiện tại: v1.0.0**
 
 ---
 
@@ -12,7 +12,7 @@ Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đ
 | :--- | :--- |
 | **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Turbopack, React Compiler) |
 | **UI** | [React 19](https://react.dev/) + [TypeScript 6](https://www.typescriptlang.org/) |
-| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) + [next-themes](https://github.com/pacocoursey/next-themes) |
+| **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) + [next-themes](https://github.com/pacocoursey/next-themes), Lexend |
 | **Backend** | [Supabase](https://supabase.com/) — Postgres + Storage, API tự kiểm quyền |
 | **Auth** | Session nội bộ bằng cookie HTTP-only, đăng nhập `username/password` |
 | **Supabase SDK** | `@supabase/supabase-js` |
@@ -59,8 +59,8 @@ toanmohinhhanoi-portal/
 │   │   └── page.tsx                # Trang chủ
 │   ├── components/
 │   │   ├── features/               # post, admin, ui
-│   │   └── layout/                 # Header, Sidebar, Footer, AppShell
-│   ├── contexts/                   # UserContext, SidebarContext
+│   │   └── layout/                 # Header, MobileDropdown, Footer, AppShell
+│   ├── contexts/                   # UserContext, MobileMenuContext
 │   ├── lib/
 │   │   ├── auth/                   # session cookie helpers
 │   │   ├── supabase/               # server.ts, admin.ts
@@ -71,7 +71,7 @@ toanmohinhhanoi-portal/
 │   │   ├── storage.ts              # Upload + signed URL
 │   │   └── api-helpers.ts          # { success, data, message } + revalidateTag
 │   ├── hooks/                      # usePostForm, useResizablePanel, usePostFormValidation
-│   ├── config/                     # navigation.ts (sidebar menu items)
+│   ├── config/                     # navigation.ts (menu items)
 │   ├── types/                      # user, database, post, contest, admin
 │   └── proxy.ts                    # Next.js 16 proxy (cũ: middleware)
 ├── package.json
@@ -160,10 +160,13 @@ DB helpers (src/lib/*-db.ts)
 Supabase (Postgres + Storage)
 ```
 
-## v0.9.0 Notes
+## v1.0.0 Notes
 
-- Người dùng không tự đăng ký hoặc đăng nhập Google nữa.
 - Admin cấp tài khoản tại `/admin/accounts`.
-- Admin tạo đội thi, mã đội, bảng thi và thành viên trong `/contest-management`.
+- `/admin/accounts` có tìm kiếm, filter, sort, pagination 50 và highlight row đang sửa.
+- Admin tạo đội thi, mã đội, bảng thi và thành viên trong `/contest-management`; không có bước duyệt đội.
 - Thí sinh chỉ đăng nhập để xem đội đã được cấp và nộp bài khi vòng nộp bài đang mở.
+- Bài nộp mới được lưu theo `contestSlug/TEAM_CODE/file`.
+- `/admin/bucket` hỗ trợ duyệt cây thư mục, tạo/đổi tên/xoá folder và file.
+- Homepage có `Bài viết nổi bật` và `Các cuộc thi`; accent chính là `#1F51FF`.
 - `password` đang được lưu plaintext theo yêu cầu vận hành nội bộ của phiên bản này.

@@ -1,4 +1,4 @@
-import { getPostBySlug, getAllPostsMeta, getRelatedPosts } from "@/lib/posts";
+import { getPostBySlug, getRelatedPosts } from "@/lib/posts";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { mdxComponents } from "../../../../mdx-components";
@@ -27,12 +27,7 @@ interface Props {
     params: Promise<{ slug: string }>;
 }
 
-export async function generateStaticParams() {
-    const posts = await getAllPostsMeta();
-    return posts.map((post) => ({
-        slug: post.slug,
-    }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const { slug } = await params;
@@ -145,7 +140,7 @@ export default async function BlogPostPage({ params }: Props) {
                     </div>
                 </article>
 
-                {/* Right Sidebar - Related Posts */}
+                {/* Related posts panel */}
                 <aside className="hidden xl:block w-62 flex-none h-full overflow-y-auto pt-6 pb-10 px-2">
                     <RelatedPosts posts={relatedPosts} />
                 </aside>

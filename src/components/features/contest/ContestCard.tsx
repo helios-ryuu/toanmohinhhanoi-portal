@@ -14,9 +14,9 @@ function formatDate(iso: string): string {
 }
 
 function stageChipClasses(stage: DbContestStage): string {
-    const base = "px-1.5 py-0.5 rounded text-[10px] tracking-wide whitespace-nowrap border ";
+    const base = "px-1.5 py-0.5 rounded-[4px] text-[10px] tracking-wide whitespace-nowrap border ";
     if (stage.allow_submission) return base + "bg-amber-500/10 text-amber-500 border-amber-500/30";
-    return base + "bg-foreground/5 text-foreground/60 border-(--border-color)";
+    return base + "bg-foreground/5 text-foreground/66 border-(--border-color)";
 }
 
 type CardContest = DbContest | ContestWithStages;
@@ -29,7 +29,7 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
     return (
         <Link
             href={`/contests/${contest.slug}`}
-            className="group flex flex-col rounded-xl border border-(--border-color) bg-(--post-card) hover:bg-(--post-card-hover) hover:border-(--border-color-hover) transition-colors overflow-hidden"
+            className="group flex flex-col rounded-[8px] border border-(--border-color) bg-(--post-card) hover:bg-(--post-card-hover) hover:border-(--border-color-hover) transition-colors overflow-hidden"
         >
             <div className="relative w-full h-40 bg-linear-to-br from-accent/20 via-background to-background-hover">
                 {contest.cover_image_url && (
@@ -50,7 +50,7 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
                 <div className="flex items-start gap-2 mb-2">
                     <ContestTypeBadge type={contest.participation_type} />
                     {contest.participation_type !== "individual" && (
-                        <span className="text-[10px] text-foreground/50 tracking-wider">
+                        <span className="text-[10px] text-foreground/58 tracking-wider">
                             Tối đa {contest.max_team_size} thành viên
                         </span>
                     )}
@@ -59,7 +59,7 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
                 <h2 className="font-semibold text-lg tracking-wide line-clamp-2 leading-tight group-hover:text-accent transition-colors">
                     {contest.title}
                 </h2>
-                <p className="text-xs text-foreground/70 mt-1 line-clamp-3 flex-1">
+                <p className="text-xs text-foreground/74 mt-1 line-clamp-3 flex-1">
                     {contest.description}
                 </p>
 
@@ -71,14 +71,14 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
                             </span>
                         ))}
                         {extra > 0 && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] text-foreground/50 border border-(--border-color)">
+                            <span className="px-1.5 py-0.5 rounded-[4px] text-[10px] text-foreground/58 border border-(--border-color)">
                                 +{extra}
                             </span>
                         )}
                     </div>
                 )}
 
-                <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-xs text-foreground/60">
+                <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-xs text-foreground/66">
                     <Calendar className="w-3.5 h-3.5 shrink-0" />
                     <span>
                         {formatDate(contest.start_at)} – {formatDate(contest.end_at)}

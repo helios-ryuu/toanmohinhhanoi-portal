@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, Clock, Users, Upload, FileText, CheckCircle2, RefreshCw, Trash2 } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
-import type { DbContest, DbContestStage, DbContestRegistration, DbRegistrationMember, DbSubmission, RegistrationStatus } from "@/types/database";
+import type { DbContest, DbContestStage, DbContestRegistration, DbRegistrationMember, DbSubmission } from "@/types/database";
 
 // ─── types ──────────────────────────────────────────────────────────────────
 
@@ -259,7 +259,6 @@ function SubmissionSection({ registration, onRefresh }: { registration: Registra
 // ─── MyContestsClient ────────────────────────────────────────────────────────
 
 export function MyContestsClient() {
-    const t = useTranslations("contests");
     const tMC = useTranslations("myContests");
     const [registrations, setRegistrations] = useState<RegistrationForProfile[]>([]);
     const [loading, setLoading] = useState(true);
@@ -324,13 +323,6 @@ export function MyContestsClient() {
                                         {reg.level && <span>{reg.level}</span>}
                                     </div>
                                 </div>
-                                <span className={`shrink-0 text-xs px-2 py-1 rounded-md border font-medium ${
-                                    reg.status === "approved" ? "bg-green-500/10 text-green-500 border-green-500/20" :
-                                    reg.status === "rejected" ? "bg-red-500/10 text-red-500 border-red-500/20" :
-                                    "bg-yellow-500/10 text-yellow-500 border-yellow-500/20"
-                                }`}>
-                                    {t(`status_${reg.status}` as `status_${RegistrationStatus}`)}
-                                </span>
                             </div>
 
                             {reg.registration_member?.length > 0 && (
@@ -347,9 +339,7 @@ export function MyContestsClient() {
                                 </div>
                             )}
 
-                            {reg.status === "approved" && (
-                                <SubmissionSection registration={reg} onRefresh={fetchRegs} />
-                            )}
+                            <SubmissionSection registration={reg} onRefresh={fetchRegs} />
                         </div>
                     ))}
                 </div>

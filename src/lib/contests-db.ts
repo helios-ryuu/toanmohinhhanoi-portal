@@ -369,7 +369,12 @@ export async function createRegistration(
 
     const { data: reg, error: regErr } = await supabase
         .from("contest_registration")
-        .insert({ contest_id: contest.id, team_name: teamName ?? null, status: "pending" })
+        .insert({
+            contest_id: contest.id,
+            team_code: `TEAM${Date.now().toString(36).toUpperCase()}`,
+            team_name: teamName ?? null,
+            status: "approved",
+        })
         .select("*")
         .single();
     if (regErr) throw new Error(regErr.message);
@@ -396,7 +401,6 @@ export interface AdminRegistrationInput {
     team_code: string;
     team_name?: string | null;
     level?: string | null;
-    status?: RegistrationStatus;
     leader_id: string;
     member_ids: string[];
 }
@@ -429,7 +433,7 @@ export async function createAdminRegistration(
             team_code: input.team_code.trim(),
             team_name: input.team_name ?? null,
             level: input.level ?? null,
-            status: input.status ?? "approved",
+            status: "approved",
         })
         .select("*")
         .single();
@@ -498,13 +502,13 @@ export async function isRegistrationLeader(
     return (data as { role: string } | null)?.role === "leader";
 }
 
-export async function isApprovedMember(
+export async function isRegistrationMember(
     supabase: SupabaseClient,
     registrationId: number,
     userId: string,
 ): Promise<boolean> {
     const reg = await getRegistration(supabase, registrationId);
-    if (!reg || reg.status !== "approved") return false;
+    if (!reg) return false;
     const { data } = await supabase
         .from("registration_member")
         .select("user_id")
@@ -521,8 +525,6 @@ export async function updateRegistrationTeam(
 ): Promise<DbContestRegistration> {
     const reg = await getRegistration(supabase, registrationId);
     if (!reg) throw new Error("registration not found");
-    if (reg.status !== "pending") throw new Error("can only edit pending registration");
-
     if (patch.member_ids) {
         const contest = await getContestById(supabase, reg.contest_id);
         if (!contest) throw new Error("contest not found");
@@ -578,7 +580,7 @@ export async function updateAdminRegistration(
     if (patch.team_code !== undefined) regPatch.team_code = patch.team_code;
     if (patch.team_name !== undefined) regPatch.team_name = patch.team_name;
     if (patch.level !== undefined) regPatch.level = patch.level;
-    if (patch.status !== undefined) regPatch.status = patch.status;
+    regPatch.status = "approved";
 
     if (Object.keys(regPatch).length === 0) return (await getRegistration(supabase, registrationId))!;
 
@@ -598,35 +600,6 @@ export async function deleteRegistration(
 ): Promise<void> {
     const { error } = await supabase.from("contest_registration").delete().eq("id", registrationId);
     if (error) throw new Error(error.message);
-}
-
-export async function withdrawRegistration(
-    supabase: SupabaseClient,
-    registrationId: number,
-): Promise<DbContestRegistration> {
-    const { data, error } = await supabase
-        .from("contest_registration")
-        .update({ status: "withdrawn" })
-        .eq("id", registrationId)
-        .select("*")
-        .single();
-    if (error) throw new Error(error.message);
-    return data as DbContestRegistration;
-}
-
-export async function setRegistrationStatus(
-    supabase: SupabaseClient,
-    registrationId: number,
-    status: "approved" | "rejected",
-): Promise<DbContestRegistration> {
-    const { data, error } = await supabase
-        .from("contest_registration")
-        .update({ status })
-        .eq("id", registrationId)
-        .select("*")
-        .single();
-    if (error) throw new Error(error.message);
-    return data as DbContestRegistration;
 }
 
 export async function listRegistrationsForContest(

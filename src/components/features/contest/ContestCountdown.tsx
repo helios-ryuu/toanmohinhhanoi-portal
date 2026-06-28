@@ -75,8 +75,8 @@ export default function ContestCountdown({ contest }: { contest: CountdownContes
 
     if (contest.status === "closed" || contest.status === "cancelled") {
         return (
-            <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-4">
-                <p className="text-sm text-foreground/70">
+            <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
+                <p className="text-sm text-foreground/74">
                     {contest.status === "closed" ? t("ended") : t("cancelled")}
                 </p>
             </div>
@@ -87,8 +87,8 @@ export default function ContestCountdown({ contest }: { contest: CountdownContes
     const milestone = pickMilestone(contest, stages, now, t);
     if (!milestone) {
         return (
-            <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-4">
-                <p className="text-sm text-foreground/70">{t("allMilestonesPassed")}</p>
+            <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
+                <p className="text-sm text-foreground/74">{t("allMilestonesPassed")}</p>
             </div>
         );
     }
@@ -96,8 +96,8 @@ export default function ContestCountdown({ contest }: { contest: CountdownContes
     const delta = milestone.target.getTime() - now.getTime();
 
     return (
-        <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-4">
-            <p className="text-xs uppercase tracking-widest text-foreground/60 mb-1">{milestone.label}</p>
+        <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
+            <p className="text-xs uppercase tracking-widest text-foreground/66 mb-1">{milestone.label}</p>
             <p className="text-accent font-mono text-lg sm:text-xl">{formatDelta(delta, locale)}</p>
         </div>
     );

@@ -29,12 +29,12 @@ export async function uploadPostImage(
 
 export async function uploadSubmissionFile(
     supabase: SupabaseClient,
-    args: { contestId: number; registrationId: number; file: File },
+    args: { contestSlug: string; teamCode: string; file: File },
 ): Promise<{ path: string }> {
-    const { contestId, registrationId, file } = args;
+    const { contestSlug, teamCode, file } = args;
     if (file.size <= 0) throw new Error("empty file");
     if (file.size > MAX_SUBMISSION_BYTES) throw new Error("file exceeds 5MB");
-    const path = `${contestId}/${registrationId}/${crypto.randomUUID()}_${safeName(file.name)}`;
+    const path = `${safeName(contestSlug)}/${safeName(teamCode)}/${crypto.randomUUID()}_${safeName(file.name)}`;
     const buffer = Buffer.from(await file.arrayBuffer());
     const { error } = await supabase.storage
         .from(SUBMISSION_BUCKET)

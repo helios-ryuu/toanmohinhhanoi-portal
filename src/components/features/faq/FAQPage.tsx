@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useUser } from "@/contexts/UserContext";
+import PageHeader from "@/components/layout/PageHeader";
 
 interface FAQItem {
     q: string;
@@ -14,7 +15,7 @@ function Accordion({ items }: { items: FAQItem[] }) {
     const [open, setOpen] = useState<number | null>(null);
 
     return (
-        <div className="divide-y divide-(--border-color) rounded-lg border border-(--border-color) bg-(--post-card) overflow-hidden">
+        <div className="divide-y divide-(--border-color) rounded-[8px] border border-(--border-color) bg-(--post-card) overflow-hidden">
             {items.map((item, i) => (
                 <div key={i}>
                     <button
@@ -30,7 +31,7 @@ function Accordion({ items }: { items: FAQItem[] }) {
                         )}
                     </button>
                     {open === i && (
-                        <div className="px-4 pb-4 text-sm text-foreground/70 leading-relaxed border-t border-(--border-color) pt-3">
+                        <div className="px-4 pb-4 text-sm text-foreground/74 leading-relaxed border-t border-(--border-color) pt-3">
                             {item.a}
                         </div>
                     )}
@@ -69,10 +70,7 @@ export default function FAQPage() {
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-            <header>
-                <h1 className="text-2xl font-bold tracking-widest text-accent">{t("pageTitle")}</h1>
-                <p className="text-sm text-foreground/70 mt-0.5">{t("pageSubtitle")}</p>
-            </header>
+            <PageHeader title={t("pageTitle")} description={t("pageSubtitle")} className="mb-0" />
 
             <section>
                 <h2 className="text-sm font-bold tracking-widest text-foreground/80 uppercase mb-3">

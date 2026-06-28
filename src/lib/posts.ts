@@ -1,6 +1,4 @@
-// Compat shim — Phase 2 transitional. New code should call lib/posts-db
-// helpers directly with a Supabase client. This module exists so the legacy
-// blog pages keep compiling while the frontend (M4) is rebuilt.
+// Public post helpers used by route segments and homepage cards.
 import { createSupabaseAdminClient } from "./supabase/admin";
 import { listPosts, getPostBySlug as dbGetPostBySlug } from "./posts-db";
 import type { DbPostWithRelations } from "@/types/database";
@@ -73,4 +71,3 @@ export async function getRelatedPosts(
         .slice(0, limit)
         .map((x) => x.p);
 }
-

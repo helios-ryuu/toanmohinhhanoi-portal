@@ -3,16 +3,14 @@
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Header from "@/components/layout/Header";
-import Sidebar from "@/components/layout/Sidebar";
 import Footer from "@/components/layout/Footer";
 import Banner from "@/components/layout/Banner";
 import NavigationPanel from "@/components/layout/NavigationPanel";
-import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
+import { MobileMenuProvider } from "@/contexts/MobileMenuContext";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/Toast";
 import { UserProvider } from "@/contexts/UserContext";
-import { Button } from "@/components/ui";
-import DotGrid from "@/components/ui/DotGrid";
+import { Button, PixelBlast } from "@/components/ui";
 
 const BANNER_LINK = {
     app: "facebook",
@@ -20,32 +18,30 @@ const BANNER_LINK = {
 } as const;
 
 function AppShellContent({ children }: { children: React.ReactNode }) {
-    const { isPinned } = useSidebar();
     const pathname = usePathname();
     const tCommon = useTranslations("common");
     const isHomePage = pathname === "/";
-
     const isPostPage = pathname.startsWith("/post/");
-
-    // Hide sidebar entirely on the dedicated post editor routes so the form can use full width.
-    const isPostEditorRoute =
-        pathname === "/admin/posts/new" || /^\/admin\/posts\/[^/]+\/edit$/.test(pathname);
-    const showSidebar = !isPostPage && !isPostEditorRoute;
 
     return (
         <div className="flex flex-col min-h-screen md:h-screen md:overflow-hidden relative">
-            {/* DotGrid Background - only on home page */}
+            {/* PixelBlast Background - only on home page */}
             {isHomePage && (
-                <div className="absolute top-0 left-0 w-full h-full z-0">
-                    <DotGrid
-                        dotSize={6}
-                        gap={20}
-                        proximity={150}
-                        shockRadius={200}
-                        shockStrength={5}
-                        resistance={750}
-                        returnDuration={1.5}
-                        useCssVars
+                <div className="pointer-events-none absolute inset-0 z-0 opacity-90">
+                    <PixelBlast
+                        variant="square"
+                        pixelSize={4}
+                        color="#0e31a3" 
+                        patternScale={2}
+                        patternDensity={0.85}
+                        pixelSizeJitter={0.12}
+                        enableRipples
+                        rippleSpeed={0.4}
+                        rippleThickness={0.12}
+                        rippleIntensityScale={1.45}
+                        speed={0.8}
+                        edgeFade={0.24}
+                        transparent
                     />
                 </div>
             )}
@@ -53,12 +49,12 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
 
             <div className="relative z-10">
                 <Banner
-                    gradient="linear-gradient(to right, #f59e0b, #ea580c, #dc2626)"
+                    gradient="linear-gradient(to right, #0bb3f5, #0c5aea, #4724c7)"
                     content={
                         <>
                             <span className="text-xs mr-2">{tCommon("bannerText")}</span>
                             <Button
-                                    className="bg-yellow-600 border-yellow-500 text-white hover:bg-yellow-400 hover:border-yellow-500"
+                                    className="bg-green-600 border-green-500 text-white hover:bg-green-400 hover:border-green-500"
                                     onClick={() => {
                                         const { webUrl, appUrl } = BANNER_LINK[BANNER_LINK.app];
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -78,20 +74,14 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                 />
             </div>
 
-            {/* Display container - contains header, sidebar, main */}
+            {/* Display container - contains header, nav, main */}
             <div className="relative z-10 flex-1 flex flex-col md:min-h-0">
                 {/* Header - fixed height */}
                 <Header noBorder={false} showMobileMenu={false} transparent={false} isHomePage={isHomePage} />
                 <NavigationPanel />
 
-                {/* Content area - sidebar + main */}
-                <div className="relative flex-1 flex md:min-h-0">
-
-                    {/* Sidebar - hidden on mobile, full height on desktop */}
-                    {showSidebar && <Sidebar />}
-
-                    {/* Main space - scrollable */}
-                    <main className={`flex-1 overflow-auto ${isHomePage ? "bg-transparent" : "bg-background"} ${showSidebar && !isPinned ? "md:ml-10" : ""} ${isPostPage ? "lg:overflow-hidden" : ""}`}>
+                <div className="relative flex-1 md:min-h-0">
+                    <main className={`h-full overflow-auto ${isHomePage ? "bg-transparent" : "bg-background"} ${isPostPage ? "lg:overflow-hidden" : ""}`}>
                         <div className={`${isPostPage ? "h-full" : "min-h-full"} flex flex-col ${!isPostPage ? "pb-[env(safe-area-inset-bottom)]" : ""}`}>
                             <div className="flex-1 min-h-0">{children}</div>
                             <Footer transparent={false} />
@@ -107,11 +97,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return (
         <ThemeProvider attribute="class" defaultTheme="dark" storageKey="helios-blog-theme" enableSystem={false}>
             <UserProvider>
-                <SidebarProvider>
+                <MobileMenuProvider>
                     <ToastProvider>
                         <AppShellContent>{children}</AppShellContent>
                     </ToastProvider>
-                </SidebarProvider>
+                </MobileMenuProvider>
             </UserProvider>
         </ThemeProvider>
     );

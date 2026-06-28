@@ -20,6 +20,10 @@ function safeFileName(name: string): string {
         .replace(/-+/g, "-");
 }
 
+function cleanPath(path: string): string {
+    return path.replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
+}
+
 interface StorageEntry {
     name: string;
     id: string | null;
@@ -27,6 +31,32 @@ interface StorageEntry {
     created_at: string | null;
     last_accessed_at?: string | null;
     metadata: { size?: number; mimetype?: string } | null;
+}
+
+async function listFilesRecursive(
+    supabase: ReturnType<typeof createSupabaseAdminClient>,
+    bucket: BucketName,
+    prefix: string,
+): Promise<string[]> {
+    const cleanPrefix = cleanPath(prefix);
+    const { data, error } = await supabase.storage.from(bucket).list(cleanPrefix, {
+        limit: 1000,
+        offset: 0,
+        sortBy: { column: "name", order: "asc" },
+    });
+    if (error) throw new Error(error.message);
+
+    const paths: string[] = [];
+    for (const entry of (data ?? []) as StorageEntry[]) {
+        const fullPath = cleanPrefix ? `${cleanPrefix}/${entry.name}` : entry.name;
+        const isFolder = entry.id === null && entry.metadata === null;
+        if (isFolder) {
+            paths.push(...await listFilesRecursive(supabase, bucket, fullPath));
+        } else {
+            paths.push(fullPath);
+        }
+    }
+    return paths;
 }
 
 // GET — list entries (files + folders) under a prefix.
@@ -67,6 +97,8 @@ export async function GET(req: NextRequest) {
 
             if (isFolder) {
                 folders.push({ name: entry.name, path: fullPath });
+            } else if (entry.name === ".keep") {
+                continue;
             } else {
                 const { data: pub } = supabase.storage.from(bucket).getPublicUrl(fullPath);
                 files.push({
@@ -87,23 +119,41 @@ export async function GET(req: NextRequest) {
     }
 }
 
-// POST — upload a file (multipart/form-data).
+// POST — upload a file (multipart/form-data) or create a folder (JSON).
 // form: file (File), prefix? (string)
+// json: { action: "create-folder", path: string }
 export async function POST(req: NextRequest) {
     try {
         await requireAdmin();
         const bucket = pickBucket(req);
         if (!bucket) return apiError("Invalid bucket", 400);
 
+        const contentType = req.headers.get("content-type") ?? "";
+        const supabase = createSupabaseAdminClient();
+
+        if (contentType.includes("application/json")) {
+            const body = await req.json().catch(() => ({}));
+            if (body.action !== "create-folder" || typeof body.path !== "string") {
+                return apiError("action=create-folder and path required", 400);
+            }
+            const folderPath = cleanPath(body.path);
+            if (!folderPath) return apiError("path required", 400);
+            const keepPath = `${folderPath}/.keep`;
+            const { error } = await supabase.storage
+                .from(bucket)
+                .upload(keepPath, Buffer.from(""), { contentType: "text/plain", upsert: true });
+            if (error) return apiError(error.message, 500);
+            return apiSuccess({ path: folderPath });
+        }
+
         const form = await req.formData();
         const file = form.get("file");
-        const prefix = (form.get("prefix") as string | null)?.replace(/^\/+|\/+$/g, "") ?? "";
+        const prefix = cleanPath((form.get("prefix") as string | null) ?? "");
         if (!(file instanceof File)) return apiError("file required", 400);
 
         const fileName = `${Date.now()}-${safeFileName(file.name)}`;
         const path = prefix ? `${prefix}/${fileName}` : fileName;
 
-        const supabase = createSupabaseAdminClient();
         const buffer = Buffer.from(await file.arrayBuffer());
         const { error } = await supabase.storage
             .from(bucket)
@@ -117,44 +167,64 @@ export async function POST(req: NextRequest) {
     }
 }
 
-// DELETE — remove a file. body: { path: string }
+// DELETE — remove a file or a folder. body: { path: string, type?: "file" | "folder" }
 export async function DELETE(req: NextRequest) {
     try {
         await requireAdmin();
         const bucket = pickBucket(req);
         if (!bucket) return apiError("Invalid bucket", 400);
 
-        const { path } = await req.json();
+        const { path, type } = await req.json();
         if (!path || typeof path !== "string") return apiError("path required", 400);
 
         const supabase = createSupabaseAdminClient();
-        const { error } = await supabase.storage.from(bucket).remove([path]);
+        const targets = type === "folder" ? await listFilesRecursive(supabase, bucket, path) : [cleanPath(path)];
+        if (targets.length === 0) return apiSuccess({ path, removed: 0 });
+        const { error } = await supabase.storage.from(bucket).remove(targets);
         if (error) return apiError(error.message, 500);
 
-        return apiSuccess({ path });
+        return apiSuccess({ path, removed: targets.length });
     } catch (err) {
         return handleRouteError(err);
     }
 }
 
-// PATCH — rename a file (copy + delete). body: { from: string, to: string }
+// PATCH — rename a file or folder (copy + delete).
+// body: { from: string, to: string, type?: "file" | "folder" }
 export async function PATCH(req: NextRequest) {
     try {
         await requireAdmin();
         const bucket = pickBucket(req);
         if (!bucket) return apiError("Invalid bucket", 400);
 
-        const { from, to } = await req.json();
+        const { from, to, type } = await req.json();
         if (!from || !to) return apiError("from and to required", 400);
 
         const supabase = createSupabaseAdminClient();
-        const { error: copyErr } = await supabase.storage.from(bucket).copy(from, to);
+        const cleanFrom = cleanPath(from);
+        const cleanTo = cleanPath(to);
+
+        if (type === "folder") {
+            const targets = await listFilesRecursive(supabase, bucket, cleanFrom);
+            for (const oldPath of targets) {
+                const nextPath = `${cleanTo}/${oldPath.slice(cleanFrom.length).replace(/^\/+/, "")}`;
+                const { error } = await supabase.storage.from(bucket).copy(oldPath, nextPath);
+                if (error) return apiError(error.message, 500);
+            }
+            if (targets.length > 0) {
+                const { error } = await supabase.storage.from(bucket).remove(targets);
+                if (error) return apiError(error.message, 500);
+            }
+            return apiSuccess({ path: cleanTo, moved: targets.length });
+        }
+
+        const { error: copyErr } = await supabase.storage.from(bucket).copy(cleanFrom, cleanTo);
         if (copyErr) return apiError(copyErr.message, 500);
-        const { error: removeErr } = await supabase.storage.from(bucket).remove([from]);
+        const { error: removeErr } = await supabase.storage.from(bucket).remove([cleanFrom]);
         if (removeErr) return apiError(removeErr.message, 500);
 
-        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(to);
-        return apiSuccess({ path: to, publicUrl: pub.publicUrl });
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(cleanTo);
+        return apiSuccess({ path: cleanTo, publicUrl: pub.publicUrl });
     } catch (err) {
         return handleRouteError(err);
     }

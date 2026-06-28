@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
     getRegistration,
-    isApprovedMember,
+    isRegistrationMember,
     getContestById,
     createSubmission,
     listStages,
@@ -32,8 +32,8 @@ export async function POST(req: NextRequest) {
         const reg = await getRegistration(supabase, registrationId);
         if (!reg) return apiError("registration not found", 404);
 
-        const approved = await isApprovedMember(supabase, registrationId, current.profile.id);
-        if (!approved) return apiError("Forbidden", 403);
+        const member = await isRegistrationMember(supabase, registrationId, current.profile.id);
+        if (!member) return apiError("Forbidden", 403);
 
         const contest = await getContestById(supabase, reg.contest_id);
         if (!contest) return apiError("contest not found", 404);
@@ -57,8 +57,8 @@ export async function POST(req: NextRequest) {
         }
 
         const { path } = await uploadSubmissionFile(supabase, {
-            contestId: reg.contest_id,
-            registrationId,
+            contestSlug: contest.slug,
+            teamCode: reg.team_code,
             file,
         });
 

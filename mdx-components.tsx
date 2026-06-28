@@ -1,8 +1,11 @@
-import type { MDXComponents } from "mdx/types";
 import CodeBlock from "@/components/ui/CodeBlock";
 import Image from "next/image";
 import { Info, Lightbulb, AlertCircle, AlertTriangle, ShieldAlert } from "lucide-react";
-import type { ReactNode } from "react";
+import type { ComponentType, JSX, ReactNode } from "react";
+
+type MDXComponents = {
+    [Key in keyof JSX.IntrinsicElements]?: (props: JSX.IntrinsicElements[Key]) => ReactNode;
+} & Record<string, ComponentType<any> | ((props: any) => ReactNode)>;
 
 // Helper to create URL-friendly slug from text
 function slugify(text: string): string {
@@ -141,7 +144,7 @@ function Video({ src, title }: { src: string; title?: string }) {
     );
 }
 
-export function useMDXComponents(components: MDXComponents): MDXComponents {
+export function createMDXComponents(components: MDXComponents = {}): MDXComponents {
     return {
         h1: ({ children }) => (
             <h1 className="text-4xl font-bold mt-8 mb-4">{children}</h1>
@@ -276,7 +279,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
             </a>
         ),
         img: ({ src, alt }) => {
-            if (!src) return null;
+            if (!src || typeof src !== "string") return null;
             // Check if external URL
             const isExternal = src.startsWith('http://') || src.startsWith('https://');
             if (isExternal) {
@@ -306,4 +309,4 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
 
 // Pre-built components object for use in async Server Components
 // eslint-disable-next-line react-hooks/rules-of-hooks
-export const mdxComponents = useMDXComponents({});
+export const mdxComponents = createMDXComponents();

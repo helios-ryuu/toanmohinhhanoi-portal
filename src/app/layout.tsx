@@ -1,20 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Lexend, Fira_Code } from "next/font/google";
+import { Lexend } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import AppShell from "@/components/layout/AppShell";
 
 const lexend = Lexend({
+  subsets: ["latin", "vietnamese"],
   variable: "--font-lexend",
-  subsets: ["latin"],
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
-});
-
-const firaCode = Fira_Code({
-  variable: "--font-fira-code",
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -58,7 +52,7 @@ export default async function RootLayout({
   const messages = await getMessages();
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${lexend.variable} ${firaCode.variable} antialiased max-h-screen`}>
+      <body className={`${lexend.variable} antialiased max-h-screen`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppShell>{children}</AppShell>
         </NextIntlClientProvider>
