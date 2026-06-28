@@ -68,15 +68,15 @@ export function SectionCard({
 }: SectionCardProps) {
     // Color classes based on variant
     const colorClasses = {
-        accent: "bg-accent/10 hover:bg-accent/20 border-accent/30",
-        blue: "bg-blue-500/10 hover:bg-blue-500/20 border-blue-500/30",
-        red: "bg-red-500/10 hover:bg-red-500/20 border-red-500/30",
+        accent: "bg-accent/20 hover:bg-accent/35 border-accent/30",
+        blue: "bg-blue-500/20 hover:bg-blue-500/35 border-blue-500/30",
+        red: "bg-red-500/20 hover:bg-red-500/35 border-red-500/30",
     };
 
     const iconColorClasses = {
-        accent: "bg-accent/20 text-accent",
-        blue: "bg-blue-500/20 text-blue-500",
-        red: "bg-red-500/20 text-red-500",
+        accent: "bg-accent/30 text-accent",
+        blue: "bg-blue-500/30 text-blue-500",
+        red: "bg-red-500/30 text-red-500",
     };
 
     // Clickable card variant (for Create section)

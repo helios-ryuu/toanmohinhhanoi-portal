@@ -10,8 +10,10 @@ export type MemberRole = "leader" | "member";
 export interface DbUser {
     id: string;
     username: string;
-    display_name: string | null;
-    bio: string | null;
+    password: string;
+    full_name: string;
+    email: string | null;
+    phone: string | null;
     school: string | null;
     role: UserRoleDb;
     created_at: string;
@@ -86,7 +88,9 @@ export type ContestWithStages = DbContest & { stages: DbContestStage[] };
 export interface DbContestRegistration {
     id: number;
     contest_id: number;
+    team_code: string;
     team_name: string | null;
+    level: string | null;
     status: RegistrationStatus;
     registered_at: string;
     updated_at: string | null;
@@ -112,7 +116,7 @@ export interface DbSubmission {
     is_final: boolean;
 }
 
-// Minimal Supabase Database typings used by @supabase/ssr generics.
+// Minimal Supabase Database typings used by supabase-js helpers.
 type Row<T> = T;
 type Insert<T> = Partial<T>;
 type Update<T> = Partial<T>;

@@ -22,7 +22,9 @@
         "home": "Home",
         "posts": "Posts",
         "contests": "Contests",
+        "about": "About",
         "adminWorkspace": "Admin Workspace",
+        "accounts": "Account Management",
         "faq": "Q&A",
         "bucket": "Bucket Management",
         "contestManagement": "Contest Management",
@@ -45,7 +47,12 @@
         "viewAll": "View all"
     },
     "footer": {
-        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.8.6"
+        "copyright": "© 2026 Helios and Toan Mo Hinh Ha Noi. All rights reserved. Portal v0.9.0",
+        "navigation": "Navigation",
+        "contact": "Contact",
+        "contactEmail": "Email: contact@toanmohinhhanoi.vn (placeholder)",
+        "contactPhone": "Phone: To be updated",
+        "contactAddress": "Address: Hanoi, Vietnam"
     },
     "post": {
         "pageTitle": "POSTS",

@@ -78,22 +78,6 @@ export default async function Home() {
             })}
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-3 mt-8">
-            <Link
-              href="/post"
-              className="group flex items-center gap-2 px-5 py-2.5 rounded-full border border-accent bg-accent/20 text-accent text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-all"
-            >
-              {t("explorePosts")}
-              <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-            </Link>
-            <Link
-              href="/contests"
-              className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-(--border-color) text-foreground/70 text-sm font-medium hover:border-foreground/30 hover:text-foreground transition-all"
-            >
-              <Trophy className="w-4 h-4" />
-              {t("contestsBtn")}
-            </Link>
-          </div>
         </div>
       </section>
 

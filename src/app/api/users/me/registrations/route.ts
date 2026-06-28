@@ -22,7 +22,7 @@ export async function GET() {
 
         const { data, error: errReg } = await supabase
             .from("contest_registration")
-            .select("*, contest(*, contest_stage(*)), registration_member(*, users(username)), submission(*)")
+            .select("*, contest(*, contest_stage(*)), registration_member(*, users(username, full_name)), submission(*)")
             .in("id", regIds)
             .order("registered_at", { ascending: false });
 

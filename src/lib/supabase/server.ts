@@ -1,51 +1,26 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DbUser } from "@/types/database";
-
-interface CookieToSet {
-    name: string;
-    value: string;
-    options?: CookieOptions;
-}
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { SESSION_COOKIE, verifySessionToken } from "@/lib/auth/session";
 
 export async function createSupabaseServerClient(): Promise<SupabaseClient> {
-    const cookieStore = await cookies();
-
-    return createServerClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                getAll() {
-                    return cookieStore.getAll();
-                },
-                setAll(toSet: CookieToSet[]) {
-                    try {
-                        toSet.forEach(({ name, value, options }) => {
-                            cookieStore.set(name, value, options as CookieOptions);
-                        });
-                    } catch {
-                        // Called from a Server Component — middleware handles refresh.
-                    }
-                },
-            },
-        },
-    );
+    return createSupabaseAdminClient();
 }
 
-export async function getCurrentUser(): Promise<{ authUser: { id: string; email?: string }; profile: DbUser } | null> {
-    const supabase = await createSupabaseServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+export async function getCurrentUser(): Promise<{ profile: DbUser } | null> {
+    const cookieStore = await cookies();
+    const session = await verifySessionToken(cookieStore.get(SESSION_COOKIE)?.value);
+    if (!session) return null;
 
+    const supabase = createSupabaseAdminClient();
     const { data: profile } = await supabase
         .from("users")
         .select("*")
-        .eq("id", user.id)
-        .single();
+        .eq("id", session.userId)
+        .maybeSingle();
 
-    return profile ? { authUser: user, profile: profile as DbUser } : null;
+    return profile ? { profile: profile as DbUser } : null;
 }
 
 export async function requireAuth() {

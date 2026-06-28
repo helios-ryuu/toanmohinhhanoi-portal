@@ -16,7 +16,7 @@ interface ContestWithStages extends DbContest {
 interface MemberWithUser extends DbRegistrationMember {
     users?: {
         username: string;
-        display_name: string | null;
+        full_name: string;
     };
 }
 
@@ -320,6 +320,8 @@ export function MyContestsClient() {
                                                 {tMC("team")} {reg.team_name}
                                             </span>
                                         )}
+                                        {reg.team_code && <span>{reg.team_code}</span>}
+                                        {reg.level && <span>{reg.level}</span>}
                                     </div>
                                 </div>
                                 <span className={`shrink-0 text-xs px-2 py-1 rounded-md border font-medium ${
@@ -337,7 +339,8 @@ export function MyContestsClient() {
                                     <div className="flex flex-wrap gap-2">
                                         {reg.registration_member.map((m) => (
                                             <span key={m.user_id} className="text-xs px-2 py-1 rounded bg-foreground/5 border border-(--border-color)">
-                                                {m.users?.username || tMC("anonymous")} {m.role === "leader" && "👑"}
+                                                {m.users?.full_name || m.users?.username || tMC("anonymous")}
+                                                {m.role === "leader" && <span className="ml-1 text-accent">Leader</span>}
                                             </span>
                                         ))}
                                     </div>

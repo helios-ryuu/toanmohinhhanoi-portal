@@ -2,7 +2,7 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Phiên bản hiện tại: v0.8.6.**
+> **Phiên bản hiện tại: v0.9.0**
 
 ---
 
@@ -11,10 +11,11 @@ Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đ
 | Hạng mục | Công nghệ |
 | :--- | :--- |
 | **Framework** | [Next.js 16](https://nextjs.org/) (App Router, Turbopack, React Compiler) |
-| **UI** | [React 19](https://react.dev/) + [TypeScript 5](https://www.typescriptlang.org/) |
+| **UI** | [React 19](https://react.dev/) + [TypeScript 6](https://www.typescriptlang.org/) |
 | **Styling** | [Tailwind CSS 4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) + [next-themes](https://github.com/pacocoursey/next-themes) |
-| **Backend** | [Supabase](https://supabase.com/) — Postgres + Auth (Google) + Storage |
-| **Supabase SDK** | `@supabase/supabase-js`, `@supabase/ssr` |
+| **Backend** | [Supabase](https://supabase.com/) — Postgres + Storage, API tự kiểm quyền |
+| **Auth** | Session nội bộ bằng cookie HTTP-only, đăng nhập `username/password` |
+| **Supabase SDK** | `@supabase/supabase-js` |
 | **Content** | [MDX](https://mdxjs.com/) qua `next-mdx-remote` + [Shiki](https://shiki.style/) + `rehype-pretty-code` |
 | **Animation** | [Framer Motion](https://www.framer.com/motion/), [GSAP](https://gsap.com/) |
 | **Icons** | [Lucide React](https://lucide.dev/) |
@@ -33,21 +34,23 @@ toanmohinhhanoi-portal/
 ├── src/
 │   ├── app/
 │   │   ├── api/
-│   │   │   ├── auth/               # callback, logout, me (returns email + profile)
+│   │   │   ├── auth/               # login, logout, me
 │   │   │   ├── users/              # [id], me (GET + PATCH with length validation)
 │   │   │   ├── posts/              # GET list, GET [slug]
 │   │   │   ├── tags/               # GET
-│   │   │   ├── contests/           # GET list, GET [slug], [slug]/register
+│   │   │   ├── contests/           # GET list, GET [slug]
 │   │   │   ├── submissions/        # POST, mark-final, download
 │   │   │   ├── search/             # title + description search
-│   │   │   └── admin/              # posts, tags, uploads, contests, registrations
+│   │   │   └── admin/              # accounts, posts, tags, uploads, contests, teams
 │   │   ├── admin/                  # Dashboard quản trị (role = 'admin')
 │   │   │   ├── bucket/             # Quản lý Storage bucket
+│   │   │   ├── accounts/           # Quản lý tài khoản
 │   │   │   ├── database/           # Xem dữ liệu DB
 │   │   │   └── posts/              # Tạo / sửa bài viết (new, [id]/edit)
-│   │   ├── auth/                   # Trang đăng nhập Google
+│   │   ├── auth/                   # Trang đăng nhập username/password
+│   │   ├── about/                  # Giới thiệu tổ chức
 │   │   ├── profile/                # Hồ sơ cá nhân (FR_USER_01–05)
-│   │   ├── contest-management/     # Quản lý cuộc thi (admin) — list/form/registrations
+│   │   ├── contest-management/     # Quản lý cuộc thi, đội thi, thành viên, bài nộp
 │   │   ├── contests/               # Public list + [slug] detail (FR_CONTEST_10–13)
 │   │   ├── post/                   # Danh sách + [slug] chi tiết (cover image + category badge)
 │   │   ├── tag/[slug]/             # Lọc bài viết theo tag (FR_POST_04)
@@ -59,7 +62,8 @@ toanmohinhhanoi-portal/
 │   │   └── layout/                 # Header, Sidebar, Footer, AppShell
 │   ├── contexts/                   # UserContext, SidebarContext
 │   ├── lib/
-│   │   ├── supabase/               # server.ts, admin.ts, client.ts
+│   │   ├── auth/                   # session cookie helpers
+│   │   ├── supabase/               # server.ts, admin.ts
 │   │   ├── posts-db.ts             # Query bài viết (supabase-js)
 │   │   ├── users-db.ts             # Query user
 │   │   ├── tags-db.ts              # Query tag
@@ -79,16 +83,21 @@ toanmohinhhanoi-portal/
 ## Setup
 
 ### Yêu cầu
-- **Node.js** v24+
+- **fnm** để quản lý Node.js
+- **Node.js** v24+ qua `fnm`
+- **corepack** để bật `pnpm`
 - **Supabase project** (free tier OK — [supabase.com](https://supabase.com))
-- **Google Cloud OAuth Client ID** cho Google Identity Services
 
 ### 1. Cài đặt dependency
 
 ```bash
 git clone https://github.com/helios-ryuu/toanmohinhhanoi-portal.git
 cd toanmohinhhanoi-portal
-npm install
+fnm install 24
+fnm use 24
+corepack enable
+corepack prepare pnpm@11.9.0 --activate
+pnpm install
 ```
 
 ### 2. Biến môi trường
@@ -99,33 +108,32 @@ Tạo file `.env.local` ở thư mục gốc:
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-key>
 SUPABASE_SECRET_KEY=<secret-key>
+SESSION_SECRET=<long-random-string>
 NEXT_PUBLIC_SITE_URL=http://localhost:3456
-NEXT_PUBLIC_GOOGLE_CLIENT_ID=<google-oauth-client-id>.apps.googleusercontent.com
 ```
 
 ### 3. Áp dụng schema Supabase
 
-Mở Supabase Dashboard → **SQL Editor** → paste nội dung `supabase/schema.sql` → **Run**. Script tạo toàn bộ bảng, enum, RLS policy, trigger `handle_new_auth_user`, và 2 bucket `post-images` / `submissions`.
+Mở Supabase Dashboard → **SQL Editor** → paste nội dung `supabase/schema.sql` → **Run**. Script tạo bảng nghiệp vụ, enum, trigger `updated_at`, bucket `post-images` / `submissions`, và schema tài khoản nội bộ.
 
-### 4. Bật Google provider
+### 4. Tạo admin đầu tiên
 
-Supabase Dashboard → **Authentication → Providers → Google** → bật và dán `Client ID` + `Client Secret`. Đồng thời thêm `http://localhost:3456` vào **Authorized JavaScript origins** trong Google Cloud Console để Google Identity Services popup hoạt động.
+Vì tài khoản do quản trị viên cấp thủ công, hãy seed admin đầu tiên trực tiếp bằng SQL:
+
+```sql
+insert into public.users (username, password, full_name, email, role)
+values ('admin', 'admin', 'Portal Admin', 'admin@example.com', 'admin');
+```
+
+Sau khi đăng nhập, đổi mật khẩu hoặc tạo admin khác trong `/admin/accounts`.
 
 ### 5. Chạy dev server
 
 ```bash
-npm run dev
+pnpm dev
 ```
 
 Mở [http://localhost:3456](http://localhost:3456).
-
-### 6. Promote tài khoản thành admin
-
-Sau lần đăng nhập đầu tiên, trigger `handle_new_auth_user` tự động tạo row trong `public.users` với `role = 'user'`. Để truy cập `/admin`:
-
-```sql
-UPDATE public.users SET role = 'admin' WHERE id = '<your-auth-uid>';
-```
 
 ---
 
@@ -133,10 +141,10 @@ UPDATE public.users SET role = 'admin' WHERE id = '<your-auth-uid>';
 
 | Lệnh | Mô tả |
 | :--- | :--- |
-| `npm run dev` | Dev server tại port 3456 (Turbopack) |
-| `npm run build` | Build production |
-| `npm start` | Chạy bản production |
-| `npm run lint` | ESLint |
+| `pnpm dev` | Dev server tại port 3456 (Turbopack) |
+| `pnpm build` | Build production |
+| `pnpm start` | Chạy bản production |
+| `pnpm lint` | ESLint |
 
 ---
 
@@ -149,5 +157,13 @@ API Routes (/api/*)  — { success, data?, message? }
     ↓ supabase-js
 DB helpers (src/lib/*-db.ts)
     ↓
-Supabase (Postgres + Auth + Storage, RLS bật trên mọi bảng)
+Supabase (Postgres + Storage)
 ```
+
+## v0.9.0 Notes
+
+- Người dùng không tự đăng ký hoặc đăng nhập Google nữa.
+- Admin cấp tài khoản tại `/admin/accounts`.
+- Admin tạo đội thi, mã đội, bảng thi và thành viên trong `/contest-management`.
+- Thí sinh chỉ đăng nhập để xem đội đã được cấp và nộp bài khi vòng nộp bài đang mở.
+- `password` đang được lưu plaintext theo yêu cầu vận hành nội bộ của phiên bản này.

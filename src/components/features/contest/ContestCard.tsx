@@ -15,7 +15,6 @@ function formatDate(iso: string): string {
 
 function stageChipClasses(stage: DbContestStage): string {
     const base = "px-1.5 py-0.5 rounded text-[10px] tracking-wide whitespace-nowrap border ";
-    if (stage.allow_registration) return base + "bg-blue-500/10 text-blue-500 border-blue-500/30";
     if (stage.allow_submission) return base + "bg-amber-500/10 text-amber-500 border-amber-500/30";
     return base + "bg-foreground/5 text-foreground/60 border-(--border-color)";
 }

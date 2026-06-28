@@ -1,24 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/features/admin/common/Button";
-import { FormField, FormInput, FormTextarea } from "@/components/features/admin/common/FormFields";
+import { FormField, FormInput } from "@/components/features/admin/common/FormFields";
 import { useUser } from "@/contexts/UserContext";
 import type { User } from "@/types/user";
 
-const LIMITS = { display_name: 100, school: 200, bio: 500 } as const;
+const LIMITS = { full_name: 100, email: 200, phone: 30, school: 200 } as const;
 
 function ProfileForm() {
     const { user: ctxUser, refresh } = useUser();
     const { showToast } = useToast();
-    const t = useTranslations("profile");
     const [profile, setProfile] = useState<User | null>(null);
-    const [displayName, setDisplayName] = useState("");
+    const [fullName, setFullName] = useState("");
+    const [email, setEmail] = useState("");
+    const [phone, setPhone] = useState("");
     const [school, setSchool] = useState("");
-    const [bio, setBio] = useState("");
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
 
@@ -31,9 +29,10 @@ function ProfileForm() {
                 if (!cancelled && json.success) {
                     const data = json.data as User;
                     setProfile(data);
-                    setDisplayName(data.display_name ?? "");
+                    setFullName(data.full_name ?? "");
+                    setEmail(data.email ?? "");
+                    setPhone(data.phone ?? "");
                     setSchool(data.school ?? "");
-                    setBio(data.bio ?? "");
                 }
             } finally {
                 if (!cancelled) setLoading(false);
@@ -44,14 +43,16 @@ function ProfileForm() {
         };
     }, []);
 
-    const overDisplay = displayName.length > LIMITS.display_name;
-    const overSchool = school.length > LIMITS.school;
-    const overBio = bio.length > LIMITS.bio;
-    const hasError = overDisplay || overSchool || overBio;
+    const hasError =
+        !fullName.trim() ||
+        fullName.length > LIMITS.full_name ||
+        email.length > LIMITS.email ||
+        phone.length > LIMITS.phone ||
+        school.length > LIMITS.school;
 
     const onSave = async () => {
         if (hasError) {
-            showToast("error", t("lengthError"));
+            showToast("error", "Vui lòng kiểm tra lại thông tin hồ sơ.");
             return;
         }
         setSaving(true);
@@ -60,21 +61,22 @@ function ProfileForm() {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    display_name: displayName.trim() || null,
+                    full_name: fullName.trim(),
+                    email: email.trim() || null,
+                    phone: phone.trim() || null,
                     school: school.trim() || null,
-                    bio: bio.trim() || null,
                 }),
             });
             const json = await res.json();
             if (json.success) {
-                showToast("success", t("saveSuccess"));
+                showToast("success", "Đã lưu hồ sơ.");
                 setProfile(json.data as User);
                 await refresh();
             } else {
-                showToast("error", json.message ?? t("saveFailed"));
+                showToast("error", json.message ?? "Lưu hồ sơ thất bại.");
             }
         } catch {
-            showToast("error", t("networkError"));
+            showToast("error", "Không thể kết nối máy chủ.");
         } finally {
             setSaving(false);
         }
@@ -83,7 +85,7 @@ function ProfileForm() {
     if (loading) {
         return (
             <div className="max-w-2xl mx-auto px-4 py-8">
-                <div className="text-foreground/60 text-sm">{t("loading")}</div>
+                <div className="text-foreground/60 text-sm">Đang tải...</div>
             </div>
         );
     }
@@ -91,67 +93,63 @@ function ProfileForm() {
     if (!profile) {
         return (
             <div className="max-w-2xl mx-auto px-4 py-8">
-                <div className="text-red-500 text-sm">{t("loadFailed")}</div>
+                <div className="text-red-500 text-sm">Không thể tải hồ sơ.</div>
             </div>
         );
     }
 
     return (
         <div className="max-w-2xl mx-auto px-4 py-8">
-            <h1 className="text-2xl font-bold tracking-widest text-accent">{t("pageTitle")}</h1>
-            <p className="text-sm text-foreground/70 mt-0.5 mb-6">{t("pageSubtitle")}</p>
+            <h1 className="text-2xl font-bold tracking-widest text-accent">Hồ sơ cá nhân</h1>
+            <p className="text-sm text-foreground/70 mt-0.5 mb-6">
+                Thông tin tài khoản do ban quản trị cấp và dùng cho cuộc thi.
+            </p>
 
             <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-6 mb-6 space-y-4">
-                <ReadonlyRow label={t("username")} value={profile.username} />
-                <ReadonlyRow label={t("email")} value={profile.email ?? "—"} />
-                <ReadonlyRow label={t("role")} value={profile.role === "admin" ? t("roleAdmin") : t("roleUser")} />
+                <ReadonlyRow label="Username" value={profile.username} />
+                <ReadonlyRow label="Vai trò" value={profile.role === "admin" ? "Admin" : "Thí sinh"} />
             </div>
 
             <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-6 space-y-4">
-                <h2 className="text-sm font-semibold tracking-widest text-foreground/80 uppercase">{t("editSection")}</h2>
+                <h2 className="text-sm font-semibold tracking-widest text-foreground/80 uppercase">Thông tin tài khoản</h2>
 
-                <FormField
-                    label={t("displayName")}
-                    error={overDisplay ? t("maxChars", { max: LIMITS.display_name }) : undefined}
-                    charCount={{ current: displayName.length, max: LIMITS.display_name }}
-                >
+                <FormField label="Họ và tên">
                     <FormInput
                         type="text"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        placeholder={t("displayNamePlaceholder")}
-                        hasError={overDisplay}
-                        maxLength={LIMITS.display_name + 20}
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        hasError={!fullName.trim() || fullName.length > LIMITS.full_name}
+                        maxLength={LIMITS.full_name + 20}
                     />
                 </FormField>
 
-                <FormField
-                    label={t("school")}
-                    error={overSchool ? t("maxChars", { max: LIMITS.school }) : undefined}
-                    charCount={{ current: school.length, max: LIMITS.school }}
-                >
+                <FormField label="Email">
+                    <FormInput
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        hasError={email.length > LIMITS.email}
+                        maxLength={LIMITS.email + 20}
+                    />
+                </FormField>
+
+                <FormField label="Số điện thoại">
+                    <FormInput
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        hasError={phone.length > LIMITS.phone}
+                        maxLength={LIMITS.phone + 10}
+                    />
+                </FormField>
+
+                <FormField label="Trường/Tổ chức">
                     <FormInput
                         type="text"
                         value={school}
                         onChange={(e) => setSchool(e.target.value)}
-                        placeholder={t("schoolPlaceholder")}
-                        hasError={overSchool}
+                        hasError={school.length > LIMITS.school}
                         maxLength={LIMITS.school + 20}
-                    />
-                </FormField>
-
-                <FormField
-                    label={t("bio")}
-                    error={overBio ? t("maxChars", { max: LIMITS.bio }) : undefined}
-                    charCount={{ current: bio.length, max: LIMITS.bio }}
-                >
-                    <FormTextarea
-                        rows={5}
-                        value={bio}
-                        onChange={(e) => setBio(e.target.value)}
-                        placeholder={t("bioPlaceholder")}
-                        hasError={overBio}
-                        maxLength={LIMITS.bio + 50}
                     />
                 </FormField>
 
@@ -160,16 +158,18 @@ function ProfileForm() {
                         variant="primary"
                         onClick={onSave}
                         isLoading={saving}
-                        loadingText={t("saving")}
+                        loadingText="Đang lưu..."
                         disabled={hasError}
                     >
-                        {t("save")}
+                        Lưu thay đổi
                     </Button>
                 </div>
             </div>
 
             {ctxUser?.role === "admin" && (
-                <p className="text-xs text-foreground/40 mt-4">{t("adminNote")}</p>
+                <p className="text-xs text-foreground/40 mt-4">
+                    Admin có thể chỉnh sửa toàn bộ tài khoản tại trang Quản lý tài khoản.
+                </p>
             )}
         </div>
     );

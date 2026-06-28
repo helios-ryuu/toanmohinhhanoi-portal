@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileText, Search, X as XIcon } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, ChevronUp, Download, FileText, Pencil, Plus, Search, Trash2, X as XIcon } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/features/admin/common/Button";
 import { useToast } from "@/components/ui/Toast";
@@ -12,16 +12,38 @@ import type {
     DbSubmission,
     RegistrationStatus,
 } from "@/types/database";
+import type { User } from "@/types/user";
 
 interface MemberWithUser extends DbRegistrationMember {
     users?: {
         username: string;
-        display_name: string | null;
+        full_name: string;
+        email: string | null;
+        phone: string | null;
         school: string | null;
     };
 }
 
 type RegistrationWithMembers = DbContestRegistration & { members: MemberWithUser[] };
+
+type TeamDraft = {
+    id?: number;
+    team_code: string;
+    team_name: string;
+    level: string;
+    status: RegistrationStatus;
+    leader_id: string;
+    member_ids: string;
+};
+
+const EMPTY_TEAM_DRAFT: TeamDraft = {
+    team_code: "",
+    team_name: "",
+    level: "",
+    status: "approved",
+    leader_id: "",
+    member_ids: "",
+};
 
 interface Props {
     contest: DbContest;
@@ -112,12 +134,16 @@ function RegistrationCard({
     submissions,
     actingId,
     onSetStatus,
+    onEdit,
+    onDelete,
     statusLabels,
 }: {
     reg: RegistrationWithMembers;
     submissions: DbSubmission[];
     actingId: number | null;
     onSetStatus: (id: number, status: "approved" | "rejected") => Promise<void>;
+    onEdit: (reg: RegistrationWithMembers) => void;
+    onDelete: (id: number) => Promise<void>;
     statusLabels: Record<RegistrationStatus, string>;
 }) {
     const t = useTranslations("registrations");
@@ -142,6 +168,16 @@ function RegistrationCard({
                         <span className="text-sm font-medium">
                             {reg.team_name || `${t("registrationFallback")} #${reg.id}`}
                         </span>
+                        {reg.team_code && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-[4px] bg-foreground/10 text-foreground/60">
+                                {reg.team_code}
+                            </span>
+                        )}
+                        {reg.level && (
+                            <span className="px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-[4px] bg-purple-500/15 text-purple-400">
+                                {reg.level}
+                            </span>
+                        )}
                         <span
                             className={`px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded-[4px] ${STATUS_STYLES[reg.status]}`}
                         >
@@ -183,6 +219,21 @@ function RegistrationCard({
                         </Button>
                     </div>
                 )}
+                <div className="flex gap-2 shrink-0">
+                    <Button size="sm" variant="save" icon={<Pencil className="w-4 h-4" />} onClick={() => onEdit(reg)}>
+                        Sửa
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant="danger"
+                        icon={<Trash2 className="w-4 h-4" />}
+                        onClick={() => onDelete(reg.id)}
+                        isLoading={actingId === reg.id}
+                        loadingText="..."
+                    >
+                        Xoá
+                    </Button>
+                </div>
             </div>
 
             {/* Expanded details */}
@@ -207,11 +258,13 @@ function RegistrationCard({
                                             {m.role === "leader" ? t("leaderRole") : t("memberRole")}
                                         </span>
                                         <span className="text-xs font-medium">
-                                            {m.users?.display_name || m.users?.username || m.user_id.slice(0, 8)}
+                                            {m.users?.full_name || m.users?.username || m.user_id.slice(0, 8)}
                                         </span>
                                     </div>
                                     <div className="text-[10px] text-foreground/50 space-y-0.5 ml-0.5">
                                         <div>@{m.users?.username ?? "—"}</div>
+                                        {m.users?.email && <div>{m.users.email}</div>}
+                                        {m.users?.phone && <div>{m.users.phone}</div>}
                                         {m.users?.school && <div>{m.users.school}</div>}
                                         <div>
                                             {t("joinedAt")}: {new Date(m.joined_at).toLocaleString()}
@@ -261,12 +314,15 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
     ];
 
     const [regs, setRegs] = useState<RegistrationWithMembers[]>([]);
+    const [accounts, setAccounts] = useState<User[]>([]);
     const [submissions, setSubmissions] = useState<DbSubmission[]>([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState<RegistrationStatus | "all">("all");
     const [actingId, setActingId] = useState<number | null>(null);
     const [search, setSearch] = useState("");
     const [sort, setSort] = useState("newest");
+    const [draft, setDraft] = useState<TeamDraft>(EMPTY_TEAM_DRAFT);
+    const userOptions = accounts.filter((u) => u.role !== "admin");
 
     const refresh = useCallback(async () => {
         setLoading(true);
@@ -299,6 +355,22 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
 
     useEffect(() => { refresh(); }, [refresh]);
 
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch("/api/admin/accounts", { cache: "no-store" });
+                const json = await res.json();
+                if (!cancelled && json.success) setAccounts(json.data ?? []);
+            } catch {
+                // Registration management still works for existing teams.
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
     async function setStatus(id: number, status: "approved" | "rejected") {
         setActingId(id);
         try {
@@ -326,6 +398,74 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
         }
     }
 
+    function editTeam(reg: RegistrationWithMembers) {
+        const leader = reg.members.find((m) => m.role === "leader");
+        const members = reg.members.filter((m) => m.role !== "leader").map((m) => m.user_id);
+        setDraft({
+            id: reg.id,
+            team_code: reg.team_code ?? "",
+            team_name: reg.team_name ?? "",
+            level: reg.level ?? "",
+            status: reg.status,
+            leader_id: leader?.user_id ?? "",
+            member_ids: members.join(", "),
+        });
+    }
+
+    async function saveTeam() {
+        const memberIds = draft.member_ids
+            .split(",")
+            .map((v) => v.trim())
+            .filter(Boolean)
+            .map((token) => accounts.find((u) => u.username === token || u.id === token)?.id ?? token);
+        if (!draft.team_code.trim() || !draft.leader_id) {
+            showToast("warning", "Mã đội và trưởng nhóm là bắt buộc.");
+            return;
+        }
+        setActingId(draft.id ?? -1);
+        try {
+            const res = await fetch(
+                draft.id ? `/api/admin/registrations/${draft.id}` : `/api/admin/contests/${contest.id}/registrations`,
+                {
+                    method: draft.id ? "PATCH" : "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        team_code: draft.team_code,
+                        team_name: draft.team_name || null,
+                        level: draft.level || null,
+                        status: draft.status,
+                        leader_id: draft.leader_id,
+                        member_ids: memberIds,
+                    }),
+                },
+            );
+            const json = await res.json();
+            if (!json.success) throw new Error(json.message || "Lưu đội thất bại.");
+            showToast("success", draft.id ? "Đã cập nhật đội." : "Đã tạo đội.");
+            setDraft(EMPTY_TEAM_DRAFT);
+            refresh();
+        } catch (err) {
+            showToast("error", err instanceof Error ? err.message : "Lưu đội thất bại.");
+        } finally {
+            setActingId(null);
+        }
+    }
+
+    async function deleteTeam(id: number) {
+        setActingId(id);
+        try {
+            const res = await fetch(`/api/admin/registrations/${id}`, { method: "DELETE" });
+            const json = await res.json();
+            if (!json.success) throw new Error(json.message || "Xoá đội thất bại.");
+            showToast("success", "Đã xoá đội.");
+            refresh();
+        } catch (err) {
+            showToast("error", err instanceof Error ? err.message : "Xoá đội thất bại.");
+        } finally {
+            setActingId(null);
+        }
+    }
+
     const displayed = useMemo(() => {
         let result = filter === "all" ? [...regs] : regs.filter((r) => r.status === filter);
 
@@ -336,7 +476,9 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                 return r.members.some(
                     (m) =>
                         m.users?.username?.toLowerCase().includes(q) ||
-                        m.users?.display_name?.toLowerCase().includes(q),
+                        m.users?.full_name?.toLowerCase().includes(q) ||
+                        m.users?.email?.toLowerCase().includes(q) ||
+                        m.users?.phone?.toLowerCase().includes(q),
                 );
             });
         }
@@ -366,6 +508,80 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                 <span className="text-foreground/30">/</span>
                 <h2 className="text-lg font-semibold tracking-wide">{contest.title}</h2>
                 <span className="text-xs text-foreground/40">— {t("panelTitle")}</span>
+            </div>
+
+            <div className="mb-5 rounded-lg border border-(--border-color) bg-(--post-card) p-4">
+                <div className="mb-3 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold uppercase tracking-widest">
+                        {draft.id ? "Sửa đội thi" : "Tạo đội thi"}
+                    </h3>
+                    {draft.id && (
+                        <button
+                            type="button"
+                            onClick={() => setDraft(EMPTY_TEAM_DRAFT)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-foreground/10"
+                            aria-label="Huỷ sửa đội"
+                        >
+                            <XIcon className="h-4 w-4" />
+                        </button>
+                    )}
+                </div>
+                <div className="grid gap-3 md:grid-cols-3">
+                    <input
+                        value={draft.team_code}
+                        onChange={(e) => setDraft((d) => ({ ...d, team_code: e.target.value }))}
+                        placeholder="TEAM_CODE"
+                        className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none"
+                    />
+                    <input
+                        value={draft.team_name}
+                        onChange={(e) => setDraft((d) => ({ ...d, team_name: e.target.value }))}
+                        placeholder="TEAM_NAME"
+                        className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none"
+                    />
+                    <input
+                        value={draft.level}
+                        onChange={(e) => setDraft((d) => ({ ...d, level: e.target.value }))}
+                        placeholder="LEVEL"
+                        className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none"
+                    />
+                    <select
+                        value={draft.leader_id}
+                        onChange={(e) => setDraft((d) => ({ ...d, leader_id: e.target.value }))}
+                        className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none"
+                    >
+                        <option value="">Chọn trưởng nhóm</option>
+                        {userOptions.map((u) => (
+                            <option key={u.id} value={u.id}>{u.full_name} (@{u.username})</option>
+                        ))}
+                    </select>
+                    <input
+                        value={draft.member_ids}
+                        onChange={(e) => setDraft((d) => ({ ...d, member_ids: e.target.value }))}
+                        placeholder="Username hoặc ID thành viên, phân cách dấu phẩy"
+                        className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none md:col-span-2"
+                    />
+                    <select
+                        value={draft.status}
+                        onChange={(e) => setDraft((d) => ({ ...d, status: e.target.value as RegistrationStatus }))}
+                        className="rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm outline-none"
+                    >
+                        <option value="approved">Approved</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="withdrawn">Withdrawn</option>
+                    </select>
+                    <Button
+                        variant="primary"
+                        icon={draft.id ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                        onClick={saveTeam}
+                        isLoading={actingId === (draft.id ?? -1)}
+                        loadingText="..."
+                        className="md:col-span-2"
+                    >
+                        {draft.id ? "Lưu đội" : "Tạo đội"}
+                    </Button>
+                </div>
             </div>
 
             {/* Toolbar */}
@@ -432,6 +648,8 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
                             submissions={submissions}
                             actingId={actingId}
                             onSetStatus={setStatus}
+                            onEdit={editTeam}
+                            onDelete={deleteTeam}
                             statusLabels={statusLabels}
                         />
                     ))}

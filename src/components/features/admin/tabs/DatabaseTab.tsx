@@ -63,7 +63,9 @@ export default function DatabaseTab() {
                 columns={[
                     { key: "id", label: "ID" },
                     { key: "username", label: "Username" },
-                    { key: "display_name", label: "Display name" },
+                    { key: "full_name", label: "Full name" },
+                    { key: "email", label: "Email" },
+                    { key: "phone", label: "Phone" },
                     { key: "role", label: "Role" },
                     { key: "school", label: "School" },
                     { key: "created_at", label: "Created at" },

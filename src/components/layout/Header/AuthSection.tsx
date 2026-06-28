@@ -40,7 +40,7 @@ export default function AuthSection() {
         );
     }
 
-    const initial = (user.display_name ?? user.username).charAt(0).toUpperCase();
+    const initial = (user.full_name || user.username).charAt(0).toUpperCase();
 
     async function handleLogout() {
         setIsOpen(false);

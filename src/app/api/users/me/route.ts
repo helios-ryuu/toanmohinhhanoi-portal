@@ -4,14 +4,16 @@ import { apiSuccess, apiError, handleRouteError } from "@/lib/api-helpers";
 import { updateUserProfile, dbUserToUser } from "@/lib/users-db";
 
 const LIMITS = {
-    display_name: 100,
-    bio: 500,
+    full_name: 100,
+    email: 200,
+    phone: 30,
     school: 200,
 } as const;
 
 const LABELS: Record<keyof typeof LIMITS, string> = {
-    display_name: "Tên hiển thị",
-    bio: "Giới thiệu",
+    full_name: "Họ và tên",
+    email: "Email",
+    phone: "Số điện thoại",
     school: "Trường/Tổ chức",
 };
 
@@ -25,10 +27,7 @@ function normalize(value: unknown): string | null | undefined {
 export async function GET() {
     try {
         const current = await requireAuth();
-        return apiSuccess({
-            ...dbUserToUser(current.profile),
-            email: current.authUser.email ?? null,
-        });
+        return apiSuccess(dbUserToUser(current.profile));
     } catch (err) {
         return handleRouteError(err);
     }
@@ -38,18 +37,18 @@ export async function PATCH(req: NextRequest) {
     try {
         const current = await requireAuth();
         const body = await req.json().catch(() => ({}));
-        const patch: { display_name?: string | null; bio?: string | null; school?: string | null } = {};
+        const patch: { full_name?: string; email?: string | null; phone?: string | null; school?: string | null } = {};
 
-        for (const key of ["display_name", "bio", "school"] as const) {
+        for (const key of ["full_name", "email", "phone", "school"] as const) {
             if (!(key in body)) continue;
             const value = normalize(body[key]);
-            if (value === undefined) {
+            if (value === undefined || (key === "full_name" && value === null)) {
                 return apiError(`${LABELS[key]} không hợp lệ`, 400);
             }
             if (value !== null && value.length > LIMITS[key]) {
                 return apiError(`${LABELS[key]} không vượt quá ${LIMITS[key]} ký tự`, 400);
             }
-            patch[key] = value;
+            patch[key] = value as never;
         }
 
         const supabase = await createSupabaseServerClient();

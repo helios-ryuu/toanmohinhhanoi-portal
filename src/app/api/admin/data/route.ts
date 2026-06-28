@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
 
         // Fetch all tables in parallel.
         const [usersRes, postRes, tagRes, postTagsRes] = await Promise.all([
-            supabase.from("users").select("id, username, display_name, role, school, created_at").order("created_at", { ascending: false }).limit(500),
+            supabase.from("users").select("id, username, full_name, email, phone, role, school, created_at").order("created_at", { ascending: false }).limit(500),
             supabase.from("post").select("id, slug, title, category, published, published_at, created_at, updated_at").order("id", { ascending: false }).limit(500),
             supabase.from("tag").select("*").order("id", { ascending: false }).limit(500),
             supabase.from("post_tags").select("post_id, tag_id").limit(2000),

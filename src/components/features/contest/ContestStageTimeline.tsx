@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Calendar, UserPlus, Upload, CheckCircle2 } from "lucide-react";
+import { Calendar, Upload, CheckCircle2 } from "lucide-react";
 import type { ContestWithStages, DbContestStage } from "@/types/database";
 
 function formatDateTime(iso: string): string {
@@ -53,7 +53,6 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
     const tNow = now ?? grandStart;
 
     const activeStages = stages.filter((s) => isActive(s, tNow));
-    const canRegister = activeStages.some((s) => s.allow_registration);
     const canSubmit = activeStages.some((s) => s.allow_submission);
 
     return (
@@ -79,15 +78,6 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                     </div>
                 )}
                 <div className="mt-3 flex flex-wrap gap-3 text-xs">
-                    <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded ${
-                            canRegister
-                                ? "bg-blue-500/15 text-blue-500"
-                                : "bg-foreground/5 text-foreground/40"
-                        }`}
-                    >
-                        <UserPlus size={12} /> {canRegister ? t("registrationOpen") : t("registrationClosed")}
-                    </span>
                     <span
                         className={`inline-flex items-center gap-1.5 px-2 py-1 rounded ${
                             canSubmit
@@ -126,11 +116,6 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
                                         >
                                             {s.name}
                                         </span>
-                                        {s.allow_registration && (
-                                            <span className="inline-flex items-center gap-0.5 text-[10px] text-blue-500">
-                                                <UserPlus size={10} /> {t("stageBadgeRegistration")}
-                                            </span>
-                                        )}
                                         {s.allow_submission && (
                                             <span className="inline-flex items-center gap-0.5 text-[10px] text-amber-500">
                                                 <Upload size={10} /> {t("stageBadgeSubmission")}

@@ -5,8 +5,7 @@ import { mdxComponents } from "../../../../mdx-components";
 import rehypePrettyCode from "rehype-pretty-code";
 import remarkGfm from "remark-gfm";
 import Image from "next/image";
-import { PostMeta, RelatedPosts, MobileTocBar, PostShareActions, PostCategoryBadge } from "@/components/features/post";
-import SidebarInjector from "@/components/layout/SidebarInjector";
+import { PostMeta, RelatedPosts, MobileTocBar, PostShareActions, PostCategoryBadge, TableOfContents } from "@/components/features/post";
 import { TagList } from "@/components/ui";
 import { Metadata } from "next";
 import { unstable_cache } from "next/cache";
@@ -96,7 +95,9 @@ export default async function BlogPostPage({ params }: Props) {
             </div>
 
             <div className="flex gap-2 px-4 md:px-0 max-w-dvw mx-auto w-full lg:flex-1 lg:min-h-0">
-                <SidebarInjector content={post.content} />
+                <aside className="hidden md:block w-68 flex-none h-full overflow-hidden border-r border-(--border-color) bg-background">
+                    <TableOfContents content={post.content} />
+                </aside>
 
                 {/* Main Content */}
                 <article className="flex-1 min-w-0 mx-auto lg:h-full lg:overflow-y-auto py-6 md:py-4 md:px-6">

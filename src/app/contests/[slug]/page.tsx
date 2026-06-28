@@ -15,7 +15,6 @@ import {
 } from "@/components/features/contest/ContestStatusBadge";
 import ContestCountdown from "@/components/features/contest/ContestCountdown";
 import ContestStageTimeline from "@/components/features/contest/ContestStageTimeline";
-import ContestRegistrationCta from "@/components/features/contest/ContestRegistrationCta";
 import type { ContestWithStages } from "@/types/database";
 
 interface Props {
@@ -181,7 +180,12 @@ export default async function ContestDetailPage({ params }: Props) {
                 </p>
             </section>
 
-            <ContestRegistrationCta contest={contest} />
+            <section className="mt-8 border-t border-(--border-color) pt-6">
+                <p className="text-sm text-foreground/70">
+                    Tài khoản, đội thi và thành viên được ban tổ chức cấp thủ công. Thí sinh đã được phân đội có thể
+                    đăng nhập và nộp bài trong trang Cuộc thi của tôi khi vòng thi đang mở.
+                </p>
+            </section>
         </div>
     );
 }

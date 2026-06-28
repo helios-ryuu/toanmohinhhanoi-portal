@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Trophy } from "lucide-react";
+import { Trophy, UsersRound } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import ManagementTab from "@/components/features/admin/tabs/ManagementTab";
@@ -71,6 +71,13 @@ function AdminWorkspace() {
             </header>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+                <SectionCard
+                    title="Quản lý tài khoản"
+                    description="Tạo tài khoản, cập nhật hồ sơ và reset mật khẩu."
+                    colorVariant="accent"
+                    icon={UsersRound}
+                    onClick={() => router.push("/admin/accounts")}
+                />
                 <SectionCard
                     title={t("contestsCard")}
                     description={t("contestsCardDesc")}

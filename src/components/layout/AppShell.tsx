@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Sidebar from "@/components/layout/Sidebar";
 import Footer from "@/components/layout/Footer";
 import Banner from "@/components/layout/Banner";
+import NavigationPanel from "@/components/layout/NavigationPanel";
 import { SidebarProvider, useSidebar } from "@/contexts/SidebarContext";
 import { ThemeProvider } from "next-themes";
 import { ToastProvider } from "@/components/ui/Toast";
@@ -29,7 +30,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     // Hide sidebar entirely on the dedicated post editor routes so the form can use full width.
     const isPostEditorRoute =
         pathname === "/admin/posts/new" || /^\/admin\/posts\/[^/]+\/edit$/.test(pathname);
-    const showSidebar = !isHomePage && !isPostEditorRoute;
+    const showSidebar = !isPostPage && !isPostEditorRoute;
 
     return (
         <div className="flex flex-col min-h-screen md:h-screen md:overflow-hidden relative">
@@ -80,7 +81,8 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
             {/* Display container - contains header, sidebar, main */}
             <div className="relative z-10 flex-1 flex flex-col md:min-h-0">
                 {/* Header - fixed height */}
-                <Header noBorder={isHomePage} showMobileMenu={!isHomePage} transparent={isHomePage} isHomePage={isHomePage} />
+                <Header noBorder={false} showMobileMenu={false} transparent={false} isHomePage={isHomePage} />
+                <NavigationPanel />
 
                 {/* Content area - sidebar + main */}
                 <div className="relative flex-1 flex md:min-h-0">
@@ -92,7 +94,7 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                     <main className={`flex-1 overflow-auto ${isHomePage ? "bg-transparent" : "bg-background"} ${showSidebar && !isPinned ? "md:ml-10" : ""} ${isPostPage ? "lg:overflow-hidden" : ""}`}>
                         <div className={`${isPostPage ? "h-full" : "min-h-full"} flex flex-col ${!isPostPage ? "pb-[env(safe-area-inset-bottom)]" : ""}`}>
                             <div className="flex-1 min-h-0">{children}</div>
-                            {isHomePage && <Footer transparent />}
+                            <Footer transparent={false} />
                         </div>
                     </main>
                 </div>

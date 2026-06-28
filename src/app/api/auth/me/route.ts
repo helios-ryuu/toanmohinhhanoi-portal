@@ -7,8 +7,5 @@ export async function GET() {
     if (!current) {
         return apiError("Unauthorized", 401);
     }
-    return apiSuccess({
-        ...dbUserToUser(current.profile),
-        email: current.authUser.email ?? null,
-    });
+    return apiSuccess(dbUserToUser(current.profile));
 }

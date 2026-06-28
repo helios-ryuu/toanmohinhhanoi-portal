@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { User } from "@/types/user";
 
 interface UserContextValue {
@@ -34,8 +33,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const logout = useCallback(async () => {
-        const supabase = createSupabaseBrowserClient();
-        await supabase.auth.signOut();
         try {
             await fetch("/api/auth/logout", { method: "POST" });
         } catch {
@@ -46,15 +43,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         refresh();
-
-        const supabase = createSupabaseBrowserClient();
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-            refresh();
-        });
-
-        return () => {
-            subscription.unsubscribe();
-        };
     }, [refresh]);
 
     return (

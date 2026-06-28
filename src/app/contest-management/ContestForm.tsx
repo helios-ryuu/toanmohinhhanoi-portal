@@ -454,18 +454,6 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
                                     <label className="inline-flex items-center gap-2 cursor-pointer">
                                         <input
                                             type="checkbox"
-                                            checked={s.allow_registration}
-                                            onChange={(e) =>
-                                                updateStage(idx, {
-                                                    allow_registration: e.target.checked,
-                                                })
-                                            }
-                                        />
-                                        {t("allowRegistration")}
-                                    </label>
-                                    <label className="inline-flex items-center gap-2 cursor-pointer">
-                                        <input
-                                            type="checkbox"
                                             checked={s.allow_submission}
                                             onChange={(e) =>
                                                 updateStage(idx, {

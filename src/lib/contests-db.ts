@@ -392,6 +392,63 @@ export async function createRegistration(
     return { registration, members: (members ?? []) as DbRegistrationMember[] };
 }
 
+export interface AdminRegistrationInput {
+    team_code: string;
+    team_name?: string | null;
+    level?: string | null;
+    status?: RegistrationStatus;
+    leader_id: string;
+    member_ids: string[];
+}
+
+function normalizeMemberRows(registrationId: number, leaderId: string, memberIds: string[]) {
+    const allMembers = Array.from(new Set([leaderId, ...memberIds]));
+    return allMembers.map((uid) => ({
+        registration_id: registrationId,
+        user_id: uid,
+        role: uid === leaderId ? ("leader" as const) : ("member" as const),
+    }));
+}
+
+export async function createAdminRegistration(
+    supabase: SupabaseClient,
+    contestId: number,
+    input: AdminRegistrationInput,
+): Promise<{ registration: DbContestRegistration; members: DbRegistrationMember[] }> {
+    if (!input.team_code.trim()) throw new Error("team_code is required");
+    if (!input.leader_id) throw new Error("leader_id is required");
+    const rows = normalizeMemberRows(0, input.leader_id, input.member_ids);
+    const contest = await getContestById(supabase, contestId);
+    if (!contest) throw new Error("contest not found");
+    if (rows.length > contest.max_team_size) throw new Error(`team exceeds max size ${contest.max_team_size}`);
+
+    const { data: reg, error: regErr } = await supabase
+        .from("contest_registration")
+        .insert({
+            contest_id: contestId,
+            team_code: input.team_code.trim(),
+            team_name: input.team_name ?? null,
+            level: input.level ?? null,
+            status: input.status ?? "approved",
+        })
+        .select("*")
+        .single();
+    if (regErr) throw new Error(regErr.message);
+    const registration = reg as DbContestRegistration;
+
+    const memberRows = normalizeMemberRows(registration.id, input.leader_id, input.member_ids);
+    const { data: members, error: memErr } = await supabase
+        .from("registration_member")
+        .insert(memberRows)
+        .select("*");
+    if (memErr) {
+        await supabase.from("contest_registration").delete().eq("id", registration.id);
+        throw new Error(memErr.message);
+    }
+
+    return { registration, members: (members ?? []) as DbRegistrationMember[] };
+}
+
 export async function getRegistration(
     supabase: SupabaseClient,
     id: number,
@@ -408,7 +465,9 @@ export async function getRegistration(
 export interface DbRegistrationMemberWithUser extends DbRegistrationMember {
     users?: {
         username: string;
-        display_name: string | null;
+        full_name: string;
+        email: string | null;
+        phone: string | null;
         school: string | null;
     };
 }
@@ -419,7 +478,7 @@ export async function getRegistrationMembers(
 ): Promise<DbRegistrationMemberWithUser[]> {
     const { data, error } = await supabase
         .from("registration_member")
-        .select("*, users(username, display_name, school)")
+        .select("*, users(username, full_name, email, phone, school)")
         .eq("registration_id", registrationId);
     if (error) throw new Error(error.message);
     return (data ?? []) as DbRegistrationMemberWithUser[];
@@ -492,6 +551,53 @@ export async function updateRegistrationTeam(
         return data as DbContestRegistration;
     }
     return (await getRegistration(supabase, registrationId))!;
+}
+
+export async function updateAdminRegistration(
+    supabase: SupabaseClient,
+    registrationId: number,
+    patch: Partial<AdminRegistrationInput>,
+): Promise<DbContestRegistration> {
+    const reg = await getRegistration(supabase, registrationId);
+    if (!reg) throw new Error("registration not found");
+
+    if (patch.leader_id || patch.member_ids) {
+        const leaderId = patch.leader_id;
+        if (!leaderId) throw new Error("leader_id is required when updating members");
+        const memberIds = patch.member_ids ?? [];
+        const contest = await getContestById(supabase, reg.contest_id);
+        if (!contest) throw new Error("contest not found");
+        const memberRows = normalizeMemberRows(registrationId, leaderId, memberIds);
+        if (memberRows.length > contest.max_team_size) throw new Error(`team exceeds max size ${contest.max_team_size}`);
+        await supabase.from("registration_member").delete().eq("registration_id", registrationId);
+        const { error } = await supabase.from("registration_member").insert(memberRows);
+        if (error) throw new Error(error.message);
+    }
+
+    const regPatch: Partial<DbContestRegistration> = {};
+    if (patch.team_code !== undefined) regPatch.team_code = patch.team_code;
+    if (patch.team_name !== undefined) regPatch.team_name = patch.team_name;
+    if (patch.level !== undefined) regPatch.level = patch.level;
+    if (patch.status !== undefined) regPatch.status = patch.status;
+
+    if (Object.keys(regPatch).length === 0) return (await getRegistration(supabase, registrationId))!;
+
+    const { data, error } = await supabase
+        .from("contest_registration")
+        .update(regPatch)
+        .eq("id", registrationId)
+        .select("*")
+        .single();
+    if (error) throw new Error(error.message);
+    return data as DbContestRegistration;
+}
+
+export async function deleteRegistration(
+    supabase: SupabaseClient,
+    registrationId: number,
+): Promise<void> {
+    const { error } = await supabase.from("contest_registration").delete().eq("id", registrationId);
+    if (error) throw new Error(error.message);
 }
 
 export async function withdrawRegistration(
