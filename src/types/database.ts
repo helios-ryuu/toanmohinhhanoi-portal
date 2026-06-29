@@ -59,6 +59,7 @@ export interface DbContest {
     rules: string | null;
     cover_image_url: string | null;
     participation_type: ContestParticipationType;
+    min_team_size: number;
     max_team_size: number;
     start_at: string;
     end_at: string;
@@ -76,8 +77,8 @@ export interface DbContestStage {
     end_at: string;
     allow_registration: boolean;
     allow_submission: boolean;
-    allow_resubmit: boolean;
     submission_type: string | null;
+    prompt_text: string | null;
     display_order: number;
     created_at: string;
     updated_at: string | null;

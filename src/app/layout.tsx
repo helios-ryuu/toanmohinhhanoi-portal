@@ -18,11 +18,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Toán Mô Hình Hà Nội",
   description: "Cổng thông tin chính thức của Toán Mô Hình Hà Nội — chia sẻ kiến thức toán mô hình, cuộc thi, và tài nguyên cho cộng đồng.",
-  metadataBase: new URL("https://blog.helios.id.vn"), // Update with your actual domain
+  metadataBase: new URL("https://toanmohinhvietnam.com"),
   openGraph: {
     title: "Toán Mô Hình Hà Nội",
     description: "Cổng thông tin chính thức của Toán Mô Hình Hà Nội — chia sẻ kiến thức toán mô hình, cuộc thi, và tài nguyên cho cộng đồng.",
-    url: "https://blog.helios.id.vn",
+    url: "https://toanmohinhvietnam.com",
     siteName: "Toán Mô Hình Hà Nội",
     images: [
       {

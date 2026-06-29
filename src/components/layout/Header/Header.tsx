@@ -32,6 +32,7 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
     const theme = (mounted ? resolvedTheme : "dark") as "light" | "dark";
     const toggleTheme = () => setTheme(theme === "light" ? "dark" : "light");
     const toggleMobileMenu = () => setIsMobileOpen(!isMobileOpen);
+    const instagramIcon = theme === "light" ? "/Instagram-black.svg" : "/Instagram-white.svg";
 
     const isPostEditor = pathname === "/admin/posts/new" || /^\/admin\/posts\/[^/]+\/edit$/.test(pathname);
 
@@ -39,6 +40,7 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
         { path: "/post", label: tNav("posts") },
         { path: "/contests", label: tNav("contests") },
         { path: "/contest", label: tNav("contests") },
+        { path: "/faq/admin", label: tNav("adminFaq") },
         { path: "/faq", label: tNav("faq") },
         { path: "/contest-management", label: tNav("contestManagement") },
         { path: "/admin/accounts", label: tNav("accounts") },
@@ -103,8 +105,8 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
                     aria-label="Facebook"
                     onClick={() => {
                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                        const webUrl = "https://www.facebook.com/toanmohinh.hanoilink";
-                        const appUrl = "fb://page/toanmohinh.hanoilink";
+                        const webUrl = "https://www.facebook.com/toanmohinh.hanoi";
+                        const appUrl = `fb://facewebmodal/f?href=${encodeURIComponent(webUrl)}`;
                         if (isMobile) {
                             window.location.href = appUrl;
                             setTimeout(() => window.open(webUrl, "_blank"), 500);
@@ -123,6 +125,14 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
                     >
                         <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.78-3.91 1.1 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.91h-2.34V22c4.78-.79 8.43-4.94 8.43-9.94Z" />
                     </svg>
+                </button>
+                <button
+                    type="button"
+                    aria-label="Instagram"
+                    onClick={() => window.open("https://www.instagram.com/archive.toanmohinh/", "_blank")}
+                    className="flex-none w-8 h-8 inline-flex items-center justify-center mx-0.5 rounded-md cursor-pointer hover:bg-background-hover text-foreground transition-colors"
+                >
+                    <Image src={instagramIcon} alt="" width={20} height={20} className="h-5 w-5" aria-hidden="true" />
                 </button>
                 <LanguageSwitcher />
                 <div className="ml-2 min-w-0">

@@ -1,4 +1,3 @@
-import { NextRequest } from "next/server";
 import { requireAuth } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiSuccess, handleRouteError } from "@/lib/api-helpers";

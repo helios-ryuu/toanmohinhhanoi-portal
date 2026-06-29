@@ -4,15 +4,20 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiError, apiSuccess, handleRouteError } from "@/lib/api-helpers";
 import { dbUserToUser, deleteUser, updateUserAdmin, type UserAdminInput } from "@/lib/users-db";
 
+const USERNAME_RE = /^[A-Za-z0-9_]{6,30}$/;
+const PASSWORD_RE = /^\S{8,}$/;
+
 function normalizePatch(body: Record<string, unknown>): Partial<UserAdminInput> | string {
     const patch: Partial<UserAdminInput> = {};
     if ("username" in body) {
         const username = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
-        if (!/^[a-z0-9_]{3,30}$/.test(username)) return "username must be 3-30 lowercase letters, numbers, or underscores";
+        if (!USERNAME_RE.test(username)) return "username must be 6-30 letters, numbers, or underscores";
         patch.username = username;
     }
     if ("password" in body) {
-        if (typeof body.password !== "string" || body.password.length < 1) return "password is required";
+        if (typeof body.password !== "string" || !PASSWORD_RE.test(body.password)) {
+            return "password must be at least 8 characters and contain no spaces";
+        }
         patch.password = body.password;
     }
     if ("full_name" in body) {

@@ -44,9 +44,6 @@ export async function POST(req: NextRequest) {
 
         const existing = await listSubmissionsForRegistration(supabase, registrationId);
         if (existing.length > 0) {
-            if (!activeStage.allow_resubmit) {
-                return apiError("already submitted — resubmission is not allowed for this stage", 400);
-            }
             // Delete all previous submissions before accepting the new one.
             await Promise.all(
                 existing.map(async (s) => {

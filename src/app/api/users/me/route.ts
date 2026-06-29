@@ -36,6 +36,9 @@ export async function GET() {
 export async function PATCH(req: NextRequest) {
     try {
         const current = await requireAuth();
+        if (current.profile.role !== "admin") {
+            return apiError("Chỉ admin được cập nhật thông tin cá nhân.", 403);
+        }
         const body = await req.json().catch(() => ({}));
         const patch: { full_name?: string; email?: string | null; phone?: string | null; school?: string | null } = {};
 

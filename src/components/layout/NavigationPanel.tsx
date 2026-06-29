@@ -12,13 +12,16 @@ export default function NavigationPanel() {
     const { user } = useUser();
     const isAdmin = user?.role === "admin";
     const visible = menuItems.filter((item) => !item.requiresAdmin || isAdmin);
+    const activeItem = visible
+        .filter((item) => item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`))
+        .sort((a, b) => b.href.length - a.href.length)[0];
 
     return (
         <nav className="border-b border-(--border-color) bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
             <div className="mx-auto flex max-w-7xl items-center gap-1 overflow-x-auto px-3 py-2">
                 {visible.map((item) => {
                     const Icon = item.icon;
-                    const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+                    const active = activeItem?.href === item.href;
                     return (
                         <Link
                             key={item.href}

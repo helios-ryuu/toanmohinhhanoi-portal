@@ -7,7 +7,8 @@ import { getTranslations } from "next-intl/server";
 import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { getContestBySlug } from "@/lib/contests-db";
+import { getContestBySlug, userHasRegistration } from "@/lib/contests-db";
+import { getCurrentUser } from "@/lib/supabase/server";
 import { mdxComponents } from "../../../../mdx-components";
 import {
     ContestStatusBadge,
@@ -60,6 +61,24 @@ function formatDateTime(iso: string): string {
     }
 }
 
+function formatParticipation(contest: ContestWithStages): string {
+    if (contest.participation_type === "individual") return "Cá nhân tham gia riêng lẻ";
+    if (contest.min_team_size === contest.max_team_size) {
+        return `Mỗi đội thi gồm ${contest.max_team_size} thành viên`;
+    }
+    return `Mỗi đội thi gồm ${contest.min_team_size}-${contest.max_team_size} thành viên`;
+}
+
+function hasActiveSubmissionStage(contest: ContestWithStages): boolean {
+    const now = Date.now();
+    return contest.stages.some((stage) => {
+        if (!stage.allow_submission) return false;
+        const start = new Date(stage.start_at).getTime();
+        const end = new Date(stage.end_at).getTime();
+        return start <= now && now <= end;
+    });
+}
+
 export default async function ContestDetailPage({ params }: Props) {
     const { slug } = await params;
     const contest: ContestWithStages | null = await getCachedContest(slug);
@@ -70,6 +89,12 @@ export default async function ContestDetailPage({ params }: Props) {
 
     const t = await getTranslations("contests");
     const tType = await getTranslations("contestType");
+    const current = await getCurrentUser();
+    const supabase = createSupabaseAdminClient();
+    const isRegistered = current
+        ? await userHasRegistration(supabase, contest.id, current.profile.id)
+        : false;
+    const canSubmit = isRegistered && hasActiveSubmissionStage(contest);
 
     let rulesContent: React.ReactNode = null;
     if (contest.rules) {
@@ -108,11 +133,9 @@ export default async function ContestDetailPage({ params }: Props) {
             <div className="mb-3 flex flex-wrap items-center gap-2">
                 <ContestStatusBadge status={contest.status} />
                 <ContestTypeBadge type={contest.participation_type} />
-                {contest.participation_type !== "individual" && (
-                    <span className="text-xs text-foreground/66">
-                        {t("maxTeam", { count: contest.max_team_size })}
-                    </span>
-                )}
+                <span className="text-xs text-foreground/66">
+                    {formatParticipation(contest)}
+                </span>
             </div>
 
             <PageHeader title={contest.title} description={contest.description} />
@@ -153,7 +176,11 @@ export default async function ContestDetailPage({ params }: Props) {
                 <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                     {t("stages")}
                 </h2>
-                <ContestStageTimeline contest={contest} />
+                <ContestStageTimeline
+                    contest={contest}
+                    showCurrentStatus={isRegistered}
+                    submissionCtaHref={canSubmit ? "/profile/contests" : undefined}
+                />
             </section>
 
             <section className="mb-6">
@@ -162,9 +189,8 @@ export default async function ContestDetailPage({ params }: Props) {
                 </h2>
                 <p className="text-sm text-foreground/80">
                     {tType(contest.participation_type)}
-                    {contest.participation_type !== "individual"
-                        ? ` — ${t("maxTeam", { count: contest.max_team_size })}.`
-                        : "."}
+                    {" — "}
+                    {formatParticipation(contest)}.
                 </p>
             </section>
 

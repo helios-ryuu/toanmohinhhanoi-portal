@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Pencil, Plus, Save, Search, Trash2, X } from
 import { useTranslations } from "next-intl";
 import { ToastProvider, useToast } from "@/components/ui/Toast";
 import { Button } from "@/components/features/admin/common/Button";
+import ConfirmPopup from "@/components/features/admin/common/ConfirmPopup";
 import type { User } from "@/types/user";
 
 type AccountDraft = {
@@ -29,6 +30,9 @@ const EMPTY_DRAFT: AccountDraft = {
 };
 
 const PAGE_SIZE = 50;
+const USERNAME_RE = /^[A-Za-z0-9_]{6,30}$/;
+const PASSWORD_RE = /^\S{8,}$/;
+const ACCOUNT_GRID_COLUMNS = "md:grid-cols-[1.08fr_0.92fr_0.52fr_106px_142px]";
 
 type RoleFilter = "all" | "user" | "admin";
 type AccountSort = "newest" | "oldest" | "usernameAsc" | "usernameDesc" | "nameAsc" | "role";
@@ -42,6 +46,7 @@ function AccountManagement() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
     const [search, setSearch] = useState("");
     const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
     const [sort, setSort] = useState<AccountSort>("newest");
@@ -96,21 +101,31 @@ function AccountManagement() {
     }
 
     async function save() {
-        if (!draft.username.trim() || !draft.password.trim() || !draft.full_name.trim()) {
+        const passwordRequired = !draft.id;
+        const passwordProvided = draft.password.length > 0;
+        if (!draft.username.trim() || !draft.full_name.trim() || (passwordRequired && !draft.password)) {
             showToast("warning", t("requiredWarning"));
+            return;
+        }
+        if (!USERNAME_RE.test(draft.username.trim())) {
+            showToast("warning", t("usernameInvalid"));
+            return;
+        }
+        if ((passwordRequired || passwordProvided) && !PASSWORD_RE.test(draft.password)) {
+            showToast("warning", t("passwordInvalid"));
             return;
         }
         setSaving(true);
         try {
             const body: Record<string, string | null> = {
                 username: draft.username,
-                password: draft.password,
                 full_name: draft.full_name,
                 email: draft.email,
                 phone: draft.phone,
                 school: draft.role === "admin" ? null : draft.school,
                 role: draft.role,
             };
+            if (passwordRequired || passwordProvided) body.password = draft.password;
             const res = await fetch(draft.id ? `/api/admin/accounts/${draft.id}` : "/api/admin/accounts", {
                 method: draft.id ? "PATCH" : "POST",
                 headers: { "Content-Type": "application/json" },
@@ -135,6 +150,7 @@ function AccountManagement() {
             const json = await res.json();
             if (!json.success) throw new Error(json.message || t("deleteError"));
             showToast("success", t("deleteSuccess"));
+            setDeleteTarget(null);
             refresh();
         } catch (err) {
             showToast("error", err instanceof Error ? err.message : t("deleteError"));
@@ -205,8 +221,21 @@ function AccountManagement() {
                     </div>
 
                     <div className="space-y-3">
-                        <Field required label={t("username")} value={draft.username} onChange={(v) => updateDraft({ username: v })} />
-                        <Field required label={draft.id ? t("newPassword") : t("password")} value={draft.password} type="password" onChange={(v) => updateDraft({ password: v })} />
+                        <Field
+                            required
+                            label={t("username")}
+                            value={draft.username}
+                            onChange={(v) => updateDraft({ username: v })}
+                            error={draft.username.length > 0 && !USERNAME_RE.test(draft.username) ? t("usernameInvalid") : undefined}
+                        />
+                        <Field
+                            required={!draft.id}
+                            label={draft.id ? t("newPassword") : t("password")}
+                            value={draft.password}
+                            type="password"
+                            onChange={(v) => updateDraft({ password: v })}
+                            error={draft.password.length > 0 && !PASSWORD_RE.test(draft.password) ? t("passwordInvalid") : undefined}
+                        />
                         <Field required label={t("fullName")} value={draft.full_name} onChange={(v) => updateDraft({ full_name: v })} />
                         <Field label={t("email")} value={draft.email} type="email" onChange={(v) => updateDraft({ email: v })} />
                         <Field label={t("phone")} value={draft.phone} onChange={(v) => updateDraft({ phone: v })} />
@@ -273,7 +302,7 @@ function AccountManagement() {
                         </select>
                     </div>
 
-                    <div className="hidden md:grid grid-cols-[1.1fr_1.4fr_1.1fr_82px_118px] gap-2 px-3 py-2 text-[11px] font-semibold text-foreground/60 border-b border-(--border-color)">
+                    <div className={`hidden md:grid ${ACCOUNT_GRID_COLUMNS} gap-2 px-3 py-2 text-[11px] font-semibold text-foreground/60 border-b border-(--border-color)`}>
                         <span>{t("colUsername")}</span>
                         <span>{t("colInfo")}</span>
                         <span>{t("colSchool")}</span>
@@ -291,18 +320,18 @@ function AccountManagement() {
                                 return (
                                     <div
                                         key={account.id}
-                                        className={`grid grid-cols-1 items-center gap-2 px-3 py-2 text-[13px] transition-colors md:grid-cols-[1.1fr_1.4fr_1.1fr_82px_118px] ${
+                                        className={`grid grid-cols-1 items-start gap-2 px-3 py-2 text-[13px] transition-colors ${ACCOUNT_GRID_COLUMNS} ${
                                             isEditing ? "bg-accent/10 ring-1 ring-inset ring-accent" : ""
                                         }`}
                                     >
                                         <div className="font-medium">@{account.username}</div>
                                         <div className="min-w-0">
-                                            <div className="truncate">{account.full_name}</div>
-                                            <div className="truncate text-[11px] text-foreground/50">
+                                            <div className="break-words leading-snug">{account.full_name}</div>
+                                            <div className="break-words text-[11px] leading-snug text-foreground/50">
                                                 {[account.email, account.phone].filter(Boolean).join(" • ") || "—"}
                                             </div>
                                         </div>
-                                        <div className="truncate text-xs text-foreground/70">{account.school || "—"}</div>
+                                        <div className="break-words text-xs leading-snug text-foreground/70">{account.school || "—"}</div>
                                         <div>
                                             <span className={`px-2 py-0.5 rounded text-[11px] ${account.role === "admin" ? "bg-red-500/15 text-red-400" : "bg-accent/15 text-accent"}`}>
                                                 {account.role === "admin" ? t("roleAdmin") : t("roleUser")}
@@ -316,7 +345,7 @@ function AccountManagement() {
                                                 size="sm"
                                                 variant="danger"
                                                 icon={<Trash2 className="w-3.5 h-3.5" />}
-                                                onClick={() => remove(account.id)}
+                                                onClick={() => setDeleteTarget(account)}
                                                 isLoading={deletingId === account.id}
                                                 loadingText="..."
                                             >
@@ -355,6 +384,18 @@ function AccountManagement() {
                     </div>
                 </section>
             </div>
+            {deleteTarget && (
+                <ConfirmPopup
+                    variant="danger"
+                    title={t("deleteConfirmTitle")}
+                    message={t("deleteConfirmMessage")}
+                    itemName={deleteTarget.username}
+                    confirmText={tCommon("delete")}
+                    cancelText={tCommon("cancel")}
+                    onCancel={() => setDeleteTarget(null)}
+                    onConfirm={() => remove(deleteTarget.id)}
+                />
+            )}
         </div>
     );
 }
@@ -365,12 +406,14 @@ function Field({
     onChange,
     type = "text",
     required = false,
+    error,
 }: {
     label: string;
     value: string;
     onChange: (value: string) => void;
     type?: string;
     required?: boolean;
+    error?: string;
 }) {
     return (
         <label className="block text-xs text-foreground/70">
@@ -381,8 +424,11 @@ function Field({
                 value={value}
                 required={required}
                 onChange={(e) => onChange(e.target.value)}
-                className="mt-1 w-full rounded-md border border-(--border-color) bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 focus:ring-accent/50"
+                className={`mt-1 w-full rounded-md border bg-background px-3 py-2 text-sm text-foreground outline-none focus:ring-2 ${
+                    error ? "border-red-500 focus:ring-red-500/50" : "border-(--border-color) focus:ring-accent/50"
+                }`}
             />
+            {error && <span className="mt-1 block text-xs text-red-500">{error}</span>}
         </label>
     );
 }

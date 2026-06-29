@@ -10,7 +10,7 @@ import type { User } from "@/types/user";
 const LIMITS = { full_name: 100, email: 200, phone: 30, school: 200 } as const;
 
 function ProfileForm() {
-    const { user: ctxUser, refresh } = useUser();
+    const { refresh } = useUser();
     const { showToast } = useToast();
     const [profile, setProfile] = useState<User | null>(null);
     const [fullName, setFullName] = useState("");
@@ -49,6 +49,7 @@ function ProfileForm() {
         email.length > LIMITS.email ||
         phone.length > LIMITS.phone ||
         school.length > LIMITS.school;
+    const canEdit = profile?.role === "admin";
 
     const onSave = async () => {
         if (hasError) {
@@ -111,62 +112,73 @@ function ProfileForm() {
             </div>
 
             <div className="rounded-lg border border-(--border-color) bg-(--post-card) p-6 space-y-4">
-                <h2 className="text-sm font-semibold tracking-widest text-foreground/80 uppercase">Thông tin tài khoản</h2>
+                <h2 className="text-sm font-semibold tracking-widest text-foreground/80 uppercase">Thông tin cá nhân</h2>
 
-                <FormField label="Họ và tên">
-                    <FormInput
-                        type="text"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        hasError={!fullName.trim() || fullName.length > LIMITS.full_name}
-                        maxLength={LIMITS.full_name + 20}
-                    />
-                </FormField>
+                {canEdit ? (
+                    <>
+                        <FormField label="Họ và tên">
+                            <FormInput
+                                type="text"
+                                value={fullName}
+                                onChange={(e) => setFullName(e.target.value)}
+                                hasError={!fullName.trim() || fullName.length > LIMITS.full_name}
+                                maxLength={LIMITS.full_name + 20}
+                            />
+                        </FormField>
 
-                <FormField label="Email">
-                    <FormInput
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        hasError={email.length > LIMITS.email}
-                        maxLength={LIMITS.email + 20}
-                    />
-                </FormField>
+                        <FormField label="Email">
+                            <FormInput
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                hasError={email.length > LIMITS.email}
+                                maxLength={LIMITS.email + 20}
+                            />
+                        </FormField>
 
-                <FormField label="Số điện thoại">
-                    <FormInput
-                        type="tel"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
-                        hasError={phone.length > LIMITS.phone}
-                        maxLength={LIMITS.phone + 10}
-                    />
-                </FormField>
+                        <FormField label="Số điện thoại">
+                            <FormInput
+                                type="tel"
+                                value={phone}
+                                onChange={(e) => setPhone(e.target.value)}
+                                hasError={phone.length > LIMITS.phone}
+                                maxLength={LIMITS.phone + 10}
+                            />
+                        </FormField>
 
-                <FormField label="Trường/Tổ chức">
-                    <FormInput
-                        type="text"
-                        value={school}
-                        onChange={(e) => setSchool(e.target.value)}
-                        hasError={school.length > LIMITS.school}
-                        maxLength={LIMITS.school + 20}
-                    />
-                </FormField>
+                        <FormField label="Trường/Tổ chức">
+                            <FormInput
+                                type="text"
+                                value={school}
+                                onChange={(e) => setSchool(e.target.value)}
+                                hasError={school.length > LIMITS.school}
+                                maxLength={LIMITS.school + 20}
+                            />
+                        </FormField>
 
-                <div className="flex justify-end pt-2">
-                    <Button
-                        variant="primary"
-                        onClick={onSave}
-                        isLoading={saving}
-                        loadingText="Đang lưu..."
-                        disabled={hasError}
-                    >
-                        Lưu thay đổi
-                    </Button>
-                </div>
+                        <div className="flex justify-end pt-2">
+                            <Button
+                                variant="primary"
+                                onClick={onSave}
+                                isLoading={saving}
+                                loadingText="Đang lưu..."
+                                disabled={hasError}
+                            >
+                                Lưu thay đổi
+                            </Button>
+                        </div>
+                    </>
+                ) : (
+                    <div className="space-y-3">
+                        <ReadonlyRow label="Họ và tên" value={profile.full_name || "—"} />
+                        <ReadonlyRow label="Email" value={profile.email || "—"} />
+                        <ReadonlyRow label="Số điện thoại" value={profile.phone || "—"} />
+                        <ReadonlyRow label="Trường/Tổ chức" value={profile.school || "—"} />
+                    </div>
+                )}
             </div>
 
-            {ctxUser?.role === "admin" && (
+            {canEdit && (
                 <p className="text-xs text-foreground/40 mt-4">
                     Admin có thể chỉnh sửa toàn bộ tài khoản tại trang Quản lý tài khoản.
                 </p>

@@ -35,8 +35,8 @@ interface StageDraft {
     end_at: string;
     allow_registration: boolean;
     allow_submission: boolean;
-    allow_resubmit: boolean;
     submission_type: string;
+    prompt_text: string;
     display_order: number;
 }
 
@@ -75,8 +75,8 @@ function emptyStage(order: number): StageDraft {
         end_at: "",
         allow_registration: false,
         allow_submission: false,
-        allow_resubmit: false,
         submission_type: "",
+        prompt_text: "",
         display_order: order,
     };
 }
@@ -90,8 +90,8 @@ function stageFromDb(s: DbContestStage): StageDraft {
         end_at: toLocalInput(s.end_at),
         allow_registration: s.allow_registration,
         allow_submission: s.allow_submission,
-        allow_resubmit: s.allow_resubmit,
         submission_type: s.submission_type ?? "",
+        prompt_text: s.prompt_text ?? "",
         display_order: s.display_order,
     };
 }
@@ -132,6 +132,7 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
     const [participationType, setParticipationType] = useState<ContestParticipationType>(
         contest?.participation_type ?? "individual",
     );
+    const [minTeamSize, setMinTeamSize] = useState<number>(contest?.min_team_size ?? 1);
     const [maxTeamSize, setMaxTeamSize] = useState<number>(contest?.max_team_size ?? 1);
     const [status, setStatus] = useState<ContestStatus>(
         // Normalize stored participation values before editing.
@@ -149,9 +150,14 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
     }, [title, slugTouched]);
 
     useEffect(() => {
-        if (participationType === "individual" && maxTeamSize !== 1) setMaxTeamSize(1);
-        if (participationType !== "individual" && maxTeamSize < 2) setMaxTeamSize(2);
-    }, [participationType, maxTeamSize]);
+        if (participationType === "individual") {
+            if (minTeamSize !== 1) setMinTeamSize(1);
+            if (maxTeamSize !== 1) setMaxTeamSize(1);
+            return;
+        }
+        if (minTeamSize < 2) setMinTeamSize(2);
+        if (maxTeamSize < 2) setMaxTeamSize(3);
+    }, [participationType, minTeamSize, maxTeamSize]);
 
     function updateStage(idx: number, patch: Partial<StageDraft>) {
         setStages((prev) => prev.map((s, i) => (i === idx ? { ...s, ...patch } : s)));
@@ -174,11 +180,14 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
         const cEnd = new Date(endAt).getTime();
         if (Number.isNaN(cStart) || Number.isNaN(cEnd)) return "Mốc thời gian không hợp lệ";
         if (!(cStart < cEnd)) return "Bắt đầu cuộc thi phải trước kết thúc cuộc thi";
-        if (participationType === "individual" && maxTeamSize !== 1) {
-            return "Cuộc thi cá nhân phải có max_team_size = 1";
+        if (participationType === "individual" && (minTeamSize !== 1 || maxTeamSize !== 1)) {
+            return "Cuộc thi cá nhân phải có min/max thành viên = 1";
         }
-        if (participationType !== "individual" && maxTeamSize < 2) {
-            return "Cuộc thi đội phải có max_team_size ≥ 2";
+        if (participationType !== "individual" && minTeamSize < 2) {
+            return "Cuộc thi đội phải có tối thiểu 2 thành viên";
+        }
+        if (participationType !== "individual" && maxTeamSize < minTeamSize) {
+            return "Số thành viên tối đa không được nhỏ hơn tối thiểu";
         }
         for (const [i, s] of stages.entries()) {
             const label = `Giai đoạn ${i + 1}`;
@@ -210,6 +219,7 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
                 rules: rules.trim() || null,
                 cover_image_url: coverImageUrl.trim() || null,
                 participation_type: participationType,
+                min_team_size: minTeamSize,
                 max_team_size: maxTeamSize,
                 start_at: fromLocalInput(startAt),
                 end_at: fromLocalInput(endAt),
@@ -221,8 +231,8 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
                     end_at: fromLocalInput(s.end_at),
                     allow_registration: s.allow_registration,
                     allow_submission: s.allow_submission,
-                    allow_resubmit: s.allow_resubmit,
                     submission_type: s.submission_type.trim() || null,
+                    prompt_text: s.prompt_text.trim() || null,
                     display_order: i,
                 })),
             };
@@ -253,6 +263,10 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
             setSaving(false);
         }
     }
+
+    const teamSizeInvalid = participationType !== "individual" && maxTeamSize < minTeamSize;
+    const teamSizeHint = participationType === "individual" ? t("individualHint") : t("teamRangeHint");
+    const teamSizeError = teamSizeInvalid ? t("teamSizeRangeError") : undefined;
 
     return (
         <div
@@ -338,7 +352,7 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
                         </div>
                     </FormField>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                         <FormField label={t("fieldParticipation")} required>
                             <FormSelectDropdown
                                 options={PARTICIPATION_OPTIONS}
@@ -347,15 +361,36 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
                             />
                         </FormField>
                         <FormField
-                            label={t("fieldMaxTeamSize")}
+                            label={t("fieldMinTeamSize")}
                             required
-                            hint={participationType === "individual" ? t("individualHint") : t("teamHint")}
+                            hint={teamSizeHint}
+                            error={teamSizeError}
                         >
                             <FormInput
                                 type="number"
                                 min={participationType === "individual" ? 1 : 2}
                                 max={20}
                                 restrictToPositiveInteger
+                                hasError={teamSizeInvalid}
+                                value={minTeamSize}
+                                onChange={(e) =>
+                                    setMinTeamSize(Math.max(1, parseInt(e.target.value || "1", 10)))
+                                }
+                                disabled={participationType === "individual"}
+                            />
+                        </FormField>
+                        <FormField
+                            label={t("fieldMaxTeamSize")}
+                            required
+                            hint={teamSizeHint}
+                            error={teamSizeError}
+                        >
+                            <FormInput
+                                type="number"
+                                min={participationType === "individual" ? 1 : minTeamSize}
+                                max={20}
+                                restrictToPositiveInteger
+                                hasError={teamSizeInvalid}
                                 value={maxTeamSize}
                                 onChange={(e) =>
                                     setMaxTeamSize(Math.max(1, parseInt(e.target.value || "1", 10)))
@@ -463,34 +498,34 @@ export default function ContestForm({ contest, onClose, onSaved }: Props) {
                                         />
                                         {t("allowSubmission")}
                                     </label>
-                                    {s.allow_submission && (
-                                        <label className="inline-flex items-center gap-2 cursor-pointer ml-2 text-foreground/70">
-                                            <input
-                                                type="checkbox"
-                                                checked={s.allow_resubmit}
-                                                onChange={(e) =>
-                                                    updateStage(idx, {
-                                                        allow_resubmit: e.target.checked,
-                                                    })
-                                                }
-                                            />
-                                            {t("allowResubmit")}
-                                        </label>
-                                    )}
                                 </div>
                                 {s.allow_submission && (
-                                    <FormField label={t("submissionType")} hint={t("submissionTypeHint")}>
-                                        <FormInput
-                                            type="text"
-                                            value={s.submission_type}
-                                            onChange={(e) =>
-                                                updateStage(idx, {
-                                                    submission_type: e.target.value,
-                                                })
-                                            }
-                                            placeholder="file"
-                                        />
-                                    </FormField>
+                                    <div className="space-y-3">
+                                        <FormField label={t("submissionType")} hint={t("submissionTypeHint")}>
+                                            <FormInput
+                                                type="text"
+                                                value={s.submission_type}
+                                                onChange={(e) =>
+                                                    updateStage(idx, {
+                                                        submission_type: e.target.value,
+                                                    })
+                                                }
+                                                placeholder="file"
+                                            />
+                                        </FormField>
+                                        <FormField label={t("stagePrompt")} hint={t("stagePromptHint")}>
+                                            <FormTextarea
+                                                rows={3}
+                                                value={s.prompt_text}
+                                                onChange={(e) =>
+                                                    updateStage(idx, {
+                                                        prompt_text: e.target.value,
+                                                    })
+                                                }
+                                                placeholder={t("stagePromptPlaceholder")}
+                                            />
+                                        </FormField>
+                                    </div>
                                 )}
                             </div>
                         ))}

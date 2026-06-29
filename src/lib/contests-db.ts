@@ -10,8 +10,8 @@ import type {
     ContestWithStages,
 } from "@/types/database";
 
-const CONTEST_FIELDS = "id, slug, title, description, rules, cover_image_url, participation_type, max_team_size, start_at, end_at, status, created_at, updated_at";
-const STAGE_FIELDS = "id, contest_id, name, description, start_at, end_at, allow_registration, allow_submission, allow_resubmit, submission_type, display_order, created_at, updated_at";
+const CONTEST_FIELDS = "id, slug, title, description, rules, cover_image_url, participation_type, min_team_size, max_team_size, start_at, end_at, status, created_at, updated_at";
+const STAGE_FIELDS = "id, contest_id, name, description, start_at, end_at, allow_registration, allow_submission, submission_type, prompt_text, display_order, created_at, updated_at";
 
 export async function listContests(
     supabase: SupabaseClient,
@@ -66,6 +66,7 @@ export interface ContestInput {
     rules?: string | null;
     cover_image_url?: string | null;
     participation_type: ContestParticipationType;
+    min_team_size: number;
     max_team_size: number;
     start_at: string;
     end_at: string;
@@ -73,11 +74,12 @@ export interface ContestInput {
 }
 
 function validateContest(input: ContestInput): string | null {
-    if (input.participation_type === "individual" && input.max_team_size !== 1) {
-        return "individual contests must have max_team_size = 1";
+    if (input.participation_type === "individual" && (input.min_team_size !== 1 || input.max_team_size !== 1)) {
+        return "individual contests must have min_team_size = max_team_size = 1";
     }
-    if (input.participation_type !== "individual" && input.max_team_size < 2) {
-        return "team/both contests must have max_team_size >= 2";
+    if (input.participation_type !== "individual") {
+        if (input.min_team_size < 2) return "team/both contests must have min_team_size >= 2";
+        if (input.max_team_size < input.min_team_size) return "max_team_size must be greater than or equal to min_team_size";
     }
     const start = new Date(input.start_at);
     const end = new Date(input.end_at);
@@ -104,6 +106,7 @@ export async function updateContest(
 ): Promise<DbContest> {
     if (
         patch.participation_type !== undefined ||
+        patch.min_team_size !== undefined ||
         patch.max_team_size !== undefined ||
         patch.start_at !== undefined ||
         patch.end_at !== undefined
@@ -117,6 +120,7 @@ export async function updateContest(
             rules: patch.rules ?? existing.rules,
             cover_image_url: patch.cover_image_url ?? existing.cover_image_url,
             participation_type: patch.participation_type ?? existing.participation_type,
+            min_team_size: patch.min_team_size ?? existing.min_team_size,
             max_team_size: patch.max_team_size ?? existing.max_team_size,
             start_at: patch.start_at ?? existing.start_at,
             end_at: patch.end_at ?? existing.end_at,
@@ -147,8 +151,8 @@ export interface StageInput {
     end_at: string;
     allow_registration?: boolean;
     allow_submission?: boolean;
-    allow_resubmit?: boolean;
     submission_type?: string | null;
+    prompt_text?: string | null;
     display_order?: number;
 }
 
@@ -218,8 +222,8 @@ export async function updateStage(
         end_at: patch.end_at ?? stage.end_at,
         allow_registration: patch.allow_registration ?? stage.allow_registration,
         allow_submission: patch.allow_submission ?? stage.allow_submission,
-        allow_resubmit: patch.allow_resubmit ?? stage.allow_resubmit,
         submission_type: patch.submission_type ?? stage.submission_type,
+        prompt_text: patch.prompt_text ?? stage.prompt_text,
         display_order: patch.display_order ?? stage.display_order,
     };
     const err = validateStage(merged, contest);
@@ -266,8 +270,8 @@ export async function replaceStages(
         end_at: s.end_at,
         allow_registration: s.allow_registration ?? false,
         allow_submission: s.allow_submission ?? false,
-        allow_resubmit: s.allow_resubmit ?? false,
         submission_type: s.submission_type ?? null,
+        prompt_text: s.prompt_text ?? null,
         display_order: s.display_order ?? i,
     }));
     const { data, error } = await supabase.from("contest_stage").insert(rows).select(STAGE_FIELDS);
@@ -288,8 +292,7 @@ export function isCapabilityActive(
     );
 }
 
-// Returns the first active submission stage, or null. Use this to read
-// stage-level flags like allow_resubmit at submission time.
+// Returns the first active submission stage, or null.
 export function getActiveSubmissionStage(
     stages: DbContestStage[],
     now: Date = new Date(),
@@ -354,8 +357,11 @@ export async function createRegistration(
     if (contest.participation_type === "individual" && teamSize !== 1) {
         throw new Error("individual contest accepts only one member");
     }
-    if (contest.participation_type === "team" && teamSize < 2) {
-        throw new Error("team contest requires at least 2 members");
+    if (contest.participation_type === "team" && teamSize < contest.min_team_size) {
+        throw new Error(`team requires at least ${contest.min_team_size} members`);
+    }
+    if (contest.participation_type === "both" && teamSize !== 1 && teamSize < contest.min_team_size) {
+        throw new Error(`team requires either 1 member or at least ${contest.min_team_size} members`);
     }
     if (teamSize > contest.max_team_size) {
         throw new Error(`team exceeds max size ${contest.max_team_size}`);
@@ -424,6 +430,15 @@ export async function createAdminRegistration(
     const rows = normalizeMemberRows(0, input.leader_id, input.member_ids);
     const contest = await getContestById(supabase, contestId);
     if (!contest) throw new Error("contest not found");
+    if (contest.participation_type === "individual" && rows.length !== 1) {
+        throw new Error("individual contest accepts only one member");
+    }
+    if (contest.participation_type === "team" && rows.length < contest.min_team_size) {
+        throw new Error(`team requires at least ${contest.min_team_size} members`);
+    }
+    if (contest.participation_type === "both" && rows.length !== 1 && rows.length < contest.min_team_size) {
+        throw new Error(`team requires either 1 member or at least ${contest.min_team_size} members`);
+    }
     if (rows.length > contest.max_team_size) throw new Error(`team exceeds max size ${contest.max_team_size}`);
 
     const { data: reg, error: regErr } = await supabase
@@ -529,6 +544,15 @@ export async function updateRegistrationTeam(
         const contest = await getContestById(supabase, reg.contest_id);
         if (!contest) throw new Error("contest not found");
         const all = Array.from(new Set([patch.leaderId, ...patch.member_ids]));
+        if (contest.participation_type === "individual" && all.length !== 1) {
+            throw new Error("individual contest accepts only one member");
+        }
+        if (contest.participation_type === "team" && all.length < contest.min_team_size) {
+            throw new Error(`team requires at least ${contest.min_team_size} members`);
+        }
+        if (contest.participation_type === "both" && all.length !== 1 && all.length < contest.min_team_size) {
+            throw new Error(`team requires either 1 member or at least ${contest.min_team_size} members`);
+        }
         if (all.length > contest.max_team_size) {
             throw new Error(`team exceeds max size ${contest.max_team_size}`);
         }
@@ -570,6 +594,15 @@ export async function updateAdminRegistration(
         const contest = await getContestById(supabase, reg.contest_id);
         if (!contest) throw new Error("contest not found");
         const memberRows = normalizeMemberRows(registrationId, leaderId, memberIds);
+        if (contest.participation_type === "individual" && memberRows.length !== 1) {
+            throw new Error("individual contest accepts only one member");
+        }
+        if (contest.participation_type === "team" && memberRows.length < contest.min_team_size) {
+            throw new Error(`team requires at least ${contest.min_team_size} members`);
+        }
+        if (contest.participation_type === "both" && memberRows.length !== 1 && memberRows.length < contest.min_team_size) {
+            throw new Error(`team requires either 1 member or at least ${contest.min_team_size} members`);
+        }
         if (memberRows.length > contest.max_team_size) throw new Error(`team exceeds max size ${contest.max_team_size}`);
         await supabase.from("registration_member").delete().eq("registration_id", registrationId);
         const { error } = await supabase.from("registration_member").insert(memberRows);

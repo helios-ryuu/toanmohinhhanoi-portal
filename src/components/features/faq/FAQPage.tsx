@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useUser } from "@/contexts/UserContext";
 import PageHeader from "@/components/layout/PageHeader";
 
 interface FAQItem {
@@ -41,9 +40,8 @@ function Accordion({ items }: { items: FAQItem[] }) {
     );
 }
 
-export default function FAQPage() {
+export default function FAQPage({ mode = "user" }: { mode?: "user" | "admin" }) {
     const t = useTranslations("faq");
-    const { user } = useUser();
 
     const userItems: FAQItem[] = [
         { q: t("q1"), a: t("a1") },
@@ -68,25 +66,22 @@ export default function FAQPage() {
         { q: t("aq8"), a: t("aa8") },
     ];
 
+    const items = mode === "admin" ? adminItems : userItems;
+
     return (
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-            <PageHeader title={t("pageTitle")} description={t("pageSubtitle")} className="mb-0" />
+            <PageHeader
+                title={mode === "admin" ? t("adminPageTitle") : t("pageTitle")}
+                description={mode === "admin" ? t("adminPageSubtitle") : t("pageSubtitle")}
+                className="mb-0"
+            />
 
             <section>
-                <h2 className="text-sm font-bold tracking-widest text-foreground/80 uppercase mb-3">
-                    {t("userSection")}
+                <h2 className={`text-sm font-bold tracking-widest uppercase mb-3 ${mode === "admin" ? "text-accent" : "text-foreground/80"}`}>
+                    {mode === "admin" ? t("adminSection") : t("userSection")}
                 </h2>
-                <Accordion items={userItems} />
+                <Accordion items={items} />
             </section>
-
-            {user?.role === "admin" && (
-                <section>
-                    <h2 className="text-sm font-bold tracking-widest text-accent uppercase mb-3">
-                        {t("adminSection")}
-                    </h2>
-                    <Accordion items={adminItems} />
-                </section>
-            )}
         </div>
     );
 }

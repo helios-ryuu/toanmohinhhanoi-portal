@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Calendar, Upload, CheckCircle2 } from "lucide-react";
 import type { ContestWithStages, DbContestStage } from "@/types/database";
@@ -29,13 +30,21 @@ function isActive(s: DbContestStage, now: number): boolean {
     return new Date(s.start_at).getTime() <= now && now <= new Date(s.end_at).getTime();
 }
 
-export default function ContestStageTimeline({ contest }: { contest: ContestWithStages }) {
+export default function ContestStageTimeline({
+    contest,
+    showCurrentStatus = true,
+    submissionCtaHref,
+}: {
+    contest: ContestWithStages;
+    showCurrentStatus?: boolean;
+    submissionCtaHref?: string;
+}) {
     const t = useTranslations("contests");
     const [now, setNow] = useState<number | null>(null);
     useEffect(() => {
         const tick = () => setNow(Date.now());
         tick();
-        const id = setInterval(tick, 30_000);
+        const id = setInterval(tick, 1000);
         return () => clearInterval(id);
     }, []);
 
@@ -57,38 +66,52 @@ export default function ContestStageTimeline({ contest }: { contest: ContestWith
 
     return (
         <div className="space-y-3">
-            <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
-                <p className="text-xs uppercase tracking-widest text-foreground/66 mb-2">
-                    {t("currentlyIn")}
-                </p>
-                {activeStages.length === 0 ? (
-                    <p className="text-sm text-foreground/74">
-                        {t("noActiveStage")}
+            {showCurrentStatus && (
+                <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
+                    <p className="text-xs uppercase tracking-widest text-foreground/66 mb-2">
+                        {t("currentlyIn")}
                     </p>
-                ) : (
-                    <div className="flex flex-wrap gap-2">
-                        {activeStages.map((s) => (
+                    {activeStages.length === 0 ? (
+                        <p className="text-sm text-foreground/74">
+                            {t("noActiveStage")}
+                        </p>
+                    ) : (
+                        <div className="flex flex-wrap gap-2">
+                            {activeStages.map((s) => (
+                                <span
+                                    key={s.id}
+                                    className="px-2 py-1 rounded-[4px] text-xs bg-accent/20 text-accent border border-accent/40"
+                                >
+                                    {s.name}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                    <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+                        {canSubmit && submissionCtaHref ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Link
+                                    href={submissionCtaHref}
+                                    className="inline-flex items-center gap-1.5 rounded-[4px] border border-amber-500/40 bg-amber-500/15 px-2 py-1 font-semibold text-amber-500 transition-colors hover:bg-amber-500/20"
+                                >
+                                    <Upload size={12} /> {t("submissionOpen")}
+                                </Link>
+                                <span className="text-[11px] text-foreground/50">{t("submissionOpenHint")}</span>
+                            </div>
+                        ) : (
                             <span
-                                key={s.id}
-                                className="px-2 py-1 rounded-[4px] text-xs bg-accent/20 text-accent border border-accent/40"
+                                className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[4px] ${
+                                    canSubmit
+                                        ? "bg-amber-500/15 text-amber-500"
+                                        : "bg-foreground/5 text-foreground/50"
+                                }`}
                             >
-                                {s.name}
+                                <Upload size={12} /> {canSubmit ? t("submissionOpen") : t("submissionClosed")}
                             </span>
-                        ))}
+                        )}
                     </div>
-                )}
-                <div className="mt-3 flex flex-wrap gap-3 text-xs">
-                    <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-[4px] ${
-                            canSubmit
-                                ? "bg-amber-500/15 text-amber-500"
-                                : "bg-foreground/5 text-foreground/50"
-                        }`}
-                    >
-                        <Upload size={12} /> {canSubmit ? t("submissionOpen") : t("submissionClosed")}
-                    </span>
                 </div>
-            </div>
+            )}
 
             <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
                 <div className="space-y-3">

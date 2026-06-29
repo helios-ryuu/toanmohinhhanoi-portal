@@ -137,6 +137,7 @@ create table public.contest (
     rules               text,
     cover_image_url     text,
     participation_type  public.contest_participation_type  not null default 'individual',
+    min_team_size       smallint                           not null default 1,
     max_team_size       smallint                           not null default 1,
     start_at            timestamptz                        not null,
     end_at              timestamptz                        not null,
@@ -158,8 +159,8 @@ create table public.contest_stage (
     end_at             timestamptz   not null,
     allow_registration boolean       not null default false,
     allow_submission   boolean       not null default false,
-    allow_resubmit     boolean       not null default false,
     submission_type    text,
+    prompt_text        text,
     display_order      integer       not null default 0,
     created_at         timestamptz   not null default now(),
     updated_at         timestamptz
@@ -245,8 +246,8 @@ alter table public.tag
 
 alter table public.contest
     add constraint contest_team_size_check check (
-        (participation_type = 'individual' and max_team_size = 1) or
-        (participation_type in ('team', 'both') and max_team_size >= 2)
+        (participation_type = 'individual' and min_team_size = 1 and max_team_size = 1) or
+        (participation_type in ('team', 'both') and min_team_size >= 2 and max_team_size >= min_team_size)
     ),
     add constraint contest_grand_order check (start_at < end_at);
 

@@ -21,6 +21,12 @@ function stageChipClasses(stage: DbContestStage): string {
 
 type CardContest = DbContest | ContestWithStages;
 
+function formatParticipation(contest: CardContest): string {
+    if (contest.participation_type === "individual") return "Cá nhân tham gia riêng lẻ";
+    if (contest.min_team_size === contest.max_team_size) return `Mỗi đội ${contest.max_team_size} thành viên`;
+    return `Mỗi đội ${contest.min_team_size}-${contest.max_team_size} thành viên`;
+}
+
 export default function ContestCard({ contest }: { contest: CardContest }) {
     const stages: DbContestStage[] = "stages" in contest && Array.isArray(contest.stages) ? contest.stages : [];
     const visibleStages = stages.slice(0, 3);
@@ -49,11 +55,9 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
             <div className="flex flex-col flex-1 p-4">
                 <div className="flex items-start gap-2 mb-2">
                     <ContestTypeBadge type={contest.participation_type} />
-                    {contest.participation_type !== "individual" && (
-                        <span className="text-[10px] text-foreground/58 tracking-wider">
-                            Tối đa {contest.max_team_size} thành viên
-                        </span>
-                    )}
+                    <span className="text-[10px] text-foreground/58 tracking-wider">
+                        {formatParticipation(contest)}
+                    </span>
                 </div>
 
                 <h2 className="font-semibold text-lg tracking-wide line-clamp-2 leading-tight group-hover:text-accent transition-colors">

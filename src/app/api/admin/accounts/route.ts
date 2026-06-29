@@ -4,13 +4,16 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiError, apiSuccess, handleRouteError } from "@/lib/api-helpers";
 import { createUser, dbUserToUser, listUsers, type UserAdminInput } from "@/lib/users-db";
 
+const USERNAME_RE = /^[A-Za-z0-9_]{6,30}$/;
+const PASSWORD_RE = /^\S{8,}$/;
+
 function normalizeUserInput(body: Record<string, unknown>, requirePassword: boolean): UserAdminInput | string {
     const username = typeof body.username === "string" ? body.username.trim().toLowerCase() : "";
     const password = typeof body.password === "string" ? body.password : "";
     const full_name = typeof body.full_name === "string" ? body.full_name.trim() : "";
     const role = body.role === "admin" ? "admin" : "user";
-    if (!/^[a-z0-9_]{3,30}$/.test(username)) return "username must be 3-30 lowercase letters, numbers, or underscores";
-    if (requirePassword && password.length < 1) return "password is required";
+    if (!USERNAME_RE.test(username)) return "username must be 6-30 letters, numbers, or underscores";
+    if (requirePassword && !PASSWORD_RE.test(password)) return "password must be at least 8 characters and contain no spaces";
     if (!full_name) return "full_name is required";
     return {
         username,

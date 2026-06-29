@@ -12,6 +12,9 @@ export default function MobileDropdown() {
     const { user } = useUser();
     const isAdmin = user?.role === "admin";
     const visibleItems = menuItems.filter((item) => (!item.requiresAdmin || isAdmin) && !item.desktopOnly);
+    const activeItem = visibleItems
+        .filter((item) => item.href === "/" ? pathname === "/" : pathname === item.href || pathname.startsWith(`${item.href}/`))
+        .sort((a, b) => b.href.length - a.href.length)[0];
 
     const handleClose = () => setIsMobileOpen(false);
 
@@ -40,9 +43,7 @@ export default function MobileDropdown() {
             >
                 <nav className="flex flex-col py-1">
                     {visibleItems.map((item) => {
-                        const isActive = item.href === "/"
-                            ? pathname === "/"
-                            : pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href + "/"));
+                        const isActive = activeItem?.href === item.href;
                         const Icon = item.icon;
 
                         if (item.underDevelopment) {

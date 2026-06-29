@@ -21,7 +21,6 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const tCommon = useTranslations("common");
     const isHomePage = pathname === "/";
-    const isPostPage = pathname.startsWith("/post/");
 
     return (
         <div className="flex flex-col min-h-screen md:h-screen md:overflow-hidden relative">
@@ -81,8 +80,8 @@ function AppShellContent({ children }: { children: React.ReactNode }) {
                 <NavigationPanel />
 
                 <div className="relative flex-1 md:min-h-0">
-                    <main className={`h-full overflow-auto ${isHomePage ? "bg-transparent" : "bg-background"} ${isPostPage ? "lg:overflow-hidden" : ""}`}>
-                        <div className={`${isPostPage ? "h-full" : "min-h-full"} flex flex-col ${!isPostPage ? "pb-[env(safe-area-inset-bottom)]" : ""}`}>
+                    <main className={`h-full overflow-auto ${isHomePage ? "bg-transparent" : "bg-background"}`}>
+                        <div className="min-h-full flex flex-col pb-[env(safe-area-inset-bottom)]">
                             <div className="flex-1 min-h-0">{children}</div>
                             <Footer transparent={false} />
                         </div>

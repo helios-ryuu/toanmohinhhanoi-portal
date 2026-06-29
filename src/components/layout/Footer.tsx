@@ -45,6 +45,7 @@ export default function Footer({ transparent = false }: FooterProps) {
                     <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-foreground/68">{t("contact")}</h3>
                     <div className="space-y-1 text-sm text-foreground/72">
                         <div>{t("contactAddress")}</div>
+                        <div>{t("contactInstagram")}</div>
                         <div>{t("contactPhone")}</div>
                         <div>{t("contactEmail")}</div>
                     </div>

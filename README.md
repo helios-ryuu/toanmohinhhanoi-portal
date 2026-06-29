@@ -2,7 +2,9 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Phiên bản hiện tại: v1.0.0**
+> **Phiên bản hiện tại: v1.1.0**
+>
+> Domain vận hành: `https://toanmohinhvietnam.com`
 
 ---
 
@@ -35,7 +37,7 @@ toanmohinhhanoi-portal/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── auth/               # login, logout, me
-│   │   │   ├── users/              # [id], me (GET + PATCH with length validation)
+│   │   │   ├── users/              # [id], me (GET; PATCH chỉ dành cho admin)
 │   │   │   ├── posts/              # GET list, GET [slug]
 │   │   │   ├── tags/               # GET
 │   │   │   ├── contests/           # GET list, GET [slug]
@@ -109,7 +111,7 @@ NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-key>
 SUPABASE_SECRET_KEY=<secret-key>
 SESSION_SECRET=<long-random-string>
-NEXT_PUBLIC_SITE_URL=http://localhost:3456
+NEXT_PUBLIC_SITE_URL=https://toanmohinhvietnam.com
 ```
 
 ### 3. Áp dụng schema Supabase
@@ -122,7 +124,7 @@ Vì tài khoản do quản trị viên cấp thủ công, hãy seed admin đầu
 
 ```sql
 insert into public.users (username, password, full_name, email, role)
-values ('admin', 'admin', 'Portal Admin', 'admin@example.com', 'admin');
+values ('admin_01', 'admin1234', 'Portal Admin', 'admin@example.com', 'admin');
 ```
 
 Sau khi đăng nhập, đổi mật khẩu hoặc tạo admin khác trong `/admin/accounts`.
@@ -160,13 +162,16 @@ DB helpers (src/lib/*-db.ts)
 Supabase (Postgres + Storage)
 ```
 
-## v1.0.0 Notes
+## v1.1.0 Notes
 
 - Admin cấp tài khoản tại `/admin/accounts`.
-- `/admin/accounts` có tìm kiếm, filter, sort, pagination 50 và highlight row đang sửa.
-- Admin tạo đội thi, mã đội, bảng thi và thành viên trong `/contest-management`; không có bước duyệt đội.
-- Thí sinh chỉ đăng nhập để xem đội đã được cấp và nộp bài khi vòng nộp bài đang mở.
+- `/admin/accounts` có tìm kiếm, filter, sort, pagination 50, highlight row đang sửa và validation username/password.
+- Admin tạo đội thi, mã đội, bảng thi và thành viên trong `/contest-management`; min/max thành viên được validate theo từng cuộc thi.
+- Thí sinh chỉ đăng nhập để xem đội đã được cấp, xem vòng hiện tại/đề bài và nộp bài khi vòng nộp bài đang mở.
+- Bài nộp luôn có thể thay thế trong thời gian vòng nộp bài còn mở.
 - Bài nộp mới được lưu theo `contestSlug/TEAM_CODE/file`.
+- Q&A chung dành cho thí sinh; Q&A Admin tách riêng tại `/faq/admin`.
+- Header có Facebook và Instagram chính thức; footer dùng hotline/email/social mới.
 - `/admin/bucket` hỗ trợ duyệt cây thư mục, tạo/đổi tên/xoá folder và file.
 - Homepage có `Bài viết nổi bật` và `Các cuộc thi`; accent chính là `#1F51FF`.
 - `password` đang được lưu plaintext theo yêu cầu vận hành nội bộ của phiên bản này.

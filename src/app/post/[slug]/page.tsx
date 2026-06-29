@@ -83,19 +83,21 @@ export default async function BlogPostPage({ params }: Props) {
     const relatedPosts = await getCachedRelatedPosts(slug, post.tags || []);
 
     return (
-        <div className="flex flex-col lg:h-full lg:overflow-hidden">
+        <div className="flex flex-col">
             {/* Mobile TOC Bar */}
             <div className="shrink-0 z-40">
                 <MobileTocBar title={post.title} content={post.content} />
             </div>
 
-            <div className="flex gap-2 px-4 md:px-0 max-w-dvw mx-auto w-full lg:flex-1 lg:min-h-0">
-                <aside className="hidden md:block w-68 flex-none h-full overflow-hidden border-r border-(--border-color) bg-background">
-                    <TableOfContents content={post.content} />
+            <div className="flex gap-2 px-4 md:px-0 max-w-dvw mx-auto w-full">
+                <aside className="hidden md:block w-68 flex-none border-r border-(--border-color) bg-background">
+                    <div className="sticky top-0 h-[calc(100vh-6rem)] overflow-hidden">
+                        <TableOfContents content={post.content} />
+                    </div>
                 </aside>
 
                 {/* Main Content */}
-                <article className="flex-1 min-w-0 mx-auto lg:h-full lg:overflow-y-auto py-6 md:py-4 md:px-6">
+                <article className="flex-1 min-w-0 mx-auto py-6 md:py-4 md:px-6">
                     <header className="mb-8">
                         {/* Cover image (FR_POST_03) */}
                         {post.image && (
@@ -141,8 +143,10 @@ export default async function BlogPostPage({ params }: Props) {
                 </article>
 
                 {/* Related posts panel */}
-                <aside className="hidden xl:block w-62 flex-none h-full overflow-y-auto pt-6 pb-10 px-2">
-                    <RelatedPosts posts={relatedPosts} />
+                <aside className="hidden xl:block w-62 flex-none pt-6 pb-10 px-2">
+                    <div className="sticky top-0 max-h-[calc(100vh-6rem)] overflow-y-auto">
+                        <RelatedPosts posts={relatedPosts} />
+                    </div>
                 </aside>
             </div>
         </div>
