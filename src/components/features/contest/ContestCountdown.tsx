@@ -45,11 +45,11 @@ function formatDelta(ms: number, locale: string): string {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
     if (locale === "vi") {
-        if (days > 0) return `${days} ngày ${hours} giờ ${minutes} phút`;
+        if (days > 0) return `${days} ngày ${hours} giờ ${minutes} phút ${seconds} giây`;
         if (hours > 0) return `${hours} giờ ${minutes} phút ${seconds} giây`;
         return `${minutes} phút ${seconds} giây`;
     }
-    if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+    if (days > 0) return `${days}d ${hours}h ${minutes}m ${seconds}s`;
     if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
     return `${minutes}m ${seconds}s`;
 }
@@ -76,7 +76,7 @@ export default function ContestCountdown({ contest }: { contest: CountdownContes
     if (contest.status === "closed" || contest.status === "cancelled") {
         return (
             <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
-                <p className="text-sm text-foreground/74">
+                <p className="text-sm text-foreground/70">
                     {contest.status === "closed" ? t("ended") : t("cancelled")}
                 </p>
             </div>
@@ -88,7 +88,7 @@ export default function ContestCountdown({ contest }: { contest: CountdownContes
     if (!milestone) {
         return (
             <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
-                <p className="text-sm text-foreground/74">{t("allMilestonesPassed")}</p>
+                <p className="text-sm text-foreground/70">{t("allMilestonesPassed")}</p>
             </div>
         );
     }
@@ -97,7 +97,7 @@ export default function ContestCountdown({ contest }: { contest: CountdownContes
 
     return (
         <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
-            <p className="text-xs uppercase tracking-widest text-foreground/66 mb-1">{milestone.label}</p>
+            <p className="text-xs uppercase tracking-widest text-foreground/70 mb-1">{milestone.label}</p>
             <p className="text-accent font-mono text-lg sm:text-xl">{formatDelta(delta, locale)}</p>
         </div>
     );

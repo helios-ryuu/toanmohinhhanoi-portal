@@ -51,7 +51,7 @@ export default function ContestStageTimeline({
     const stages = contest.stages ?? [];
     if (stages.length === 0) {
         return (
-            <p className="text-sm text-foreground/66 italic">
+            <p className="text-sm text-foreground/70 italic">
                 {t("stagesEmpty")}
             </p>
         );
@@ -68,11 +68,11 @@ export default function ContestStageTimeline({
         <div className="space-y-3">
             {showCurrentStatus && (
                 <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-4">
-                    <p className="text-xs uppercase tracking-widest text-foreground/66 mb-2">
+                    <p className="text-xs uppercase tracking-widest text-foreground/70 mb-2">
                         {t("currentlyIn")}
                     </p>
                     {activeStages.length === 0 ? (
-                        <p className="text-sm text-foreground/74">
+                        <p className="text-sm text-foreground/70">
                             {t("noActiveStage")}
                         </p>
                     ) : (
@@ -150,7 +150,7 @@ export default function ContestStageTimeline({
                                             </span>
                                         )}
                                     </div>
-                                    <div className="text-foreground/66 whitespace-nowrap text-[10px]">
+                                    <div className="text-foreground/70 whitespace-nowrap text-[10px]">
                                         {formatDateTime(s.start_at)} – {formatDateTime(s.end_at)}
                                     </div>
                                 </div>
@@ -161,7 +161,7 @@ export default function ContestStageTimeline({
                                     />
                                 </div>
                                 {s.description && (
-                                    <p className="text-[11px] text-foreground/66 leading-relaxed">
+                                    <p className="text-[11px] text-foreground/70 leading-relaxed">
                                         {s.description}
                                     </p>
                                 )}
@@ -170,7 +170,7 @@ export default function ContestStageTimeline({
                     })}
                 </div>
                 {now !== null && (
-                    <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-[11px] text-foreground/66">
+                    <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-[11px] text-foreground/70">
                         <Calendar size={12} />
                         <span>
                             {t("grandWindow", {

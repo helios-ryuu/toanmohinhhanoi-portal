@@ -135,7 +135,7 @@ export default async function ContestDetailPage({ params }: Props) {
             <div className="mb-3 flex flex-wrap items-center gap-2">
                 <ContestStatusBadge status={contest.status} />
                 <ContestTypeBadge type={contest.participation_type} />
-                <span className="text-xs text-foreground/66">
+                <span className="text-xs text-foreground">
                     {formatParticipation(contest)}
                 </span>
             </div>
@@ -143,7 +143,7 @@ export default async function ContestDetailPage({ params }: Props) {
             <PageHeader
                 title={contest.title}
                 description={contest.description}
-                descriptionClassName="text-foreground/70"
+                descriptionClassName="text-foreground"
             />
 
             <div className="mb-6">
@@ -155,7 +155,7 @@ export default async function ContestDetailPage({ params }: Props) {
                     <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                         {t("rules")}
                     </h2>
-                    <div className="text-sm text-foreground/70 leading-relaxed">
+                    <div className="text-sm text-foreground leading-relaxed">
                         {rulesContent}
                     </div>
                 </section>
@@ -167,12 +167,12 @@ export default async function ContestDetailPage({ params }: Props) {
                 </h2>
                 <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div>
-                        <div className="text-xs uppercase tracking-widest text-foreground/66">{t("grandStart")}</div>
+                        <div className="text-xs uppercase tracking-widest text-foreground/70">{t("grandStart")}</div>
                         <div className="text-sm">{formatDateTime(contest.start_at)}</div>
                     </div>
                     <div className="hidden sm:block text-foreground/30">→</div>
                     <div className="sm:text-right">
-                        <div className="text-xs uppercase tracking-widest text-foreground/66">{t("grandEnd")}</div>
+                        <div className="text-xs uppercase tracking-widest text-foreground/70">{t("grandEnd")}</div>
                         <div className="text-sm">{formatDateTime(contest.end_at)}</div>
                     </div>
                 </div>
@@ -193,7 +193,7 @@ export default async function ContestDetailPage({ params }: Props) {
                 <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                     {t("participation")}
                 </h2>
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-foreground">
                     {tType(contest.participation_type)}
                     {" — "}
                     {formatParticipation(contest)}.
@@ -201,7 +201,7 @@ export default async function ContestDetailPage({ params }: Props) {
             </section>
 
             <section className="mt-8 border-t border-(--border-color) pt-6">
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-foreground">
                     Tài khoản, đội thi và thành viên sẽ được ban tổ chức cấp khi tham gia cuộc thi.
                 </p>
             </section>

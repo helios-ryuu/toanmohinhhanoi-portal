@@ -27,14 +27,14 @@ export default function Footer({ transparent = false }: FooterProps) {
                             <div className="text-xs text-foreground/58">Mathematical Modeling Hanoi</div>
                         </div>
                     </div>
-                    <p className="mt-3 max-w-md text-xs leading-relaxed text-foreground/70">{t("copyright")}</p>
+                    <p className="mt-3 max-w-md text-xs leading-relaxed text-foreground">{t("copyright")}</p>
                 </div>
 
                 <div>
-                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-widest text-foreground/70">{t("navigation")}</h3>
+                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-widest text-foreground">{t("navigation")}</h3>
                     <div className="grid grid-cols-2 gap-1">
                         {links.map((item) => (
-                            <Link key={item.href} href={item.href} className="text-sm text-foreground/70 hover:text-accent">
+                            <Link key={item.href} href={item.href} className="text-sm text-foreground hover:text-accent">
                                 {tNav(item.labelKey)}
                             </Link>
                         ))}
@@ -42,8 +42,8 @@ export default function Footer({ transparent = false }: FooterProps) {
                 </div>
 
                 <div>
-                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-widest text-foreground/70">{t("contact")}</h3>
-                    <div className="space-y-1 text-sm text-foreground/70">
+                    <h3 className="mb-2 text-sm font-semibold uppercase tracking-widest text-foreground">{t("contact")}</h3>
+                    <div className="space-y-1 text-sm text-foreground">
                         <div>{t("contactAddress")}</div>
                         <div>{t("contactInstagram")}</div>
                         <div>{t("contactPhone")}</div>

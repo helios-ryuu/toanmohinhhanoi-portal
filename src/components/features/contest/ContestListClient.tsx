@@ -116,7 +116,7 @@ export default function ContestListClient({ contests }: Props) {
             {/* Results */}
             {displayed.length === 0 ? (
                 <div className="rounded-[8px] border border-(--border-color) bg-(--post-card) p-8 text-center">
-                    <p className="text-sm text-foreground/66">{t("emptyState")}</p>
+                    <p className="text-sm text-foreground/70">{t("emptyState")}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

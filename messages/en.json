@@ -503,6 +503,26 @@
             {
                 "q": "What should I do before the final deadline?",
                 "a": "Do not wait until the last minute. Confirm the file format, team, contest, and that the latest submission appears in My Contests."
+            },
+            {
+                "q": "How do I sign in?",
+                "a": "Click Sign in in the navigation bar, enter the issued username and password, then confirm your account appears on the right. If sign-in fails, check for extra spaces or contact the organizers for a password reset."
+            },
+            {
+                "q": "How do I view my contests?",
+                "a": "After signing in, open Profile and choose My Contests. This page lists assigned contests, team details, members, current stage, prompt, and latest submission."
+            },
+            {
+                "q": "How do I quickly find a team or contest?",
+                "a": "In My Contests, use search for the contest name, team name, or team code. You can also filter by submission status to show contests with open submission windows."
+            },
+            {
+                "q": "How do I submit work?",
+                "a": "Open My Contests, find the correct contest and active submission stage, choose a file, and submit. After submitting, check the submission area to confirm the latest file is recorded."
+            },
+            {
+                "q": "How do I replace or delete a submission?",
+                "a": "While the submission stage is still open, use the replace or delete action in the contest's submission area. Once the stage closes, the system locks those actions."
             }
         ],
         "adminItems": [
@@ -545,6 +565,26 @@
             {
                 "q": "What should happen before closing a contest?",
                 "a": "Review stage status, download or verify required submissions, make sure team changes are complete, then update the contest status according to the organizers' decision."
+            },
+            {
+                "q": "How do I create a contestant or admin account?",
+                "a": "Go to Account Management, create a new account, and enter username, password, contact details, and role. After creation, share the credentials with the correct recipient through an internal channel."
+            },
+            {
+                "q": "How do I create a complete contest quickly?",
+                "a": "Go to Contest Management, choose New contest, then enter general information, cover image, rules, participation type, member limits, and at least one stage. Keep it as Draft until review is complete."
+            },
+            {
+                "q": "How do I add a team?",
+                "a": "In Contest Management, open Registrations for the target contest. Enter team code, team name, level, leader, and members, then save. If validation fails, recheck usernames and member limits."
+            },
+            {
+                "q": "How do I download contestant submissions?",
+                "a": "Open the contest's registration/submission management view, expand the team, and download the file. Download links are signed URLs with an expiry, so generate a new link if one expires."
+            },
+            {
+                "q": "How do I manage images and files in buckets?",
+                "a": "Open Bucket, choose post-images for public images or submissions for uploaded work. Admins can create folders, upload, rename, delete, and copy URLs."
             }
         ]
     },

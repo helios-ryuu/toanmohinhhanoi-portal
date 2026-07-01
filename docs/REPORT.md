@@ -1,36 +1,36 @@
-# Report v1.2.0
+# Report v1.2.1
 
 ## Tổng quan
 
-v1.2.0 tập trung polish trải nghiệm đọc, tìm kiếm và vận hành cho portal Toán Mô Hình Hà Nội:
+v1.2.1 là patch release hoàn thiện các điểm phát hiện khi kiểm thử v1.2.0 trên localhost:
 
-- Search ở header tìm được bài viết, kỳ thi và tag, đồng thời dùng placeholder/label i18n.
-- Timeline kỳ thi làm nổi bật giai đoạn đang diễn ra bằng màu vàng thống nhất với badge nộp bài.
-- Q&A user/admin được mở rộng theo hướng quy định, lưu ý vận hành và các trường hợp cần liên hệ ban tổ chức.
-- Footer và header được chỉnh typography, màu chữ, copyright và spacing giữa social/language/account.
-- Legacy cleanup xử lý warning lint, bỏ type search cũ và thay `THREE.Clock` bằng `THREE.Timer`.
+- Bổ sung Q&A Operational cho user và admin để hướng dẫn các thao tác cơ bản.
+- Sửa tương tác click/tap trong header search bằng link điều hướng thật.
+- Countdown public luôn hiển thị giây, kể cả khi còn nhiều ngày.
+- Đồng bộ thêm màu chữ ở footer và các vùng copy contest theo tone nội dung bài viết.
 
 ## Thay đổi chính
 
-- Mở rộng `/api/search` để trả thêm `contests` bên cạnh `posts` và `tags`.
-- Chuyển FAQ từ key phẳng `q1/a1` sang mảng dữ liệu i18n có cấu trúc.
-- Chuẩn hóa màu body copy trong contest detail và footer theo tone nội dung bài viết.
-- Bật bypass optimizer cho ảnh public từ URL ngoài để tránh lỗi server khi upstream object không còn tồn tại.
-- Cập nhật docs/README/package version lên `1.2.0`.
+- Thêm hướng dẫn user: đăng nhập, xem Cuộc thi của tôi, tìm đội/kỳ thi, nộp bài, thay thế/xoá bài nộp.
+- Thêm hướng dẫn admin: tạo tài khoản, tạo kỳ thi, thêm đội, tải bài nộp, quản lý bucket.
+- Đổi item trong search dropdown từ button gọi `router.push` sang `Link` để navigation ổn định hơn.
+- Cập nhật format countdown tiếng Việt sang `x ngày y giờ z phút t giây` khi thời lượng còn trên 1 ngày.
+- Chuẩn hóa các vùng copy chính của footer và contest detail về `text-foreground`, cùng tone với body post.
+- Cập nhật docs/README/package version lên `1.2.1`.
 
 ## Rủi ro đã biết
 
 - Password plaintext vẫn là yêu cầu vận hành nội bộ và không phù hợp cho môi trường có yêu cầu bảo mật cao.
-- Search header lọc client-side trên dữ liệu cache 60 giây; nội dung mới có thể trễ tối đa một chu kỳ cache.
-- FAQ là nội dung tĩnh trong i18n, chưa có CMS riêng để admin chỉnh trực tiếp.
+- Search header vẫn lọc client-side trên dữ liệu cache 60 giây.
+- FAQ vẫn là nội dung tĩnh trong i18n, chưa có CMS riêng để admin chỉnh trực tiếp.
 
 ## Kiểm thử cần chạy
 
-- `pnpm exec tsc --noEmit`
-- `pnpm lint`
-- `pnpm build`
-- Tìm kiếm bài viết, kỳ thi và `#tag` từ header.
-- Mở `/faq` và `/faq/admin`, kiểm tra accordion trên desktop/mobile.
-- Mở trang chi tiết kỳ thi có stage đang diễn ra và xác nhận thanh stage màu vàng.
-- Kiểm tra footer/header spacing ở desktop và mobile.
-- Kiểm tra ảnh Supabase bị mất không còn làm request `/_next/image` lỗi 400.
+- `node -e` parse `messages/vi.json` và `messages/en.json`.
+- `./node_modules/.bin/tsc --noEmit`
+- `./node_modules/.bin/eslint`
+- `./node_modules/.bin/next build --webpack`
+- Tìm kiếm rồi click/tap vào kết quả bài viết, kỳ thi và tag trong header search.
+- Kiểm tra `/faq` và `/faq/admin` có cả nhóm Q&A Operational.
+- Kiểm tra contest countdown hiển thị giây với thời lượng còn trên 1 ngày.
+- Kiểm tra màu chữ footer và contest so với nội dung post.

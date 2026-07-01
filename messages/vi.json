@@ -503,6 +503,26 @@
             {
                 "q": "Tôi cần lưu ý gì trước hạn cuối?",
                 "a": "Không đợi sát giờ để nộp bài. Hãy kiểm tra file đúng định dạng, đúng đội, đúng kỳ thi và xác nhận bài nộp mới nhất đã hiển thị trong Cuộc thi của tôi."
+            },
+            {
+                "q": "Làm thế nào để đăng nhập?",
+                "a": "Nhấn Đăng nhập trên thanh điều hướng, nhập username và mật khẩu được cấp, sau đó kiểm tra lại tên tài khoản ở góc phải. Nếu đăng nhập thất bại, kiểm tra dấu cách thừa hoặc liên hệ ban tổ chức để reset mật khẩu."
+            },
+            {
+                "q": "Làm thế nào để xem các kỳ thi của tôi?",
+                "a": "Sau khi đăng nhập, mở Hồ sơ rồi chọn Cuộc thi của tôi. Trang này liệt kê các kỳ thi đã được gán, đội thi, thành viên, vòng hiện tại, đề bài và bài nộp gần nhất."
+            },
+            {
+                "q": "Làm thế nào để tìm nhanh đội hoặc kỳ thi?",
+                "a": "Trong Cuộc thi của tôi, dùng ô tìm kiếm để nhập tên kỳ thi, tên đội hoặc mã đội. Bạn cũng có thể dùng bộ lọc trạng thái nộp bài để chỉ xem các cuộc thi đang mở nộp."
+            },
+            {
+                "q": "Làm thế nào để nộp bài?",
+                "a": "Mở Cuộc thi của tôi, tìm đúng kỳ thi và vòng đang mở nộp bài, chọn file rồi gửi. Sau khi gửi, kiểm tra phần bài nộp để chắc file mới nhất đã được ghi nhận."
+            },
+            {
+                "q": "Làm thế nào để thay thế hoặc xoá bài nộp?",
+                "a": "Khi vòng nộp bài còn mở, dùng nút thay thế hoặc xoá trong khu vực bài nộp của kỳ thi. Sau khi vòng đóng, các thao tác này sẽ bị hệ thống khoá."
             }
         ],
         "adminItems": [
@@ -545,6 +565,26 @@
             {
                 "q": "Trước khi kết thúc một kỳ thi cần làm gì?",
                 "a": "Kiểm tra trạng thái giai đoạn, tải hoặc đối chiếu bài nộp cần thiết, đảm bảo đội thi không còn thay đổi ngoài quy trình, rồi chuyển trạng thái kỳ thi theo quyết định của ban tổ chức."
+            },
+            {
+                "q": "Làm thế nào để tạo tài khoản thí sinh hoặc admin?",
+                "a": "Vào Quản lý tài khoản, chọn tạo tài khoản mới, nhập username, mật khẩu, thông tin liên hệ và vai trò. Sau khi tạo, gửi thông tin đăng nhập cho đúng người nhận qua kênh nội bộ."
+            },
+            {
+                "q": "Làm thế nào để tạo nhanh một kỳ thi đầy đủ?",
+                "a": "Vào Quản lý kỳ thi, chọn Tạo cuộc thi mới, nhập thông tin chung, ảnh bìa, thể lệ, hình thức tham gia, giới hạn thành viên và ít nhất một giai đoạn. Giữ trạng thái Bản nháp cho tới khi đã kiểm tra xong."
+            },
+            {
+                "q": "Làm thế nào để thêm đội thi?",
+                "a": "Trong Quản lý kỳ thi, mở Đăng ký của kỳ thi cần thao tác. Nhập mã đội, tên đội, bảng thi, leader và danh sách thành viên, rồi lưu. Nếu hệ thống báo lỗi, kiểm tra lại username và giới hạn thành viên."
+            },
+            {
+                "q": "Làm thế nào để tải bài nộp của thí sinh?",
+                "a": "Mở khu quản lý đăng ký/bài nộp của kỳ thi, mở rộng đội cần xem và bấm tải file. Link tải là signed URL có thời hạn, nên tạo lại nếu link hết hạn."
+            },
+            {
+                "q": "Làm thế nào để quản lý ảnh và file trong bucket?",
+                "a": "Vào Bucket, chọn post-images cho ảnh công khai hoặc submissions cho bài nộp. Có thể tạo thư mục, upload, đổi tên, xoá và sao chép URL theo quyền admin."
             }
         ]
     },

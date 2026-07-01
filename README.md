@@ -2,7 +2,7 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Phiên bản hiện tại: v1.2.0**
+> **Phiên bản hiện tại: v1.2.1**
 >
 > Domain vận hành: `https://toanmohinhvietnam.com`
 
@@ -162,12 +162,11 @@ DB helpers (src/lib/*-db.ts)
 Supabase (Postgres + Storage)
 ```
 
-## v1.2.0 Notes
+## v1.2.1 Notes
 
-- Header search tìm được bài viết, kỳ thi và tag; placeholder và label kết quả đã có i18n.
-- Timeline giai đoạn cuộc thi dùng màu vàng cho stage đang diễn ra, đồng bộ với badge vòng có thể nộp bài.
-- Q&A user/admin được mở rộng theo hướng quy định vận hành và chuyển sang dữ liệu i18n có cấu trúc.
-- Footer được polish typography, màu body copy, copyright `©` và khoảng cách cụm social/language/account.
-- Ảnh public từ Supabase được render không qua optimizer để tránh lỗi `/_next/image` khi file upstream bị mất.
-- Cleanup legacy gồm bỏ type search cũ, sửa warning lint, và chuyển `THREE.Clock` sang `THREE.Timer`.
+- Q&A user/admin có thêm nhóm Operational hướng dẫn đăng nhập, xem cuộc thi, nộp/thay bài, tạo tài khoản, tạo kỳ thi, thêm đội và tải bài nộp.
+- Search dropdown dùng link điều hướng thật để click/tap vào kết quả hoạt động ổn định trên localhost và production.
+- Countdown public luôn hiển thị giây, kể cả khi còn nhiều ngày: `x ngày y giờ z phút t giây`.
+- Footer và các vùng copy của contest được đồng bộ màu chữ body với nội dung post.
+- Kế thừa v1.2.0: search bài viết/kỳ thi/tag, FAQ i18n có cấu trúc, ảnh Supabase không qua optimizer và cleanup `THREE.Timer`.
 - `password` đang được lưu plaintext theo yêu cầu vận hành nội bộ của phiên bản này.

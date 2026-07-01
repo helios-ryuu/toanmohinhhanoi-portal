@@ -17,7 +17,7 @@ function formatDate(iso: string): string {
 function stageChipClasses(stage: DbContestStage): string {
     const base = "px-1.5 py-0.5 rounded-[4px] text-[10px] tracking-wide whitespace-nowrap border ";
     if (stage.allow_submission) return base + "bg-amber-500/10 text-amber-500 border-amber-500/30";
-    return base + "bg-foreground/5 text-foreground/66 border-(--border-color)";
+    return base + "bg-foreground/5 text-foreground/70 border-(--border-color)";
 }
 
 type CardContest = DbContest | ContestWithStages;
@@ -57,7 +57,7 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
             <div className="flex flex-col flex-1 p-4">
                 <div className="flex items-start gap-2 mb-2">
                     <ContestTypeBadge type={contest.participation_type} />
-                    <span className="text-[10px] text-foreground/58 tracking-wider">
+                    <span className="text-[10px] text-foreground/70 tracking-wider">
                         {formatParticipation(contest)}
                     </span>
                 </div>
@@ -65,7 +65,7 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
                 <h2 className="font-semibold text-lg tracking-wide line-clamp-2 leading-tight group-hover:text-accent transition-colors">
                     {contest.title}
                 </h2>
-                <p className="text-xs text-foreground/74 mt-1 line-clamp-3 flex-1">
+                <p className="text-xs text-foreground/70 mt-1 line-clamp-3 flex-1">
                     {contest.description}
                 </p>
 
@@ -77,14 +77,14 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
                             </span>
                         ))}
                         {extra > 0 && (
-                            <span className="px-1.5 py-0.5 rounded-[4px] text-[10px] text-foreground/58 border border-(--border-color)">
+                            <span className="px-1.5 py-0.5 rounded-[4px] text-[10px] text-foreground/70 border border-(--border-color)">
                                 +{extra}
                             </span>
                         )}
                     </div>
                 )}
 
-                <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-xs text-foreground/66">
+                <div className="mt-3 pt-3 border-t border-(--border-color) flex items-center gap-2 text-xs text-foreground/70">
                     <Calendar className="w-3.5 h-3.5 shrink-0" />
                     <span>
                         {formatDate(contest.start_at)} – {formatDate(contest.end_at)}
