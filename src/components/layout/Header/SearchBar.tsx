@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 type SearchItemType = "home" | "posts" | "contests" | "post" | "contest" | "tag";
@@ -172,11 +171,12 @@ export default function SearchBar() {
                         <ul className="py-2">
                             {results.map((item, index) => (
                                 <li key={`${item.type}-${item.path}`}>
-                                    <Link
-                                        href={item.path}
-                                        onClick={() => {
-                                            setIsOpen(false);
-                                            setQuery("");
+                                    <button
+                                        type="button"
+                                        onPointerDown={(event) => {
+                                            if (event.pointerType === "mouse" && event.button !== 0) return;
+                                            event.preventDefault();
+                                            goToResult(item.path);
                                         }}
                                         className={`w-full px-4 py-2 text-left text-sm hover:bg-background-hover transition-colors flex items-center gap-2 ${
                                             selectedIndex === index
@@ -188,7 +188,7 @@ export default function SearchBar() {
                                             {t(`type.${item.type}`)}:
                                         </span>
                                         <span className="truncate">{item.title}</span>
-                                    </Link>
+                                    </button>
                                 </li>
                             ))}
                         </ul>
