@@ -5,6 +5,8 @@ import type { ComponentType, JSX, ReactNode } from "react";
 
 type MDXComponents = {
     [Key in keyof JSX.IntrinsicElements]?: (props: JSX.IntrinsicElements[Key]) => ReactNode;
+    // MDX custom components can receive arbitrary props from authored content.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 } & Record<string, ComponentType<any> | ((props: any) => ReactNode)>;
 
 // Helper to create URL-friendly slug from text
@@ -308,5 +310,4 @@ export function createMDXComponents(components: MDXComponents = {}): MDXComponen
 }
 
 // Pre-built components object for use in async Server Components
-// eslint-disable-next-line react-hooks/rules-of-hooks
 export const mdxComponents = createMDXComponents();

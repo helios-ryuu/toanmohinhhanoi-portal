@@ -53,13 +53,28 @@
         "viewAll": "View all"
     },
     "footer": {
-        "copyright": "Copyright 2026, TOANMOHINH. All rights reserved.",
+        "copyright": "© Copyright 2026, TOANMOHINH. All rights reserved.",
         "navigation": "Navigation",
         "contact": "Contact",
         "contactEmail": "Email: contact.toanmohinh@gmail.com",
         "contactPhone": "Hotline: 0353 840 125 - Phan Minh Trang (Head Organizer)",
         "contactAddress": "Facebook: Toán Mô hình Hà Nội",
         "contactInstagram": "Instagram: archive.toanmohinh"
+    },
+    "search": {
+        "placeholder": "Search posts, contests, or #tags...",
+        "noResults": "No matching results",
+        "home": "Home",
+        "allPosts": "All posts",
+        "allContests": "All contests",
+        "type": {
+            "home": "Page",
+            "posts": "Posts",
+            "contests": "Contests",
+            "post": "Post",
+            "contest": "Contest",
+            "tag": "Tag"
+        }
     },
     "post": {
         "pageTitle": "POSTS",
@@ -443,45 +458,95 @@
     },
     "faq": {
         "pageTitle": "Q&A",
-        "pageSubtitle": "Essential guidance for contestants signing in, viewing contests, and submitting work.",
+        "pageSubtitle": "Rules and essential notes for contestants participating in a contest.",
         "adminPageTitle": "Admin Q&A",
-        "adminPageSubtitle": "Administrator workflows for accounts, contests, teams, submissions, and data.",
+        "adminPageSubtitle": "Operational principles for accounts, contests, teams, submissions, and data.",
         "userSection": "General Q&A",
         "adminSection": "Admin Q&A",
-        "q1": "What should I do first after receiving an account?",
-        "a1": "Click Sign in in the top-right corner, enter the username/password issued by the organizers, then check Profile and My Contests to confirm your assigned team.",
-        "q2": "Where do I submit my work?",
-        "a2": "Go to Profile → My Contests. When a submission stage is open, the submission form appears in the correct contest. The page also shows the current stage, remaining time, and prompt if one has been added.",
-        "q3": "Can I edit a submitted file?",
-        "a3": "Yes. As long as the submission stage is still open, you can replace or delete the current submission and upload again. Once the stage ends, the system blocks further changes.",
-        "q4": "How do I know how much time is left?",
-        "a4": "In My Contests, each active contest shows the current stage and a live countdown to the stage end time, including seconds.",
-        "q5": "Where can I view the prompt?",
-        "a5": "If organizers have added a prompt for the submission stage, it appears in My Contests. Links inside the prompt are clickable.",
-        "q6": "Can I edit my personal information?",
-        "a6": "No. Contestant accounts are managed by the organizers, so personal information is read-only. If something is incorrect, contact the organizers.",
-        "q7": "What do contest statuses mean?",
-        "a7": "Active means the contest is published and may have open stages. Closed means the contest has ended. Cancelled means it was cancelled. Draft is for organizers only and is not public.",
-        "q8": "How do I contact the organizers?",
-        "a8": "Hotline: 0353 840 125 - Phan Minh Trang (Head Organizer). Email: contact.toanmohinh@gmail.com. Instagram: archive.toanmohinh. Facebook: Toán Mô hình Hà Nội.",
-        "q9": "Where can I view contests I joined?",
-        "a9": "Go to Profile → My Contests to see all assigned contests, team info, members, current stage, and latest submission.",
-        "aq1": "How do I create a contest?",
-        "aa1": "Go to Contest Management and click New contest. Fill in title, slug, description, rules, cover image, participation type, min/max team size, time window, and stages. Set the status to Active when ready to publish.",
-        "aq2": "How do I add stages and prompts?",
-        "aa2": "In the contest form, scroll to Stages and click Add stage. Each stage needs a name, start/end times inside the contest window, submission options, and optional prompt text for contestants.",
-        "aq3": "How do I create a team?",
-        "aa3": "In Contest Management, open Registrations for a contest. Enter TEAM_CODE, team name, level, leader, and members, then save. The system validates team size against the contest min/max settings.",
-        "aq4": "How do I view team submissions?",
-        "aa4": "In the team management panel, expand any registration row to see all submissions. Click the Download button next to a file to download it via a 5-minute signed URL.",
-        "aq5": "How do replacement submissions work?",
-        "aa5": "Contestants can always replace submitted work while the submission stage is open. After the stage ends, both API and UI block new uploads and replacements.",
-        "aq6": "How do I use the Bucket (file storage)?",
-        "aa6": "Go to Bucket in the navigation. You can browse the folder tree, create folders, upload, rename, delete, and copy URLs for files in post-images and submissions.",
-        "aq7": "How do I manage accounts?",
-        "aa7": "Go to Account Management to create accounts, update profiles, change roles, and reset passwords. Usernames must be at least 6 letters/numbers/underscores; passwords must be at least 8 characters with no spaces.",
-        "aq8": "How do I manage posts, tags, and data?",
-        "aa8": "Go to Admin Workspace to create, edit, publish, or delete posts and tags. The Database section at the bottom provides read-only tables for quick review."
+        "userItems": [
+            {
+                "q": "What is a contestant account allowed to access?",
+                "a": "A contestant account is only for organizer-approved actions: viewing profile data, checking assigned teams, following contests, and submitting during valid windows. Do not share the account outside your team."
+            },
+            {
+                "q": "What should I verify after receiving an account?",
+                "a": "After signing in, check Profile and My Contests. If your name, email, school, team, or members are incorrect, contact the organizers before the submission deadline."
+            },
+            {
+                "q": "Why can I not edit my personal information?",
+                "a": "Contestant data is managed by the organizers to keep team records consistent. Contestants can review and confirm details; official changes must go through the organizers."
+            },
+            {
+                "q": "What do contest statuses mean?",
+                "a": "Active means the contest is published and may have open stages. Closed means the contest has ended. Cancelled means it will not continue. Draft is organizer-only and not public."
+            },
+            {
+                "q": "Which timeline should I follow?",
+                "a": "Follow both the overall contest window and each stage. Submission permission depends on a stage that accepts submissions, not only on the contest's general status."
+            },
+            {
+                "q": "When is a submission accepted?",
+                "a": "A submission is accepted only when you belong to the contest team or individual entry and the submission stage is open. After the deadline, the system blocks new uploads, replacements, and deletes."
+            },
+            {
+                "q": "Can I replace a submitted file?",
+                "a": "Yes, as long as the submission stage is still open. The latest replacement is the file currently recorded for your team or individual entry."
+            },
+            {
+                "q": "What if I cannot see the prompt or submission form?",
+                "a": "Check that you are signed in with the correct account, assigned to the contest, and in a stage that accepts submissions. If it is still missing, contact the organizers with your username and team code."
+            },
+            {
+                "q": "How do I contact the organizers?",
+                "a": "Hotline: 0353 840 125 - Phan Minh Trang (Head Organizer). Email: contact.toanmohinh@gmail.com. Instagram: archive.toanmohinh. Facebook: Toán Mô hình Hà Nội."
+            },
+            {
+                "q": "What should I do before the final deadline?",
+                "a": "Do not wait until the last minute. Confirm the file format, team, contest, and that the latest submission appears in My Contests."
+            }
+        ],
+        "adminItems": [
+            {
+                "q": "When should a contest be published?",
+                "a": "Move a contest to Active only after the title, slug, description, rules, participation type, team limits, time window, and stages have been reviewed. Draft contests are not public."
+            },
+            {
+                "q": "What are the rules for stages?",
+                "a": "Each stage must sit inside the contest window, have a clear name, and start before it ends. Enable submissions only for stages that should actually receive work."
+            },
+            {
+                "q": "How should rules and prompts be entered?",
+                "a": "Rules should describe the general contest policy. Stage prompts should live on the relevant stage so contestants see the right material in the right context."
+            },
+            {
+                "q": "What are the team and member rules?",
+                "a": "Teams must respect the contest's min/max member settings. Leaders and members must be valid users, admin accounts should not be contestants, and a user should not be duplicated within the same contest."
+            },
+            {
+                "q": "When should a team be edited?",
+                "a": "Edit a team only with clear operational approval. Changing the leader, members, or team code can affect contestant access and submission rights."
+            },
+            {
+                "q": "How should submissions be managed?",
+                "a": "Contestants may replace submissions while the submission stage is open. After a stage closes, admins should review or download submissions through the management view and avoid direct data edits."
+            },
+            {
+                "q": "What is each bucket used for?",
+                "a": "post-images stores public images for posts and contests. submissions stores uploaded work and should be accessed through signed URLs instead of public links."
+            },
+            {
+                "q": "What should admins watch when managing accounts?",
+                "a": "Usernames should remain stable because they are used for team assignment. When resetting passwords or changing roles, confirm the recipient to avoid granting the wrong access."
+            },
+            {
+                "q": "When should Admin Workspace data be checked?",
+                "a": "Use the read-only data tables for quick review of accounts, posts, tags, and operational state. For business changes, prefer the dedicated UI over manual data edits."
+            },
+            {
+                "q": "What should happen before closing a contest?",
+                "a": "Review stage status, download or verify required submissions, make sure team changes are complete, then update the contest status according to the organizers' decision."
+            }
+        ]
     },
     "myContests": {
         "backToProfile": "Back to profile",

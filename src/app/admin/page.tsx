@@ -42,7 +42,7 @@ function AdminWorkspace() {
         } finally {
             setIsLoading(false);
         }
-    }, [showToast]);
+    }, [showToast, t]);
 
     useEffect(() => { refresh(); }, [refresh]);
 

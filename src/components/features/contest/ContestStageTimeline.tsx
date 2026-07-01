@@ -124,7 +124,7 @@ export default function ContestStageTimeline({
                         const active = isActive(s, tNow);
                         const past = sEnd < tNow;
                         const barColor = active
-                            ? "bg-accent"
+                            ? "bg-amber-500"
                             : past
                               ? "bg-foreground/30"
                               : "bg-blue-500/60";
@@ -134,7 +134,7 @@ export default function ContestStageTimeline({
                                     <div className="flex items-center gap-2 min-w-0">
                                         <span
                                             className={`font-semibold truncate ${
-                                                active ? "text-accent" : ""
+                                                active ? "text-amber-500" : ""
                                             }`}
                                         >
                                             {s.name}

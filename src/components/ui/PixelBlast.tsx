@@ -329,12 +329,15 @@ export default function PixelBlast({
         window.addEventListener("pointerdown", handlePointerDown, { passive: true });
         window.addEventListener("touchstart", handleTouchStart, { passive: true });
 
-        const clock = new THREE.Clock();
+        const timer = new THREE.Timer();
+        timer.connect(document);
+        timer.setTimescale(speed);
         const timeOffset = randomOffset() * 1000;
         let raf = 0;
-        const animate = () => {
+        const animate = (timestamp: number) => {
+            timer.update(timestamp);
             if (!autoPauseOffscreen || visibleRef.current) {
-                uniforms.uTime.value = timeOffset + clock.getElapsedTime() * speed;
+                uniforms.uTime.value = timeOffset + timer.getElapsed();
                 composer.render();
             }
             raf = requestAnimationFrame(animate);
@@ -347,6 +350,7 @@ export default function PixelBlast({
             window.removeEventListener("touchstart", handleTouchStart);
             observer.disconnect();
             intersectionObserver.disconnect();
+            timer.dispose();
             composer.dispose();
             quad.geometry.dispose();
             material.dispose();

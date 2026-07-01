@@ -54,7 +54,7 @@ function ContestManagementWorkspace() {
         } finally {
             setLoading(false);
         }
-    }, [showToast]);
+    }, [showToast, t]);
 
     useEffect(() => {
         refresh();

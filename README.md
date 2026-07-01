@@ -2,7 +2,7 @@
 
 Portal chính thức của tổ chức **Toán Mô Hình Hà Nội** — nơi đăng bài viết, chia sẻ kiến thức và tổ chức các cuộc thi toán mô hình. Xây dựng trên Next.js 16, React 19 và Supabase.
 
-> **Phiên bản hiện tại: v1.1.0**
+> **Phiên bản hiện tại: v1.2.0**
 >
 > Domain vận hành: `https://toanmohinhvietnam.com`
 
@@ -42,7 +42,7 @@ toanmohinhhanoi-portal/
 │   │   │   ├── tags/               # GET
 │   │   │   ├── contests/           # GET list, GET [slug]
 │   │   │   ├── submissions/        # POST, mark-final, download
-│   │   │   ├── search/             # title + description search
+│   │   │   ├── search/             # search posts, contests and tags
 │   │   │   └── admin/              # accounts, posts, tags, uploads, contests, teams
 │   │   ├── admin/                  # Dashboard quản trị (role = 'admin')
 │   │   │   ├── bucket/             # Quản lý Storage bucket
@@ -162,16 +162,12 @@ DB helpers (src/lib/*-db.ts)
 Supabase (Postgres + Storage)
 ```
 
-## v1.1.0 Notes
+## v1.2.0 Notes
 
-- Admin cấp tài khoản tại `/admin/accounts`.
-- `/admin/accounts` có tìm kiếm, filter, sort, pagination 50, highlight row đang sửa và validation username/password.
-- Admin tạo đội thi, mã đội, bảng thi và thành viên trong `/contest-management`; min/max thành viên được validate theo từng cuộc thi.
-- Thí sinh chỉ đăng nhập để xem đội đã được cấp, xem vòng hiện tại/đề bài và nộp bài khi vòng nộp bài đang mở.
-- Bài nộp luôn có thể thay thế trong thời gian vòng nộp bài còn mở.
-- Bài nộp mới được lưu theo `contestSlug/TEAM_CODE/file`.
-- Q&A chung dành cho thí sinh; Q&A Admin tách riêng tại `/faq/admin`.
-- Header có Facebook và Instagram chính thức; footer dùng hotline/email/social mới.
-- `/admin/bucket` hỗ trợ duyệt cây thư mục, tạo/đổi tên/xoá folder và file.
-- Homepage có `Bài viết nổi bật` và `Các cuộc thi`; accent chính là `#1F51FF`.
+- Header search tìm được bài viết, kỳ thi và tag; placeholder và label kết quả đã có i18n.
+- Timeline giai đoạn cuộc thi dùng màu vàng cho stage đang diễn ra, đồng bộ với badge vòng có thể nộp bài.
+- Q&A user/admin được mở rộng theo hướng quy định vận hành và chuyển sang dữ liệu i18n có cấu trúc.
+- Footer được polish typography, màu body copy, copyright `©` và khoảng cách cụm social/language/account.
+- Ảnh public từ Supabase được render không qua optimizer để tránh lỗi `/_next/image` khi file upstream bị mất.
+- Cleanup legacy gồm bỏ type search cũ, sửa warning lint, và chuyển `THREE.Clock` sang `THREE.Timer`.
 - `password` đang được lưu plaintext theo yêu cầu vận hành nội bộ của phiên bản này.

@@ -99,43 +99,45 @@ export default function Header({ noBorder = false, showMobileMenu = true, transp
             </div>
 
             {/* Right side - icons stay aligned right; auth section can grow without squishing icons */}
-            <div className="flex flex-1 md:flex-none items-center justify-end h-full pr-4 gap-1 md:min-w-52">
-                <button
-                    type="button"
-                    aria-label="Facebook"
-                    onClick={() => {
-                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                        const webUrl = "https://www.facebook.com/toanmohinh.hanoi";
-                        const appUrl = `fb://facewebmodal/f?href=${encodeURIComponent(webUrl)}`;
-                        if (isMobile) {
-                            window.location.href = appUrl;
-                            setTimeout(() => window.open(webUrl, "_blank"), 500);
-                        } else {
-                            window.open(webUrl, "_blank");
-                        }
-                    }}
-                    className="flex-none w-8 h-8 inline-flex items-center justify-center mx-0.5 rounded-md cursor-pointer hover:bg-background-hover text-foreground transition-colors"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="w-5 h-5"
-                        aria-hidden="true"
+            <div className="flex flex-1 md:flex-none items-center justify-end h-full pr-5 gap-2 md:min-w-52">
+                <div className="flex items-center gap-1 mr-1">
+                    <button
+                        type="button"
+                        aria-label="Facebook"
+                        onClick={() => {
+                            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                            const webUrl = "https://www.facebook.com/toanmohinh.hanoi";
+                            const appUrl = `fb://facewebmodal/f?href=${encodeURIComponent(webUrl)}`;
+                            if (isMobile) {
+                                window.location.href = appUrl;
+                                setTimeout(() => window.open(webUrl, "_blank"), 500);
+                            } else {
+                                window.open(webUrl, "_blank");
+                            }
+                        }}
+                        className="flex-none w-8 h-8 inline-flex items-center justify-center rounded-md cursor-pointer hover:bg-background-hover text-foreground transition-colors"
                     >
-                        <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.78-3.91 1.1 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.91h-2.34V22c4.78-.79 8.43-4.94 8.43-9.94Z" />
-                    </svg>
-                </button>
-                <button
-                    type="button"
-                    aria-label="Instagram"
-                    onClick={() => window.open("https://www.instagram.com/archive.toanmohinh/", "_blank")}
-                    className="flex-none w-8 h-8 inline-flex items-center justify-center mx-0.5 rounded-md cursor-pointer hover:bg-background-hover text-foreground transition-colors"
-                >
-                    <Image src={instagramIcon} alt="" width={20} height={20} className="h-5 w-5" aria-hidden="true" />
-                </button>
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="w-5 h-5"
+                            aria-hidden="true"
+                        >
+                            <path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.52 1.49-3.91 3.78-3.91 1.1 0 2.24.2 2.24.2v2.47h-1.26c-1.24 0-1.63.77-1.63 1.56v1.87h2.78l-.44 2.91h-2.34V22c4.78-.79 8.43-4.94 8.43-9.94Z" />
+                        </svg>
+                    </button>
+                    <button
+                        type="button"
+                        aria-label="Instagram"
+                        onClick={() => window.open("https://www.instagram.com/archive.toanmohinh/", "_blank")}
+                        className="flex-none w-8 h-8 inline-flex items-center justify-center rounded-md cursor-pointer hover:bg-background-hover text-foreground transition-colors"
+                    >
+                        <Image src={instagramIcon} alt="" width={20} height={20} className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                </div>
                 <LanguageSwitcher />
-                <div className="ml-2 min-w-0">
+                <div className="ml-1 min-w-0">
                     <AuthSection />
                 </div>
                 {!isPostEditor && (

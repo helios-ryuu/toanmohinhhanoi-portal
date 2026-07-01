@@ -42,31 +42,7 @@ function Accordion({ items }: { items: FAQItem[] }) {
 
 export default function FAQPage({ mode = "user" }: { mode?: "user" | "admin" }) {
     const t = useTranslations("faq");
-
-    const userItems: FAQItem[] = [
-        { q: t("q1"), a: t("a1") },
-        { q: t("q2"), a: t("a2") },
-        { q: t("q3"), a: t("a3") },
-        { q: t("q4"), a: t("a4") },
-        { q: t("q5"), a: t("a5") },
-        { q: t("q6"), a: t("a6") },
-        { q: t("q7"), a: t("a7") },
-        { q: t("q8"), a: t("a8") },
-        { q: t("q9"), a: t("a9") },
-    ];
-
-    const adminItems: FAQItem[] = [
-        { q: t("aq1"), a: t("aa1") },
-        { q: t("aq2"), a: t("aa2") },
-        { q: t("aq3"), a: t("aa3") },
-        { q: t("aq4"), a: t("aa4") },
-        { q: t("aq5"), a: t("aa5") },
-        { q: t("aq6"), a: t("aa6") },
-        { q: t("aq7"), a: t("aa7") },
-        { q: t("aq8"), a: t("aa8") },
-    ];
-
-    const items = mode === "admin" ? adminItems : userItems;
+    const items = t.raw(mode === "admin" ? "adminItems" : "userItems") as FAQItem[];
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">

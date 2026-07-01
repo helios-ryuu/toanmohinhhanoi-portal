@@ -1,41 +1,36 @@
-# Report v1.1.0
+# Report v1.2.0
 
 ## Tổng quan
 
-v1.1.0 nâng cấp portal vận hành nội bộ cho Toán Mô Hình Hà Nội:
+v1.2.0 tập trung polish trải nghiệm đọc, tìm kiếm và vận hành cho portal Toán Mô Hình Hà Nội:
 
-- Domain vận hành chuyển sang `toanmohinhvietnam.com` nhưng giữ nguyên branding hiển thị.
-- Header/footer cập nhật Facebook, Instagram, hotline và email chính thức.
-- Q&A chung tách khỏi Q&A Admin.
-- Contest có min/max thành viên và đề bài theo từng vòng.
-- My Contests có search/filter/sort, vòng hiện tại, countdown có giây và đề bài link được.
-- Thí sinh luôn có thể thay thế bài nộp trong thời gian vòng nộp bài còn mở.
-- User thường không tự sửa hồ sơ; admin vẫn có thể tự cập nhật.
+- Search ở header tìm được bài viết, kỳ thi và tag, đồng thời dùng placeholder/label i18n.
+- Timeline kỳ thi làm nổi bật giai đoạn đang diễn ra bằng màu vàng thống nhất với badge nộp bài.
+- Q&A user/admin được mở rộng theo hướng quy định, lưu ý vận hành và các trường hợp cần liên hệ ban tổ chức.
+- Footer và header được chỉnh typography, màu chữ, copyright và spacing giữa social/language/account.
+- Legacy cleanup xử lý warning lint, bỏ type search cũ và thay `THREE.Clock` bằng `THREE.Timer`.
 
 ## Thay đổi chính
 
-- Thêm `min_team_size` cho `contest`.
-- Thêm `prompt_text` cho `contest_stage`.
-- Gỡ `allow_resubmit`; quyền thay thế bài nộp phụ thuộc trực tiếp vào thời gian stage nộp bài.
-- Sửa active state navigation để các tab admin độc lập.
-- Chuẩn hóa validation username/password ở login, admin account UI và API.
-- Đổi label contest status `active` sang `Đang diễn ra`.
-- Cập nhật docs/README/package version lên `1.1.0`.
+- Mở rộng `/api/search` để trả thêm `contests` bên cạnh `posts` và `tags`.
+- Chuyển FAQ từ key phẳng `q1/a1` sang mảng dữ liệu i18n có cấu trúc.
+- Chuẩn hóa màu body copy trong contest detail và footer theo tone nội dung bài viết.
+- Bật bypass optimizer cho ảnh public từ URL ngoài để tránh lỗi server khi upstream object không còn tồn tại.
+- Cập nhật docs/README/package version lên `1.2.0`.
 
 ## Rủi ro đã biết
 
-- Password plaintext là yêu cầu vận hành nội bộ và không phù hợp cho môi trường có yêu cầu bảo mật cao.
-- Migration `0003_stage_allow_resubmit.sql` vẫn nằm trong lịch sử migration; migration `0004` sẽ drop cột này cho database hiện hữu.
-- Schema vẫn giữ enum status của registration để tương thích dữ liệu hiện có, nhưng UI/API v1.1.0 không còn thao tác duyệt/từ chối.
+- Password plaintext vẫn là yêu cầu vận hành nội bộ và không phù hợp cho môi trường có yêu cầu bảo mật cao.
+- Search header lọc client-side trên dữ liệu cache 60 giây; nội dung mới có thể trễ tối đa một chu kỳ cache.
+- FAQ là nội dung tĩnh trong i18n, chưa có CMS riêng để admin chỉnh trực tiếp.
 
 ## Kiểm thử cần chạy
 
+- `pnpm exec tsc --noEmit`
 - `pnpm lint`
 - `pnpm build`
-- Đăng nhập user/admin.
-- Admin tạo account hợp lệ và thử username/password không hợp lệ.
-- Admin tạo contest đội với min/max và prompt theo stage.
-- User thấy đội trong `/profile/contests`, dùng search/filter/sort, xem countdown và đề bài.
-- User nộp bài, thay thế bài khi stage mở và bị chặn khi stage đóng.
-- Contest detail chỉ hiển thị CTA nộp bài cho user đã tham gia.
-- Admin tạo/đổi tên/xoá folder trong bucket.
+- Tìm kiếm bài viết, kỳ thi và `#tag` từ header.
+- Mở `/faq` và `/faq/admin`, kiểm tra accordion trên desktop/mobile.
+- Mở trang chi tiết kỳ thi có stage đang diễn ra và xác nhận thanh stage màu vàng.
+- Kiểm tra footer/header spacing ở desktop và mobile.
+- Kiểm tra ảnh Supabase bị mất không còn làm request `/_next/image` lỗi 400.

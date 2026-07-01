@@ -1,89 +1,78 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 
+type SearchItemType = "home" | "posts" | "contests" | "post" | "contest" | "tag";
+
 interface SearchItem {
-    type: "Home" | "Post" | "Roadmaps" | "Project" | "Tag";
+    type: SearchItemType;
     title: string;
     path: string;
+    description?: string;
     tags?: string[];
 }
 
-// Static routes for the blog
-const staticRoutes: SearchItem[] = [
-    { type: "Home", title: "Home", path: "/" },
-    { type: "Post", title: "All Posts", path: "/post" },
-];
-
 export default function SearchBar() {
+    const t = useTranslations("search");
     const [query, setQuery] = useState("");
     const [isOpen, setIsOpen] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
     const [posts, setPosts] = useState<SearchItem[]>([]);
+    const [contests, setContests] = useState<SearchItem[]>([]);
     const [tags, setTags] = useState<SearchItem[]>([]);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const inputRef = useRef<HTMLInputElement>(null);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const router = useRouter();
 
-    // Fetch posts and tags on mount
+    const staticRoutes = useMemo<SearchItem[]>(() => [
+        { type: "home", title: t("home"), path: "/" },
+        { type: "posts", title: t("allPosts"), path: "/post" },
+        { type: "contests", title: t("allContests"), path: "/contests" },
+    ], [t]);
+
     useEffect(() => {
         fetch("/api/search")
             .then((res) => res.json())
             .then((json) => {
                 if (json.success) {
                     setPosts(json.data.posts || []);
+                    setContests(json.data.contests || []);
                     setTags(json.data.tags || []);
                 }
             })
             .catch(console.error);
     }, []);
 
-    // Filter results based on query
     const filterResults = useCallback((searchQuery: string) => {
-        // Check if searching by tag (starts with #)
         if (searchQuery.startsWith("#")) {
             const tagQuery = searchQuery.slice(1).toLowerCase().trim();
+            if (!tagQuery) return tags;
 
-            if (!tagQuery) {
-                // Show all tags when just # is typed
-                return tags;
-            }
-
-            // Filter tags that match the query
-            const matchingTags = tags.filter((tag) =>
-                tag.title.toLowerCase().includes(tagQuery)
-            );
-
-            // Also show posts that have matching tags
+            const matchingTags = tags.filter((tag) => tag.title.toLowerCase().includes(tagQuery));
             const matchingPosts = posts.filter((post) =>
-                post.tags?.some((t) => t.toLowerCase().includes(tagQuery))
+                post.tags?.some((tag) => tag.toLowerCase().includes(tagQuery)),
             );
 
             return [...matchingTags, ...matchingPosts];
         }
 
-        // Normal search
-        const allItems = [...staticRoutes, ...posts];
-
-        if (!searchQuery.trim()) {
-            return allItems;
-        }
+        const allItems = [...staticRoutes, ...posts, ...contests];
+        if (!searchQuery.trim()) return allItems;
 
         const lowerQuery = searchQuery.toLowerCase();
-        return allItems.filter(
-            (item) =>
-                item.title.toLowerCase().includes(lowerQuery) ||
-                item.type.toLowerCase().includes(lowerQuery)
+        return allItems.filter((item) =>
+            item.title.toLowerCase().includes(lowerQuery) ||
+            item.description?.toLowerCase().includes(lowerQuery) ||
+            t(`type.${item.type}`).toLowerCase().includes(lowerQuery),
         );
-    }, [posts, tags]);
+    }, [contests, posts, staticRoutes, tags, t]);
 
-    // Derive results directly from query (no setState in effect)
     const results = useMemo(() => filterResults(query), [query, filterResults]);
 
-    // Close dropdown when clicking outside
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
@@ -100,27 +89,28 @@ export default function SearchBar() {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // Keyboard navigation
-    const handleKeyDown = (e: React.KeyboardEvent) => {
+    const goToResult = (path: string) => {
+        router.push(path);
+        setIsOpen(false);
+        setQuery("");
+    };
+
+    const handleKeyDown = (event: React.KeyboardEvent) => {
         if (!isOpen) return;
 
-        switch (e.key) {
+        switch (event.key) {
             case "ArrowDown":
-                e.preventDefault();
-                setSelectedIndex((prev) =>
-                    prev < results.length - 1 ? prev + 1 : prev
-                );
+                event.preventDefault();
+                setSelectedIndex((prev) => (prev < results.length - 1 ? prev + 1 : prev));
                 break;
             case "ArrowUp":
-                e.preventDefault();
+                event.preventDefault();
                 setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
                 break;
             case "Enter":
-                e.preventDefault();
+                event.preventDefault();
                 if (selectedIndex >= 0 && results[selectedIndex]) {
-                    router.push(results[selectedIndex].path);
-                    setIsOpen(false);
-                    setQuery("");
+                    goToResult(results[selectedIndex].path);
                 }
                 break;
             case "Escape":
@@ -132,15 +122,10 @@ export default function SearchBar() {
 
     const handleFocus = () => {
         setIsFocused(true);
-        // Only open dropdown if there's already a query
-        if (query.trim()) {
-            setIsOpen(true);
-            // Results are now derived via useMemo based on query
-        }
+        if (query.trim()) setIsOpen(true);
     };
 
     const handleBlur = () => {
-        // Delay to allow click on dropdown items
         setTimeout(() => {
             setIsFocused(false);
             setQuery("");
@@ -148,27 +133,15 @@ export default function SearchBar() {
         }, 150);
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value;
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = event.target.value;
         setQuery(value);
-        setSelectedIndex(-1); // Reset selection when query changes
-        // Open dropdown when user starts typing
-        if (value.trim()) {
-            setIsOpen(true);
-        } else {
-            setIsOpen(false);
-        }
-    };
-
-    const handleResultClick = (path: string) => {
-        router.push(path);
-        setIsOpen(false);
-        setQuery("");
+        setSelectedIndex(-1);
+        setIsOpen(!!value.trim());
     };
 
     return (
         <div className="relative w-full max-w-140">
-            {/* Search Input */}
             <div className="relative">
                 <input
                     ref={inputRef}
@@ -181,16 +154,14 @@ export default function SearchBar() {
                     placeholder=""
                     className="w-full px-4 py-0.5 bg-background-hover/40 border border-(--border-color) rounded-sm text-sm text-foreground focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-all text-left"
                 />
-                {/* Centered icon + placeholder overlay */}
                 {!isFocused && !query && (
                     <div className="absolute inset-0 flex items-center justify-center gap-2 pointer-events-none text-(--foreground-dim) text-sm">
                         <Search strokeWidth={3} className="w-4 h-4" />
-                        <span className="text-xs">Search posts by title, tag, or concept...</span>
+                        <span className="text-xs">{t("placeholder")}</span>
                     </div>
                 )}
             </div>
 
-            {/* Dropdown Results */}
             {isOpen && (
                 <div
                     ref={dropdownRef}
@@ -202,17 +173,18 @@ export default function SearchBar() {
                                 <li key={`${item.type}-${item.path}`}>
                                     <button
                                         type="button"
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            handleResultClick(item.path);
+                                        onMouseDown={(event) => {
+                                            event.preventDefault();
+                                            goToResult(item.path);
                                         }}
-                                        className={`w-full px-4 py-2 text-left text-sm hover:bg-background-hover transition-colors flex items-center gap-2 ${selectedIndex === index
-                                            ? "bg-background-hover text-accent"
-                                            : "text-foreground"
-                                            }`}
+                                        className={`w-full px-4 py-2 text-left text-sm hover:bg-background-hover transition-colors flex items-center gap-2 ${
+                                            selectedIndex === index
+                                                ? "bg-background-hover text-accent"
+                                                : "text-foreground"
+                                        }`}
                                     >
-                                        <span className="text-(--foreground-dim) font-medium min-w-[60px]">
-                                            {item.type}:
+                                        <span className="text-(--foreground-dim) font-medium min-w-[72px]">
+                                            {t(`type.${item.type}`)}:
                                         </span>
                                         <span className="truncate">{item.title}</span>
                                     </button>
@@ -221,7 +193,7 @@ export default function SearchBar() {
                         </ul>
                     ) : (
                         <div className="px-4 py-6 text-center text-(--foreground-dim) text-sm">
-                            No matching results
+                            {t("noResults")}
                         </div>
                     )}
                 </div>

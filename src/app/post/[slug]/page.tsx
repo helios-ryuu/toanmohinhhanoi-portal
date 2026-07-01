@@ -1,4 +1,5 @@
 import { getPostBySlug, getRelatedPosts } from "@/lib/posts";
+import { shouldBypassImageOptimization } from "@/lib/images";
 import { notFound } from "next/navigation";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { mdxComponents } from "../../../../mdx-components";
@@ -108,6 +109,7 @@ export default async function BlogPostPage({ params }: Props) {
                                     fill
                                     sizes="(max-width: 768px) 100vw, 800px"
                                     className="object-cover"
+                                    unoptimized={shouldBypassImageOptimization(post.image)}
                                     priority
                                 />
                                 <div className="absolute inset-0 bg-linear-to-t from-background/30 via-transparent to-transparent" />

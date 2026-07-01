@@ -53,13 +53,28 @@
         "viewAll": "Xem tất cả"
     },
     "footer": {
-        "copyright": "Copyright 2026, TOANMOHINH. All rights reserved.",
+        "copyright": "© Copyright 2026, TOANMOHINH. All rights reserved.",
         "navigation": "Điều hướng",
         "contact": "Liên hệ",
         "contactEmail": "Email: contact.toanmohinh@gmail.com",
         "contactPhone": "Hotline: 0353 840 125 - Phan Minh Trang (Trưởng Ban Tổ chức)",
         "contactAddress": "Facebook: Toán Mô hình Hà Nội",
         "contactInstagram": "Instagram: archive.toanmohinh"
+    },
+    "search": {
+        "placeholder": "Tìm bài viết, kỳ thi hoặc #tag...",
+        "noResults": "Không có kết quả phù hợp",
+        "home": "Trang chủ",
+        "allPosts": "Tất cả bài viết",
+        "allContests": "Tất cả kỳ thi",
+        "type": {
+            "home": "Trang",
+            "posts": "Bài viết",
+            "contests": "Kỳ thi",
+            "post": "Bài viết",
+            "contest": "Kỳ thi",
+            "tag": "Tag"
+        }
     },
     "post": {
         "pageTitle": "BÀI VIẾT",
@@ -443,45 +458,95 @@
     },
     "faq": {
         "pageTitle": "Hỏi & Đáp",
-        "pageSubtitle": "Các hướng dẫn cần thiết cho thí sinh khi đăng nhập, xem cuộc thi và nộp bài.",
+        "pageSubtitle": "Quy định và lưu ý cần thiết cho thí sinh khi tham gia kỳ thi.",
         "adminPageTitle": "Hỏi & Đáp Admin",
-        "adminPageSubtitle": "Quy trình quản trị tài khoản, kỳ thi, đội thi, bài nộp và dữ liệu.",
+        "adminPageSubtitle": "Nguyên tắc vận hành tài khoản, kỳ thi, đội thi, bài nộp và dữ liệu.",
         "userSection": "Hỏi & Đáp chung",
         "adminSection": "Hỏi & Đáp Admin",
-        "q1": "Tôi cần làm gì đầu tiên khi nhận tài khoản?",
-        "a1": "Nhấn Đăng nhập ở góc trên bên phải, nhập username/password do ban tổ chức cấp, sau đó vào Hồ sơ để kiểm tra thông tin cá nhân và vào Cuộc thi của tôi để xem đội thi đã được gán.",
-        "q2": "Tôi nộp bài ở đâu?",
-        "a2": "Vào Hồ sơ → Cuộc thi của tôi. Khi vòng nộp bài đang mở, form nộp bài sẽ xuất hiện trong đúng cuộc thi của bạn. Trang này cũng hiển thị vòng hiện tại, thời gian còn lại và đề bài nếu ban tổ chức đã thêm.",
-        "q3": "Tôi có thể sửa bài đã nộp không?",
-        "a3": "Có. Miễn là vòng nộp bài vẫn còn mở, bạn có thể thay thế hoặc xoá bài nộp hiện tại rồi nộp lại. Khi hết hạn, hệ thống sẽ không cho thay đổi bài nộp nữa.",
-        "q4": "Làm sao biết vòng thi còn bao lâu?",
-        "a4": "Trong Cuộc thi của tôi, mỗi cuộc thi đang có vòng hoạt động sẽ hiển thị tên vòng và bộ đếm ngược tới thời điểm kết thúc vòng, bao gồm cả giây.",
-        "q5": "Tôi xem đề bài ở đâu?",
-        "a5": "Nếu ban tổ chức đã thêm đề bài cho vòng nộp bài, đề sẽ hiển thị trong Cuộc thi của tôi. Các link trong đề bài có thể bấm trực tiếp.",
-        "q6": "Tôi có tự sửa thông tin cá nhân được không?",
-        "a6": "Không. Tài khoản thí sinh do ban tổ chức quản lý, nên phần Thông tin cá nhân chỉ hiển thị để kiểm tra. Nếu thông tin sai, hãy liên hệ ban tổ chức.",
-        "q7": "Các trạng thái cuộc thi có nghĩa gì?",
-        "a7": "Đang diễn ra là cuộc thi đã được công bố và có thể có vòng đang mở. Đã đóng là cuộc thi đã kết thúc. Đã huỷ là cuộc thi bị huỷ. Bản nháp chỉ dành cho ban tổ chức và không hiển thị công khai.",
-        "q8": "Tôi cần liên hệ ban tổ chức như thế nào?",
-        "a8": "Hotline: 0353 840 125 - Phan Minh Trang (Trưởng Ban Tổ chức). Email: contact.toanmohinh@gmail.com. Instagram: archive.toanmohinh. Facebook: Toán Mô hình Hà Nội.",
-        "q9": "Tôi xem các cuộc thi đã tham gia ở đâu?",
-        "a9": "Vào Hồ sơ → Cuộc thi của tôi để xem toàn bộ cuộc thi đã được gán, đội thi, thành viên, vòng hiện tại và bài nộp gần nhất.",
-        "aq1": "Làm thế nào để tạo cuộc thi?",
-        "aa1": "Vào Quản lý kỳ thi và nhấn Tạo cuộc thi mới. Điền tiêu đề, slug, mô tả, thể lệ, ảnh bìa, hình thức tham gia, min/max thành viên, khung thời gian và các giai đoạn. Đặt trạng thái Đang diễn ra khi sẵn sàng công bố.",
-        "aq2": "Làm thế nào để thêm vòng thi và đề bài?",
-        "aa2": "Trong biểu mẫu cuộc thi, kéo xuống phần Giai đoạn và nhấn Thêm giai đoạn. Mỗi vòng cần tên, thời gian bắt đầu/kết thúc nằm trong khung cuộc thi, tuỳ chọn cho phép nộp bài và đề bài dạng text nếu cần hiển thị cho thí sinh.",
-        "aq3": "Làm thế nào để tạo đội thi?",
-        "aa3": "Trong Quản lý kỳ thi, nhấn Đăng ký cho một cuộc thi. Nhập TEAM_CODE, tên đội, bảng thi, trưởng nhóm và thành viên rồi lưu. Hệ thống kiểm tra số thành viên theo min/max của cuộc thi.",
-        "aq4": "Làm thế nào để xem bài nộp của đội?",
-        "aa4": "Trong bảng quản lý đội thi, mở rộng bất kỳ hàng đăng ký nào để xem tất cả bài nộp. Nhấn Tải xuống bên cạnh file để tải về qua URL có chữ ký trong 5 phút.",
-        "aq5": "Bài nộp có thể thay thế như thế nào?",
-        "aa5": "Thí sinh luôn có thể thay thế bài đã nộp trong thời gian vòng nộp bài còn mở. Khi vòng kết thúc, API và giao diện đều chặn nộp mới hoặc thay thế.",
-        "aq6": "Làm thế nào để sử dụng Bucket?",
-        "aa6": "Vào Bucket trong thanh điều hướng. Bạn có thể duyệt cây thư mục, tạo thư mục, tải lên, đổi tên, xoá và sao chép URL cho file trong bucket post-images và submissions.",
-        "aq7": "Làm thế nào để quản lý tài khoản?",
-        "aa7": "Vào Quản lý tài khoản để tạo tài khoản, cập nhật hồ sơ, đổi vai trò và reset mật khẩu. Username phải có ít nhất 6 ký tự gồm chữ, số hoặc dấu gạch dưới; mật khẩu tối thiểu 8 ký tự và không có dấu cách.",
-        "aq8": "Làm thế nào để quản lý bài viết, tag và dữ liệu?",
-        "aa8": "Vào Admin Workspace để tạo, sửa, xuất bản hoặc xoá bài viết và tag. Phần Cơ sở dữ liệu ở cuối trang Admin Workspace hiển thị các bảng chỉ đọc để rà soát nhanh."
+        "userItems": [
+            {
+                "q": "Tài khoản thí sinh được sử dụng trong phạm vi nào?",
+                "a": "Tài khoản chỉ dùng cho các hoạt động do ban tổ chức cấp quyền: xem thông tin cá nhân, xem đội thi được gán, theo dõi kỳ thi và nộp bài trong thời gian hợp lệ. Không chia sẻ tài khoản cho người ngoài đội."
+            },
+            {
+                "q": "Khi nhận tài khoản, tôi cần kiểm tra gì trước?",
+                "a": "Sau khi đăng nhập, hãy kiểm tra Hồ sơ và Cuộc thi của tôi. Nếu tên, email, trường, đội thi hoặc thành viên bị sai, liên hệ ban tổ chức trước khi đến hạn nộp bài."
+            },
+            {
+                "q": "Vì sao tôi không tự sửa thông tin cá nhân?",
+                "a": "Thông tin thí sinh được ban tổ chức quản lý để giữ dữ liệu đội thi thống nhất. Thí sinh chỉ xem và xác nhận; mọi chỉnh sửa chính thức cần đi qua ban tổ chức."
+            },
+            {
+                "q": "Một kỳ thi có thể có những trạng thái nào?",
+                "a": "Đang diễn ra là kỳ thi đã công bố và có thể có giai đoạn đang mở. Đã đóng là kỳ thi kết thúc. Đã huỷ là kỳ thi không tiếp tục. Bản nháp chỉ dành cho ban tổ chức và không hiển thị công khai."
+            },
+            {
+                "q": "Tôi cần theo dõi mốc thời gian nào?",
+                "a": "Hãy theo dõi khung thời gian tổng của kỳ thi và từng giai đoạn. Quyền nộp bài phụ thuộc vào giai đoạn cho phép nộp bài, không chỉ phụ thuộc trạng thái chung của kỳ thi."
+            },
+            {
+                "q": "Bài nộp được chấp nhận khi nào?",
+                "a": "Bài chỉ được chấp nhận khi bạn thuộc đội/cá nhân của kỳ thi và giai đoạn nộp bài đang mở. Hết hạn, hệ thống sẽ chặn nộp mới, thay thế hoặc xoá bài."
+            },
+            {
+                "q": "Tôi có thể thay thế bài đã nộp không?",
+                "a": "Có, miễn là giai đoạn nộp bài vẫn đang mở. Bản thay thế gần nhất sẽ là bản đang được hệ thống ghi nhận cho đội/cá nhân."
+            },
+            {
+                "q": "Nếu không thấy đề bài hoặc form nộp bài thì sao?",
+                "a": "Hãy kiểm tra bạn đã đăng nhập đúng tài khoản, đã được gán vào kỳ thi, và giai đoạn hiện tại có cho phép nộp bài hay chưa. Nếu vẫn thiếu, liên hệ ban tổ chức kèm tên tài khoản và mã đội."
+            },
+            {
+                "q": "Tôi nên liên hệ ban tổ chức qua đâu?",
+                "a": "Hotline: 0353 840 125 - Phan Minh Trang (Trưởng Ban Tổ chức). Email: contact.toanmohinh@gmail.com. Instagram: archive.toanmohinh. Facebook: Toán Mô hình Hà Nội."
+            },
+            {
+                "q": "Tôi cần lưu ý gì trước hạn cuối?",
+                "a": "Không đợi sát giờ để nộp bài. Hãy kiểm tra file đúng định dạng, đúng đội, đúng kỳ thi và xác nhận bài nộp mới nhất đã hiển thị trong Cuộc thi của tôi."
+            }
+        ],
+        "adminItems": [
+            {
+                "q": "Khi nào nên công bố một kỳ thi?",
+                "a": "Chỉ chuyển kỳ thi sang Đang diễn ra khi tiêu đề, slug, mô tả, thể lệ, hình thức tham gia, giới hạn thành viên, khung thời gian và các giai đoạn đã được rà soát. Bản nháp không hiển thị công khai."
+            },
+            {
+                "q": "Nguyên tắc đặt giai đoạn là gì?",
+                "a": "Mỗi giai đoạn phải nằm trong khung thời gian tổng của kỳ thi, có tên rõ ràng và thời gian bắt đầu nhỏ hơn thời gian kết thúc. Chỉ bật nộp bài ở những giai đoạn thật sự nhận bài."
+            },
+            {
+                "q": "Đề bài và thể lệ nên nhập thế nào?",
+                "a": "Thể lệ nên mô tả quy định chung của kỳ thi. Đề bài theo từng vòng nên đặt trong prompt của giai đoạn tương ứng để thí sinh thấy đúng ngữ cảnh khi vòng mở."
+            },
+            {
+                "q": "Quy tắc tạo đội và thành viên là gì?",
+                "a": "Đội phải tuân thủ min/max thành viên của kỳ thi. Leader và member phải là user hợp lệ, không dùng tài khoản admin làm thí sinh, và mỗi user không nên bị gán trùng trong cùng kỳ thi."
+            },
+            {
+                "q": "Khi nào được sửa đội thi?",
+                "a": "Chỉ sửa đội khi có xác nhận vận hành rõ ràng. Việc đổi leader, thêm/bớt thành viên hoặc mã đội có thể ảnh hưởng quyền xem và nộp bài của thí sinh."
+            },
+            {
+                "q": "Bài nộp được quản lý theo nguyên tắc nào?",
+                "a": "Thí sinh được thay thế bài trong thời gian giai đoạn nộp bài còn mở. Sau khi đóng vòng, admin nên xem/tải bài qua khu quản lý, hạn chế sửa dữ liệu trực tiếp để giữ lịch sử rõ ràng."
+            },
+            {
+                "q": "Bucket dùng cho những loại dữ liệu nào?",
+                "a": "post-images dùng cho ảnh công khai của bài viết và kỳ thi. submissions dùng cho file bài nộp, nên truy cập qua signed URL thay vì chia sẻ URL công khai."
+            },
+            {
+                "q": "Cần lưu ý gì khi quản lý tài khoản?",
+                "a": "Username phải ổn định vì được dùng để gán đội. Khi reset mật khẩu hoặc đổi vai trò, hãy xác nhận đúng người nhận để tránh cấp nhầm quyền."
+            },
+            {
+                "q": "Khi nào cần kiểm tra dữ liệu ở Admin Workspace?",
+                "a": "Dùng bảng dữ liệu đọc nhanh để đối chiếu tài khoản, bài viết, tag và trạng thái vận hành. Nếu cần sửa nghiệp vụ, ưu tiên dùng giao diện chuyên biệt thay vì can thiệp dữ liệu thủ công."
+            },
+            {
+                "q": "Trước khi kết thúc một kỳ thi cần làm gì?",
+                "a": "Kiểm tra trạng thái giai đoạn, tải hoặc đối chiếu bài nộp cần thiết, đảm bảo đội thi không còn thay đổi ngoài quy trình, rồi chuyển trạng thái kỳ thi theo quyết định của ban tổ chức."
+            }
+        ]
     },
     "myContests": {
         "backToProfile": "Về hồ sơ",

@@ -8,6 +8,7 @@ import { compileMDX } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getContestBySlug, userHasRegistration } from "@/lib/contests-db";
+import { shouldBypassImageOptimization } from "@/lib/images";
 import { getCurrentUser } from "@/lib/supabase/server";
 import { mdxComponents } from "../../../../mdx-components";
 import {
@@ -125,6 +126,7 @@ export default async function ContestDetailPage({ params }: Props) {
                         fill
                         sizes="(max-width: 768px) 100vw, 800px"
                         className="object-cover"
+                        unoptimized={shouldBypassImageOptimization(contest.cover_image_url)}
                         priority
                     />
                 </div>
@@ -138,7 +140,11 @@ export default async function ContestDetailPage({ params }: Props) {
                 </span>
             </div>
 
-            <PageHeader title={contest.title} description={contest.description} />
+            <PageHeader
+                title={contest.title}
+                description={contest.description}
+                descriptionClassName="text-foreground/70"
+            />
 
             <div className="mb-6">
                 <ContestCountdown contest={contest} />
@@ -149,7 +155,7 @@ export default async function ContestDetailPage({ params }: Props) {
                     <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                         {t("rules")}
                     </h2>
-                    <div className="text-sm text-foreground/80 leading-relaxed">
+                    <div className="text-sm text-foreground/70 leading-relaxed">
                         {rulesContent}
                     </div>
                 </section>
@@ -187,7 +193,7 @@ export default async function ContestDetailPage({ params }: Props) {
                 <h2 className="text-sm font-bold tracking-widest text-foreground/84 uppercase mb-2">
                     {t("participation")}
                 </h2>
-                <p className="text-sm text-foreground/80">
+                <p className="text-sm text-foreground/70">
                     {tType(contest.participation_type)}
                     {" — "}
                     {formatParticipation(contest)}.
@@ -195,9 +201,8 @@ export default async function ContestDetailPage({ params }: Props) {
             </section>
 
             <section className="mt-8 border-t border-(--border-color) pt-6">
-                <p className="text-sm text-foreground/74">
-                    Tài khoản, đội thi và thành viên được ban tổ chức cấp thủ công. Thí sinh đã được phân đội có thể
-                    đăng nhập và nộp bài trong trang Cuộc thi của tôi khi vòng thi đang mở.
+                <p className="text-sm text-foreground/70">
+                    Tài khoản, đội thi và thành viên sẽ được ban tổ chức cấp khi tham gia cuộc thi.
                 </p>
             </section>
         </div>

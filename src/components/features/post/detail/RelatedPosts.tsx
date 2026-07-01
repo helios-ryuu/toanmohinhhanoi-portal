@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { shouldBypassImageOptimization } from "@/lib/images";
 import type { PostMeta } from "@/types/post";
 
 interface RelatedPostsProps {
@@ -31,6 +32,7 @@ export default function RelatedPosts({ posts }: RelatedPostsProps) {
                                         alt={post.title}
                                         fill
                                         className="object-cover"
+                                        unoptimized={shouldBypassImageOptimization(post.image)}
                                     />
                                 </div>
                             )}

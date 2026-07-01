@@ -55,7 +55,7 @@ export default function ShareQRPopup({
             showToast("info", t("qrReady"));
             toastShownRef.current = true;
         }
-    }, [showToast]);
+    }, [showToast, t]);
     // Helper to wait for all images to load
     const waitForImages = async (element: HTMLElement): Promise<void> => {
         const images = element.querySelectorAll('img');

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, BookOpen, Trophy, Users } from "lucide-react";
 import { getAllPostsMeta } from "@/lib/posts";
+import { shouldBypassImageOptimization } from "@/lib/images";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { listContests } from "@/lib/contests-db";
 import { unstable_cache } from "next/cache";
@@ -59,6 +60,7 @@ function FeaturedPostCard({ post }: { post: PostMeta }) {
             fill
             sizes="92px"
             className="object-cover transition-transform duration-300 group-hover:scale-105"
+            unoptimized={shouldBypassImageOptimization(post.image)}
           />
         ) : (
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(31,81,255,0.28),transparent_34%),linear-gradient(135deg,var(--post-card),var(--background-hover))]" />

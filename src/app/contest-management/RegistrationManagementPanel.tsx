@@ -296,7 +296,7 @@ export default function RegistrationManagementPanel({ contest, onBack }: Props) 
         } finally {
             setLoading(false);
         }
-    }, [contest.id, showToast]);
+    }, [contest.id, showToast, t]);
 
     useEffect(() => { refresh(); }, [refresh]);
 

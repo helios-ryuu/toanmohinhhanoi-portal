@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar } from "lucide-react";
+import { shouldBypassImageOptimization } from "@/lib/images";
 import type { DbContest, DbContestStage, ContestWithStages } from "@/types/database";
 import { ContestStatusBadge, ContestTypeBadge } from "./ContestStatusBadge";
 
@@ -45,6 +46,7 @@ export default function ContestCard({ contest }: { contest: CardContest }) {
                         fill
                         sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                         className="object-cover"
+                        unoptimized={shouldBypassImageOptimization(contest.cover_image_url)}
                     />
                 )}
                 <div className="absolute top-2 left-2 flex gap-1.5">

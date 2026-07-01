@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import Image from "next/image";
+import { shouldBypassImageOptimization } from "@/lib/images";
 import { TagList } from "@/components/ui";
 import StatColumns from "./PostStatColumns";
 import PostCardContextMenu from "./PostCardContextMenu";
@@ -60,11 +61,11 @@ export default function PostCard({
                         <div className="relative w-full h-48 md:h-42 mb-4">
                             {/* Glow layer */}
                             <div className="absolute -inset-1 blur-xl opacity-14">
-                                <Image src={image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw" className="object-cover rounded-xl" />
+                                <Image src={image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw" className="object-cover rounded-xl" unoptimized={shouldBypassImageOptimization(image)} />
                             </div>
                             {/* Image container */}
                             <div className="relative w-full h-full rounded-xl overflow-hidden z-10">
-                                <Image src={image} alt={title} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw" className="object-cover" />
+                                <Image src={image} alt={title} fill sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 25vw" className="object-cover" unoptimized={shouldBypassImageOptimization(image)} />
                                 <div className="absolute inset-0 bg-linear-to-t from-background/25 via-transparent to-transparent" />
                             </div>
                         </div>
